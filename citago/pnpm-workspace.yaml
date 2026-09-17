@@ -1,0 +1,10 @@
+# Explicit decisions about which dependencies may run install scripts.
+allowBuilds:
+  # Native file watcher used by `nest start --watch`.
+  '@parcel/watcher': true
+  # Native module resolver used by ESLint.
+  unrs-resolver: true
+  # Analytics/telemetry package. Never allowed to run.
+  '@scarf/scarf': false
+  # Bundler used by tsx (dev tooling for the TypeORM CLI and seeds).
+  esbuild: true

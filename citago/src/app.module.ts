@@ -1,21 +1,37 @@
 import { Module } from '@nestjs/common';
-import { createObserveModule } from '@nestjs/observe';
-import { AppController } from './app.controller.js';
-import { AppService } from './app.service.js';
+import { ConfigModule } from '@nestjs/config';
+import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 
-export const { ObserveModule, ObserveInstrument } = createObserveModule();
+import { validateEnvironment } from './config/environment.js';
+import { DatabaseModule } from './database/database.module.js';
+import { HealthModule } from './modules/health/health.module.js';
+import { IdentityModule } from './modules/identity/identity.module.js';
+import { TenantsModule } from './modules/tenants/tenants.module.js';
+import { SharedModule } from './shared/infrastructure/shared.module.js';
+import { AllExceptionsFilter } from './shared/presentation/filters/all-exceptions.filter.js';
+import { RequestLoggingInterceptor } from './shared/presentation/interceptors/request-logging.interceptor.js';
+import { ResponseEnvelopeInterceptor } from './shared/presentation/interceptors/response-envelope.interceptor.js';
 
 @Module({
   imports: [
-    // Distributed tracing, auto-correlated logs, request/job metrics, error
-    // telemetry, alarms, and more — out of the box. Sign up at https://observe.nestjs.com
-    ObserveModule.forRoot({
-      appKey: 'YOUR_APP_KEY',
-      appSecret: 'YOUR_APP_SECRET',
-      serviceId: 'citago',
+    ConfigModule.forRoot({
+      isGlobal: true,
+      cache: true,
+      validate: validateEnvironment,
     }),
+    SharedModule,
+    DatabaseModule,
+    HealthModule,
+    TenantsModule,
+    IdentityModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    // Rate limiting is applied as Express middleware in app.setup.ts, because
+    // @nestjs/throttler is still CommonJS and cannot be loaded from the
+    // ESM-only @nestjs/common of Nest 12 (see docs/adr/0003-esm-and-jest.md).
+    { provide: APP_FILTER, useClass: AllExceptionsFilter },
+    { provide: APP_INTERCEPTOR, useClass: RequestLoggingInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: ResponseEnvelopeInterceptor },
+  ],
 })
 export class AppModule {}
