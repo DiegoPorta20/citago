@@ -1,5 +1,6 @@
 import { InitTenancyAndIdentity1789674597432 } from './1789674597432-InitTenancyAndIdentity.js';
 import { AddTenantToRefreshTokens1789677885914 } from './1789677885914-AddTenantToRefreshTokens.js';
+import { AddServices1789684045518 } from './1789684045518-AddServices.js';
 
 /**
  * Every migration, in the order it must be applied.
@@ -12,4 +13,5 @@ import { AddTenantToRefreshTokens1789677885914 } from './1789677885914-AddTenant
 export const MIGRATIONS = [
   InitTenancyAndIdentity1789674597432,
   AddTenantToRefreshTokens1789677885914,
+  AddServices1789684045518,
 ];

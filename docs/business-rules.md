@@ -32,9 +32,11 @@ Matriz de permisos por rol: [permissions.md](./permissions.md).
 
 | # | Regla | Estado |
 |---|---|---|
-| CA-1 | `duration_minutes > 0` | ◻ |
-| CA-2 | `price >= 0` | ◻ |
-| CA-3 | Un servicio con historial no se elimina: se desactiva | ◻ |
+| CA-1 | `duration_minutes > 0` (y como máximo 720) | ✔ entidad + CHECK |
+| CA-2 | `price >= 0` | ✔ `Money` + CHECK |
+| CA-3 | Un servicio con historial no se elimina: se desactiva | ✔ no existe endpoint DELETE |
+| CA-5 | Dos servicios activos del mismo negocio no pueden compartir nombre (sin distinguir mayúsculas ni acentos); un servicio desactivado libera el nombre | ✔ |
+| CA-6 | El dinero viaja como string decimal y se opera en céntimos enteros | ✔ `Money` |
 | CA-4 | Un servicio `INACTIVE` no admite citas nuevas; las existentes se conservan | ◻ |
 
 ## Clientes
@@ -66,7 +68,7 @@ Matriz de permisos por rol: [permissions.md](./permissions.md).
 
 | # | Regla | Estado |
 |---|---|---|
-| SA-1 | El dinero usa `DECIMAL(12,2)`; nunca coma flotante | ◻ |
+| SA-1 | El dinero usa `DECIMAL(12,2)`; nunca coma flotante | ✔ `Money` (máx. 9999999999.99) |
 | SA-2 | `total = subtotal - discount` y `discount <= subtotal` | ◻ |
 | SA-3 | Una cita genera como máximo una venta, y solo si está `COMPLETED` | ◻ |
 | SA-4 | Una venta no se edita ni se borra: se anula (`VOIDED`) con motivo y autor | ◻ |

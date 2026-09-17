@@ -28,6 +28,7 @@ export async function createTestDataSource(): Promise<DataSource> {
 
 /** Order matters: children before parents, because every FK is RESTRICT. */
 const TABLES_IN_DELETION_ORDER = [
+  'services',
   'refresh_tokens',
   'memberships',
   'users',

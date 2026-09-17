@@ -37,7 +37,7 @@ token de inyección de NestJS.
 | `health` | Liveness y conectividad con MySQL | implementado |
 | `identity` | Usuarios, credenciales, sesiones, membresías y roles | **implementado** |
 | `tenants` | Negocio, configuración y horario de atención | entidad y repositorio listos; endpoints pendientes |
-| `catalog` | Servicios: duración, precio, estado | pendiente |
+| `catalog` | Servicios: duración, precio, estado | **implementado** |
 | `staff` | Profesionales y sus horarios | pendiente |
 | `clients` | Clientes y normalización de teléfono | pendiente |
 | `appointments` | Agenda, máquina de estados, solapamientos | pendiente |
@@ -53,7 +53,8 @@ token de inyección de NestJS.
   `page`, `limit`, `total` y `totalPages` en `meta`.
 - Error: `{ "statusCode", "code", "message", "details?", "timestamp", "path" }`.
   `code` es estable y legible por máquina (`APPOINTMENT_OVERLAP`).
-- Fechas ISO-8601 en UTC. Dinero como string decimal. IDs UUIDv7.
+- Fechas ISO-8601 en UTC. **Dinero como string decimal** (`"25.00"`), nunca
+  number: internamente es `Money`, un entero exacto de céntimos. IDs UUIDv7.
 - Un recurso de otro tenant responde `404`, nunca `403`.
 
 ## Endpoints disponibles
@@ -66,6 +67,12 @@ token de inyección de NestJS.
 | POST | `/api/v1/auth/refresh` | Público |
 | POST | `/api/v1/auth/logout` | Público |
 | GET | `/api/v1/auth/me` | Autenticado |
+| POST | `/api/v1/services` | OWNER, ADMIN |
+| GET | `/api/v1/services` | Autenticado |
+| GET | `/api/v1/services/:id` | Autenticado |
+| PATCH | `/api/v1/services/:id` | OWNER, ADMIN |
+| POST | `/api/v1/services/:id/activate` | OWNER, ADMIN |
+| POST | `/api/v1/services/:id/deactivate` | OWNER, ADMIN |
 
 La autenticación es **deny by default**: el guard es global y un endpoint solo
 queda abierto si lleva `@Public()`.
@@ -79,6 +86,7 @@ queda abierto si lleva `@Public()`.
 | Traducción de errores sin filtrar internos | `shared/presentation/filters` |
 | Configuración validada al arrancar | `src/config/environment.ts` |
 | CORS deshabilitado por defecto (cliente nativo) | `src/app.setup.ts` |
+| Sin `DELETE` sobre datos con historial: se desactiva o se anula | Controllers |
 | Aislamiento multi-tenant en cuatro capas | [ADR 0004](./adr/0004-tenant-isolation.md) |
 
 ## Persistencia

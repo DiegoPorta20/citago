@@ -4,6 +4,7 @@ import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 
 import { validateEnvironment } from './config/environment.js';
 import { DatabaseModule } from './database/database.module.js';
+import { CatalogModule } from './modules/catalog/catalog.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { IdentityModule } from './modules/identity/identity.module.js';
 import { TenantsModule } from './modules/tenants/tenants.module.js';
@@ -24,6 +25,7 @@ import { ResponseEnvelopeInterceptor } from './shared/presentation/interceptors/
     HealthModule,
     TenantsModule,
     IdentityModule,
+    CatalogModule,
   ],
   providers: [
     // Rate limiting is applied as Express middleware in app.setup.ts, because

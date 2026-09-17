@@ -1,3 +1,11 @@
+/**
+ * Paginated collections.
+ *
+ * Lives in the shared domain kernel, not in the application layer, so a
+ * repository contract can express "a page of entities" without the domain
+ * depending on an outer layer. These are plain data types: no framework, no
+ * ORM, no transport.
+ */
 export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 100;
 

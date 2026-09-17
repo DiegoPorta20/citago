@@ -30,6 +30,7 @@ async function main(): Promise<void> {
     const summary = await runDevSeed(dataSource);
 
     console.log(`Seeded tenant ${summary.tenantId} (${env.DB_DATABASE})`);
+    console.log(`  ${summary.serviceCount} services in the catalogue`);
     for (const user of summary.users) {
       console.log(
         `  ${user.role.padEnd(5)} ${user.email} / ${summary.password}`,

@@ -1,3 +1,4 @@
+import { ServiceOrmEntity } from '../modules/catalog/infrastructure/persistence/typeorm/entities/service.orm-entity.js';
 import { MembershipOrmEntity } from '../modules/identity/infrastructure/persistence/typeorm/entities/membership.orm-entity.js';
 import { RefreshTokenOrmEntity } from '../modules/identity/infrastructure/persistence/typeorm/entities/refresh-token.orm-entity.js';
 import { UserOrmEntity } from '../modules/identity/infrastructure/persistence/typeorm/entities/user.orm-entity.js';
@@ -18,4 +19,5 @@ export const ORM_ENTITIES = [
   UserOrmEntity,
   MembershipOrmEntity,
   RefreshTokenOrmEntity,
+  ServiceOrmEntity,
 ];

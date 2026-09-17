@@ -6,7 +6,7 @@ import {
   DEFAULT_PAGE_SIZE,
   MAX_PAGE_SIZE,
   type PageRequest,
-} from '../../application/pagination.js';
+} from '../../domain/pagination.js';
 
 /**
  * Shared pagination input for every collection endpoint.

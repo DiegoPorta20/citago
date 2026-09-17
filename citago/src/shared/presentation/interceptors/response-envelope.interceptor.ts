@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { map, type Observable } from 'rxjs';
 
-import type { Page } from '../../application/pagination.js';
+import type { Page } from '../../domain/pagination.js';
 
 export interface ResponseEnvelope<T> {
   data: T;

@@ -1,7 +1,7 @@
 import { type CallHandler, type ExecutionContext } from '@nestjs/common';
 import { firstValueFrom, of } from 'rxjs';
 
-import { buildPage } from '../../application/pagination.js';
+import { buildPage } from '../../domain/pagination.js';
 import { ResponseEnvelopeInterceptor } from './response-envelope.interceptor.js';
 
 describe('ResponseEnvelopeInterceptor', () => {
