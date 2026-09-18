@@ -1,10 +1,14 @@
 import { plainToInstance, Transform, Type } from 'class-transformer';
 import {
+  IsBase64,
   IsBoolean,
   IsEnum,
   IsInt,
   IsOptional,
   IsString,
+  IsUrl,
+  Length,
+  Matches,
   Max,
   MaxLength,
   Min,
@@ -87,6 +91,14 @@ export class EnvironmentVariables {
   SWAGGER_ENABLED: boolean = true;
 
   /**
+   * Development-only endpoints, such as the inbound message simulator.
+   * Off by default: forgetting to set it can never expose them.
+   */
+  @asBoolean()
+  @IsBoolean()
+  DEV_TOOLS_ENABLED: boolean = false;
+
+  /**
    * Comma-separated list of allowed browser origins. Empty disables CORS,
    * which is the correct default: the client is a native application.
    */
@@ -114,6 +126,37 @@ export class EnvironmentVariables {
   @IsInt()
   @Min(1)
   AUTH_THROTTLE_LIMIT: number = 20;
+
+  /**
+   * Key for encrypting secrets at rest (WhatsApp access tokens): 32 random
+   * bytes, base64-encoded. Losing it makes stored tokens unreadable; leaking it
+   * exposes them. Keep it out of the database backups' reach.
+   */
+  @IsBase64()
+  @Length(44, 44, {
+    message: 'ENCRYPTION_KEY must be 32 bytes encoded in base64',
+  })
+  ENCRYPTION_KEY: string;
+
+  /**
+   * Meta app secret. Verifies the X-Hub-Signature-256 of every webhook.
+   * Empty disables the webhook: it rejects everything (fails closed).
+   */
+  @IsOptional()
+  @IsString()
+  WHATSAPP_APP_SECRET: string = '';
+
+  /** Shared secret Meta echoes when subscribing the webhook. Empty disables it. */
+  @IsOptional()
+  @IsString()
+  WHATSAPP_VERIFY_TOKEN: string = '';
+
+  /** Graph API base URL. Overridden in tests with a local fake. */
+  @IsUrl({ require_tld: false, protocols: ['http', 'https'] })
+  WHATSAPP_GRAPH_API_URL: string = 'https://graph.facebook.com';
+
+  @Matches(/^v\d+\.\d+$/)
+  WHATSAPP_GRAPH_API_VERSION: string = 'v23.0';
 }
 
 export function validateEnvironment(

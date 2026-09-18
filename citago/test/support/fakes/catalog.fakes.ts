@@ -28,6 +28,15 @@ export class InMemoryServiceRepository extends ServiceRepository {
     return service && service.tenantId === tenantId ? service : null;
   }
 
+  async findManyByIdsForTenant(
+    ids: readonly string[],
+    tenantId: string,
+  ): Promise<Service[]> {
+    return [...this.services.values()].filter(
+      (service) => service.tenantId === tenantId && ids.includes(service.id),
+    );
+  }
+
   async list(
     tenantId: string,
     filters: ServiceListFilters,

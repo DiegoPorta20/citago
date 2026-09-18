@@ -19,7 +19,10 @@ export async function createTestApp(): Promise<NestExpressApplication> {
     imports: [AppModule],
   }).compile();
 
-  const app = moduleRef.createNestApplication<NestExpressApplication>();
+  const app = moduleRef.createNestApplication<NestExpressApplication>({
+    // Same as main.ts: webhook signatures are computed over the raw body.
+    rawBody: true,
+  });
   const config =
     app.get<ConfigService<EnvironmentVariables, true>>(ConfigService);
 

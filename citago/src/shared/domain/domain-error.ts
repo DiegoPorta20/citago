@@ -17,6 +17,8 @@ export enum DomainErrorCategory {
   Forbidden = 'FORBIDDEN',
   /** The caller is not authenticated, or the credentials are invalid. */
   Unauthorized = 'UNAUTHORIZED',
+  /** An external service we depend on (e.g. WhatsApp) failed or refused the call. */
+  ExternalService = 'EXTERNAL_SERVICE',
 }
 
 /**

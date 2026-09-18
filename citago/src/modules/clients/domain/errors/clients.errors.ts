@@ -32,8 +32,15 @@ export class ClientPhoneAlreadyRegisteredError extends DomainError {
   readonly code = 'CLIENT_PHONE_ALREADY_REGISTERED';
   readonly category = DomainErrorCategory.Conflict;
 
-  constructor(clientId: string) {
-    super('A client with that phone number already exists.', { clientId });
+  /**
+   * `clientId` is absent when the duplicate was caught by the database unique
+   * key (two simultaneous creations) rather than by the use case's lookup.
+   */
+  constructor(clientId?: string) {
+    super(
+      'A client with that phone number already exists.',
+      clientId ? { clientId } : undefined,
+    );
   }
 }
 

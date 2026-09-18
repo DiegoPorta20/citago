@@ -21,7 +21,7 @@ Stack: **NestJS 12 · TypeScript 6 · TypeORM 1 · MySQL 8 · REST · Jest · Sw
 ```bash
 cd citago
 pnpm install
-cp .env.example .env          # ajustar si hace falta
+cp .env.example .env          # completar ENCRYPTION_KEY (ver abajo)
 docker compose up -d          # MySQL en 3306 (dev) y 3307 (tests)
 pnpm start:dev
 ```
@@ -36,6 +36,28 @@ Todas están documentadas en [`.env.example`](.env.example) y **se validan al
 arrancar**: si falta una o tiene un valor inválido, la aplicación no inicia.
 
 `.env` y `.env.test` nunca se commitean.
+
+`ENCRYPTION_KEY` es obligatoria: cifra los tokens de WhatsApp guardados en la
+base. Se genera una por entorno:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+### WhatsApp
+
+Sin `WHATSAPP_APP_SECRET` ni `WHATSAPP_VERIFY_TOKEN` el webhook rechaza todo;
+el resto de la API funciona igual y la bandeja se puede probar con el simulador
+(`DEV_TOOLS_ENABLED=true`). Para conectar un número real:
+
+1. En la app de Meta, configurar el webhook en
+   `https://<host>/api/v1/webhooks/whatsapp` con el mismo `WHATSAPP_VERIFY_TOKEN`
+   y suscribirse al campo `messages`.
+2. Copiar el app secret en `WHATSAPP_APP_SECRET`.
+3. Como OWNER o ADMIN: `PUT /api/v1/whatsapp/channel` con `phoneNumberId` y un
+   token permanente de system user. CitaGo lo verifica con Meta antes de guardarlo.
+
+Detalles en [ADR 0009](../docs/adr/0009-whatsapp-integration.md).
 
 ## Base de datos
 
@@ -60,8 +82,10 @@ compuestas, `CHECK` y nombres de índices no se generan correctamente solos.
 pnpm seed
 ```
 
-Crea datos claramente ficticios e idempotentes (se puede re-ejecutar): el tenant
-`Barbería Demo` (PE / PEN / America/Lima) y tres usuarios con contraseña
+Crea datos claramente ficticios y se puede re-ejecutar: el tenant `Barbería Demo`
+(PE / PEN / America/Lima), 6 servicios, 20 clientes, 2 profesionales con horario
+semanal y ~50 citas en todos los estados, **recalculadas alrededor de hoy en cada
+ejecución** (las citas del tenant demo se reemplazan). Usuarios, contraseña
 `Demo1234!`:
 
 | Email | Rol |

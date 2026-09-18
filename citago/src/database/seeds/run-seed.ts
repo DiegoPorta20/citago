@@ -31,6 +31,12 @@ async function main(): Promise<void> {
 
     console.log(`Seeded tenant ${summary.tenantId} (${env.DB_DATABASE})`);
     console.log(`  ${summary.serviceCount} services in the catalogue`);
+    console.log(`  ${summary.clientCount} clients`);
+    console.log(`  ${summary.staffCount} staff members with a weekly schedule`);
+    console.log(`  ${summary.appointmentCount} appointments around today`);
+    console.log(
+      '  3 WhatsApp conversations (1 pending, 1 answered, 1 archived)',
+    );
     for (const user of summary.users) {
       console.log(
         `  ${user.role.padEnd(5)} ${user.email} / ${summary.password}`,

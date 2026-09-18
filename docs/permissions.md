@@ -4,9 +4,8 @@ Los roles pertenecen al **tenant**, no a la plataforma: una persona es OWNER de
 un negocio, no "OWNER" en abstracto. El rol se lee de la membresía en cada
 request, así que revocar un acceso o cambiar un rol tiene efecto inmediato.
 
-> ⚠️ **Propuesta inicial, pendiente de tu confirmación (decisión B6).** Está
-> implementada solo en la parte que ya existe (autenticación); el resto se
-> aplica al construir cada módulo.
+> Implementada para autenticación, servicios, clientes, profesionales, citas, conversaciones y el canal de WhatsApp.
+> Los puntos abiertos al final siguen pendientes de confirmación.
 
 ## Roles
 
@@ -57,6 +56,8 @@ repositorio y la base de datos ([ADR 0004](./adr/0004-tenant-isolation.md)).
 | Ver su propia agenda | ✅ | ✅ | ✅ |
 | Crear y reagendar citas de cualquier profesional | ✅ | ✅ | ❌ |
 | Crear y reagendar sus propias citas | ✅ | ✅ | ✅ |
+| Reservar fuera de horario, en una ausencia o en el pasado | ✅ | ✅ | ❌ |
+| Consultar disponibilidad de su propia agenda | ✅ | ✅ | ✅ |
 | Confirmar, marcar llegada, iniciar y completar sus citas | ✅ | ✅ | ✅ |
 | Cancelar o marcar `NO_SHOW` en sus citas | ✅ | ✅ | ✅ |
 | Cancelar citas de otro profesional | ✅ | ✅ | ❌ |
@@ -67,7 +68,9 @@ repositorio y la base de datos ([ADR 0004](./adr/0004-tenant-isolation.md)).
 | Anular una venta | ✅ | ✅ | ❌ |
 | **Conversaciones** | | | |
 | Ver y responder conversaciones | ✅ | ✅ | ✅ |
-| Archivar conversaciones | ✅ | ✅ | ❌ |
+| Marcar resuelta y vincular a un cliente | ✅ | ✅ | ✅ |
+| Archivar y reabrir conversaciones | ✅ | ✅ | ❌ |
+| Asignar una conversación a un miembro | ✅ | ✅ | ❌ |
 | Configurar el canal de WhatsApp | ✅ | ✅ | ❌ |
 | **Dashboard** | | | |
 | Ver ingresos y métricas del negocio | ✅ | ✅ | ❌ |

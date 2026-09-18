@@ -23,6 +23,12 @@ export abstract class ServiceRepository {
     tenantId: string,
   ): Promise<Service | null>;
 
+  /** Batch lookup for views that show many appointments at once, inactive included. */
+  abstract findManyByIdsForTenant(
+    ids: readonly string[],
+    tenantId: string,
+  ): Promise<Service[]>;
+
   abstract list(
     tenantId: string,
     filters: ServiceListFilters,

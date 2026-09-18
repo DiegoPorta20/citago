@@ -6,6 +6,7 @@ const validEnv = {
   DB_PASSWORD: 'secret',
   DB_DATABASE: 'citago',
   JWT_ACCESS_SECRET: 'a'.repeat(48),
+  ENCRYPTION_KEY: Buffer.alloc(32, 7).toString('base64'),
 };
 
 describe('validateEnvironment', () => {
@@ -84,5 +85,25 @@ describe('validateEnvironment', () => {
     expect(() =>
       validateEnvironment({ ...validEnv, PATH: '/usr/bin', HOME: '/home/dev' }),
     ).not.toThrow();
+  });
+
+  it('requires a 32-byte encryption key', () => {
+    const { ENCRYPTION_KEY: _omitted, ...withoutKey } = validEnv;
+
+    expect(() => validateEnvironment(withoutKey)).toThrow(/ENCRYPTION_KEY/);
+    expect(() =>
+      validateEnvironment({
+        ...validEnv,
+        ENCRYPTION_KEY: Buffer.alloc(16).toString('base64'),
+      }),
+    ).toThrow(/ENCRYPTION_KEY/);
+  });
+
+  it('leaves the WhatsApp webhook disabled unless configured', () => {
+    const env = validateEnvironment({ ...validEnv });
+
+    expect(env.WHATSAPP_APP_SECRET).toBe('');
+    expect(env.WHATSAPP_VERIFY_TOKEN).toBe('');
+    expect(env.WHATSAPP_GRAPH_API_URL).toBe('https://graph.facebook.com');
   });
 });

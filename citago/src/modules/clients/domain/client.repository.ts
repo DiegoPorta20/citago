@@ -3,10 +3,8 @@ import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
 import type { Client } from './client.entity.js';
 
 export interface ClientListFilters {
-  /** Matches the start of the name, or any part of the phone number. */
+  /** Matches the start of the name, or digits anywhere in the phone number. */
   readonly query?: string;
-  /** Deleted clients are hidden unless explicitly asked for. */
-  readonly includeDeleted?: boolean;
 }
 
 /**
@@ -29,7 +27,16 @@ export abstract class ClientRepository {
   ): Promise<Client | null>;
 
   /**
-   * The identity lookup: it is how WhatsApp finds an existing customer, and
+   * Batch lookup for views that show many appointments at once. Includes
+   * deleted clients: a past appointment must still show who it was for.
+   */
+  abstract findManyByIdsForTenant(
+    ids: readonly string[],
+    tenantId: string,
+  ): Promise<Client[]>;
+
+  /**
+   * The identity lookup: it is how WhatsApp will find an existing customer, and
    * how a duplicate is detected before creating one.
    *
    * Includes deleted clients, because a soft-deleted client still holds its
@@ -40,11 +47,17 @@ export abstract class ClientRepository {
     phone: PhoneNumber,
   ): Promise<Client | null>;
 
+  /** Never returns deleted clients. */
   abstract list(
     tenantId: string,
     filters: ClientListFilters,
     page: PageRequest,
   ): Promise<Page<Client>>;
 
+  /**
+   * Throws `ClientPhoneAlreadyRegisteredError` when the database rejects a
+   * duplicate phone — the race two simultaneous sign-ups can still hit after
+   * the use case checked.
+   */
   abstract save(client: Client): Promise<void>;
 }

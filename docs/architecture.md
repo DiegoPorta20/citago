@@ -38,12 +38,12 @@ token de inyección de NestJS.
 | `identity` | Usuarios, credenciales, sesiones, membresías y roles | **implementado** |
 | `tenants` | Negocio, configuración y horario de atención | entidad y repositorio listos; endpoints pendientes |
 | `catalog` | Servicios: duración, precio, estado | **implementado** |
-| `staff` | Profesionales y sus horarios | pendiente |
-| `clients` | Clientes y normalización de teléfono | pendiente |
-| `appointments` | Agenda, máquina de estados, solapamientos | pendiente |
+| `staff` | Profesionales, horario semanal, ausencias y bloqueo de agenda | **implementado** |
+| `clients` | Clientes y normalización de teléfono | **implementado** |
+| `appointments` | Agenda, máquina de estados, solapamientos, disponibilidad | **implementado** |
 | `sales` | Ventas, líneas, métodos de pago, anulación | pendiente |
-| `conversations` | Conversaciones y mensajes, independientes del canal | pendiente |
-| `whatsapp` | Webhook, firma, idempotencia, adapter de Meta | pendiente |
+| `conversations` | Conversaciones y mensajes, independientes del canal | **implementado** |
+| `whatsapp` | Webhook, firma, conexión del número, envío por la Cloud API ([ADR 0009](./adr/0009-whatsapp-integration.md)) | **implementado** |
 | `dashboard` | Métricas por consulta (sin dominio) | pendiente |
 
 ## Contrato de la API
@@ -73,6 +73,33 @@ token de inyección de NestJS.
 | PATCH | `/api/v1/services/:id` | OWNER, ADMIN |
 | POST | `/api/v1/services/:id/activate` | OWNER, ADMIN |
 | POST | `/api/v1/services/:id/deactivate` | OWNER, ADMIN |
+| POST | `/api/v1/clients` | Autenticado |
+| GET | `/api/v1/clients` | Autenticado |
+| GET | `/api/v1/clients/:id` | Autenticado |
+| PATCH | `/api/v1/clients/:id` | Autenticado |
+| DELETE | `/api/v1/clients/:id` (lógico) | OWNER, ADMIN |
+| POST | `/api/v1/clients/:id/restore` | OWNER, ADMIN |
+| POST, PATCH | `/api/v1/staff`, `/api/v1/staff/:id` | OWNER, ADMIN |
+| GET | `/api/v1/staff`, `/api/v1/staff/:id` | Autenticado |
+| PUT | `/api/v1/staff/:id/schedule` | OWNER, ADMIN |
+| POST | `/api/v1/staff/:id/activate` · `/deactivate` | OWNER, ADMIN |
+| GET | `/api/v1/staff/:id/time-off` | Autenticado |
+| POST, DELETE | `/api/v1/staff/:id/time-off` · `/:timeOffId` | OWNER, ADMIN |
+| POST | `/api/v1/appointments` | Autenticado (STAFF: solo su agenda) |
+| GET | `/api/v1/appointments` (agenda) | Autenticado (STAFF: solo su agenda) |
+| GET | `/api/v1/appointments/availability` | Autenticado (STAFF: solo su agenda) |
+| GET, PATCH | `/api/v1/appointments/:id` | Autenticado (STAFF: solo su agenda) |
+| POST | `/api/v1/appointments/:id/{confirm,arrive,start,complete,cancel,no-show}` | Autenticado (STAFF: solo su agenda) |
+| GET | `/api/v1/conversations` (bandeja; `needsReply=true` = pendientes) | Autenticado |
+| GET | `/api/v1/conversations/:id` · `/:id/messages` (cursor `before`) | Autenticado |
+| POST | `/api/v1/conversations/:id/resolve` | Autenticado |
+| PUT | `/api/v1/conversations/:id/client` | Autenticado |
+| POST | `/api/v1/conversations/:id/archive` · `/reopen` | OWNER, ADMIN |
+| PUT | `/api/v1/conversations/:id/assignee` | OWNER, ADMIN |
+| POST | `/api/v1/conversations/simulate-inbound` (solo con `DEV_TOOLS_ENABLED`) | OWNER, ADMIN |
+| POST | `/api/v1/conversations/:id/messages` (responder por el canal) | Autenticado |
+| GET · PUT · DELETE | `/api/v1/whatsapp/channel` (estado, conectar, desconectar) | OWNER, ADMIN |
+| GET · POST | `/api/v1/webhooks/whatsapp` (verificación y entregas de Meta) | Público, con verify token / firma |
 
 La autenticación es **deny by default**: el guard es global y un endpoint solo
 queda abierto si lleva `@Public()`.

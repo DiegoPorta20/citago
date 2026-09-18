@@ -102,4 +102,13 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-argument': 'off',
     },
   },
+  // Integration tests exist to compose real adapters with the use cases they
+  // serve, so they cross layers on purpose. Unit specs are still bound by the
+  // rules above: a domain test that needs TypeORM is a design smell.
+  {
+    files: ['**/*.int-spec.ts'],
+    rules: {
+      'no-restricted-imports': 'off',
+    },
+  },
 );

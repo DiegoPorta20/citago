@@ -31,6 +31,7 @@ export interface AppSetupOptions {
 }
 
 const DEFAULT_THROTTLE_TTL = 60_000;
+const WEBHOOKS_PATH = `/${API_PREFIX}/webhooks/`;
 const DEFAULT_THROTTLE_LIMIT = 120;
 const DEFAULT_AUTH_THROTTLE_LIMIT = 20;
 
@@ -51,10 +52,15 @@ export function setupApp(
   //
   // In-memory store: correct for a single instance. Running several instances
   // will need a shared store.
+  //
+  // Webhooks are exempt: Meta delivers from a handful of IPs and would hit a
+  // per-IP limit at any real volume, and a throttled delivery is a delayed
+  // customer message. Unsigned requests are rejected before any database work.
   app.use(
     rateLimit({
       windowMs: options.throttleTtl ?? DEFAULT_THROTTLE_TTL,
       limit: options.throttleLimit ?? DEFAULT_THROTTLE_LIMIT,
+      skip: (request) => request.originalUrl.startsWith(WEBHOOKS_PATH),
       standardHeaders: 'draft-7',
       legacyHeaders: false,
       handler: tooManyRequests,

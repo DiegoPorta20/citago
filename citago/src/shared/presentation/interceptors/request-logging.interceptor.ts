@@ -32,7 +32,7 @@ export class RequestLoggingInterceptor implements NestInterceptor {
           const route = (request.route as { path?: string } | undefined)?.path;
 
           this.logger.log(
-            `${request.method} ${route ?? request.originalUrl} ${response.statusCode} ${Date.now() - startedAt}ms`,
+            `${request.method} ${route ?? request.originalUrl.split('?')[0]} ${response.statusCode} ${Date.now() - startedAt}ms`,
           );
         },
       }),

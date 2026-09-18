@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { In } from 'typeorm';
 
 import {
   buildPage,
@@ -33,6 +34,19 @@ export class TypeOrmServiceRepository extends ServiceRepository {
     const row = await this.repository.findOneBy({ id, tenantId });
 
     return row ? this.toDomain(row) : null;
+  }
+
+  async findManyByIdsForTenant(
+    ids: readonly string[],
+    tenantId: string,
+  ): Promise<Service[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    const rows = await this.repository.findBy({ id: In([...ids]), tenantId });
+
+    return rows.map((row) => this.toDomain(row));
   }
 
   async list(

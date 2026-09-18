@@ -21,6 +21,7 @@ const CATEGORY_STATUS: Record<DomainErrorCategory, HttpStatus> = {
   [DomainErrorCategory.BusinessRule]: HttpStatus.UNPROCESSABLE_ENTITY,
   [DomainErrorCategory.Forbidden]: HttpStatus.FORBIDDEN,
   [DomainErrorCategory.Unauthorized]: HttpStatus.UNAUTHORIZED,
+  [DomainErrorCategory.ExternalService]: HttpStatus.BAD_GATEWAY,
 };
 
 /** Error code returned for framework exceptions that carry no domain code. */
@@ -52,15 +53,18 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = http.getResponse<Response>();
 
     const body = this.toErrorBody(exception, request.originalUrl);
+    // Logged without the query string: it can carry personal data (a searched
+    // phone number) or secrets (the webhook verify token).
+    const path = request.originalUrl.split('?')[0];
 
     if (body.statusCode >= SERVER_ERROR_MIN_STATUS) {
       this.logger.error(
-        `${request.method} ${request.originalUrl} -> ${body.statusCode} ${body.code}`,
+        `${request.method} ${path} -> ${body.statusCode} ${body.code}`,
         exception instanceof Error ? exception.stack : String(exception),
       );
     } else {
       this.logger.debug(
-        `${request.method} ${request.originalUrl} -> ${body.statusCode} ${body.code}`,
+        `${request.method} ${path} -> ${body.statusCode} ${body.code}`,
       );
     }
 

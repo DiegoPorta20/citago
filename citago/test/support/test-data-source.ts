@@ -28,6 +28,15 @@ export async function createTestDataSource(): Promise<DataSource> {
 
 /** Order matters: children before parents, because every FK is RESTRICT. */
 const TABLES_IN_DELETION_ORDER = [
+  'whatsapp_channels',
+  'messages',
+  'conversations',
+  'appointment_status_history',
+  'appointments',
+  'staff_time_off',
+  'staff_schedules',
+  'staff_members',
+  'clients',
   'services',
   'refresh_tokens',
   'memberships',
