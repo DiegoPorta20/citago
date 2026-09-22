@@ -17,6 +17,12 @@ export abstract class UserRepository {
   /** Login path: the only lookup allowed without a tenant context. */
   abstract findByEmail(email: Email): Promise<User | null>;
 
+  /**
+   * Batch lookup for a list of memberships, which already proved the caller
+   * may see these people.
+   */
+  abstract findManyByIds(ids: readonly string[]): Promise<User[]>;
+
   abstract existsByEmail(email: Email): Promise<boolean>;
 
   abstract save(user: User): Promise<void>;

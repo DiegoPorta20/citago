@@ -1,5 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { In, IsNull, QueryFailedError } from 'typeorm';
+import {
+  And,
+  In,
+  IsNull,
+  LessThan,
+  MoreThanOrEqual,
+  QueryFailedError,
+} from 'typeorm';
 
 import {
   buildPage,
@@ -8,6 +15,7 @@ import {
   type PageRequest,
 } from '../../../../../shared/domain/pagination.js';
 import type { PhoneNumber } from '../../../../../shared/domain/phone-number.js';
+import type { TimeRange } from '../../../../../shared/domain/time-range.js';
 import { TransactionalEntityManager } from '../../../../../shared/infrastructure/persistence/transactional-entity-manager.js';
 import { Client } from '../../../domain/client.entity.js';
 import {
@@ -68,6 +76,19 @@ export class TypeOrmClientRepository extends ClientRepository {
     });
 
     return row ? this.toDomain(row) : null;
+  }
+
+  async countCreatedBetween(
+    tenantId: string,
+    range: TimeRange,
+  ): Promise<number> {
+    return this.repository.count({
+      where: {
+        tenantId,
+        deletedAt: IsNull(),
+        createdAt: And(MoreThanOrEqual(range.start), LessThan(range.end)),
+      },
+    });
   }
 
   async list(

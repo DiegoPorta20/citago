@@ -8,10 +8,12 @@ import { AppointmentsModule } from './modules/appointments/appointments.module.j
 import { CatalogModule } from './modules/catalog/catalog.module.js';
 import { ClientsModule } from './modules/clients/clients.module.js';
 import { ConversationsModule } from './modules/conversations/conversations.module.js';
+import { DashboardModule } from './modules/dashboard/dashboard.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { IdentityModule } from './modules/identity/identity.module.js';
 import { TenantsModule } from './modules/tenants/tenants.module.js';
 import { WhatsAppWebhookModule } from './modules/whatsapp/whatsapp-webhook.module.js';
+import { SalesModule } from './modules/sales/sales.module.js';
 import { WhatsAppModule } from './modules/whatsapp/whatsapp.module.js';
 import { StaffModule } from './modules/staff/staff.module.js';
 import { SharedModule } from './shared/infrastructure/shared.module.js';
@@ -35,7 +37,9 @@ import { ResponseEnvelopeInterceptor } from './shared/presentation/interceptors/
     ClientsModule,
     StaffModule,
     AppointmentsModule,
+    SalesModule,
     ConversationsModule,
+    DashboardModule,
     WhatsAppModule,
     WhatsAppWebhookModule,
   ],

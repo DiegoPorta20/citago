@@ -10,10 +10,8 @@ import {
   MinLength,
 } from 'class-validator';
 
-import {
-  MAX_SERVICE_DURATION_MINUTES,
-  MONEY_PATTERN,
-} from './create-service.request.dto.js';
+import { MONEY_PATTERN } from '../../../../shared/presentation/dto/money-pattern.js';
+import { MAX_SERVICE_DURATION_MINUTES } from './create-service.request.dto.js';
 
 /**
  * Partial update: only the fields present are applied.

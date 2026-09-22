@@ -4,24 +4,19 @@ import {
   ArrayMaxSize,
   IsArray,
   IsDateString,
-  IsInt,
   IsOptional,
   IsString,
   IsUUID,
-  Matches,
-  Max,
   MaxLength,
-  Min,
   MinLength,
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
 
+import { ScheduleRangeDto } from '../../../shared/presentation/dto/schedule-range.dto.js';
 import type { StaffMember } from '../domain/staff-member.entity.js';
 import { StaffMemberStatus } from '../domain/staff-member-status.js';
 import type { StaffTimeOff } from '../domain/staff-time-off.entity.js';
-
-const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export class CreateStaffMemberRequestDto {
   @ApiProperty({ example: 'Carlos', maxLength: 120 })
@@ -59,26 +54,7 @@ export class UpdateStaffMemberRequestDto {
   userId?: string | null;
 }
 
-export class ScheduleRangeDto {
-  @ApiProperty({
-    minimum: 1,
-    maximum: 7,
-    example: 1,
-    description: '1 = Monday … 7 = Sunday',
-  })
-  @IsInt()
-  @Min(1)
-  @Max(7)
-  weekday: number;
-
-  @ApiProperty({ example: '09:00', description: 'Business wall-clock time.' })
-  @Matches(TIME_PATTERN, { message: 'startsAt must be HH:mm' })
-  startsAt: string;
-
-  @ApiProperty({ example: '13:00' })
-  @Matches(TIME_PATTERN, { message: 'endsAt must be HH:mm' })
-  endsAt: string;
-}
+export { ScheduleRangeDto };
 
 export class ReplaceScheduleRequestDto {
   @ApiProperty({

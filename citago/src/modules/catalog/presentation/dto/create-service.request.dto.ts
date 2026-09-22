@@ -10,10 +10,9 @@ import {
   MinLength,
 } from 'class-validator';
 
-export const MAX_SERVICE_DURATION_MINUTES = 720;
+import { MONEY_PATTERN } from '../../../../shared/presentation/dto/money-pattern.js';
 
-/** `"25"`, `"25.5"` or `"25.00"`. A JSON number is rejected on purpose. */
-export const MONEY_PATTERN = /^\d{1,10}(\.\d{1,2})?$/;
+export const MAX_SERVICE_DURATION_MINUTES = 720;
 
 export class CreateServiceRequestDto {
   @ApiProperty({ example: 'Corte de cabello', maxLength: 120 })

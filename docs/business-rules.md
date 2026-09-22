@@ -1,4 +1,4 @@
-✔ |✔ |✔ |✔ |✔ |✔ |✔ |✔ |✔ |✔ |✔ |✔ |✔ |# Reglas de negocio
+# Reglas de negocio
 
 Registro único de las reglas del dominio. Se actualiza **en la misma PR** que
 implementa o descubre una regla.
@@ -10,10 +10,19 @@ Estado: `✔` implementada y testeada · `◻` acordada, pendiente de implementa
 
 | # | Regla | Estado |
 |---|---|---|
-| MT-1 | Un cliente, servicio, profesional, cita, venta, conversación o mensaje pertenece a exactamente un tenant | ◻ |
+| MT-1 | Un cliente, servicio, profesional, cita, venta, conversación o mensaje pertenece a exactamente un tenant | ✔ |
 | MT-2 | Ninguna operación acepta `tenantId` del cliente: sale siempre del contexto autenticado | ✔ |
 | MT-3 | Una cita no puede referenciar cliente, servicio ni profesional de otro tenant (garantizado por claves foráneas compuestas) | ✔ |
-| MT-4 | Un recurso de otro tenant responde `404`, nunca `403` | ◻ |
+| MT-4 | Un recurso de otro tenant responde `404`, nunca `403` | ✔ verificado en el e2e de cada módulo |
+
+## Negocio
+
+| # | Regla | Estado |
+|---|---|---|
+| BU-1 | La moneda se fija al registrarse y no se puede cambiar: el catálogo guarda importes desnudos que se leen en ella | ✔ la API no acepta `currency` |
+| BU-2 | El horario de atención describe al negocio; lo que valida una cita es el horario del profesional (regla AP-14) | ✔ una sola fuente de verdad para la disponibilidad |
+| BU-3 | La zona horaria sí se puede cambiar: los instantes están en UTC y no se reescriben | ✔ |
+| BU-4 | Suspender un negocio corta todas sus sesiones, incluida la que lo desharía: no se expone por API | ✔ decisión consciente |
 
 ## Identidad
 
@@ -21,7 +30,10 @@ Matriz de permisos por rol: [permissions.md](./permissions.md).
 
 | # | Regla | Estado |
 |---|---|---|
-| ID-1 | Todo tenant conserva al menos un OWNER activo | ✔ al registrarse (la baja del último OWNER se implementa con la gestión de usuarios) |
+| ID-1 | Todo tenant conserva al menos un OWNER activo | ✔ nadie puede revocar ni degradar al último OWNER activo |
+| ID-7 | Nadie cambia su propio rol ni revoca su propio acceso: otra persona con permiso debe hacerlo | ✔ evita que el único administrador se deje fuera con un toque |
+| ID-8 | Un email que ya tiene cuenta se vincula al negocio, no se duplica: una persona puede trabajar en dos negocios | ✔ su acceso al otro negocio no se toca |
+| ID-9 | La contraseña temporal de un alta se muestra una sola vez y nunca se guarda en texto plano | ✔ solo se persiste el hash argon2id |
 | ID-2 | Las contraseñas se guardan con hash (argon2id), nunca en texto plano ni en el JWT | ✔ |
 | ID-3 | El rol se valida contra la membresía en cada request, no se confía en el claim del token | ✔ |
 | ID-5 | Un mensaje de error de login nunca revela si el email existe | ✔ |
@@ -72,7 +84,7 @@ Matriz de permisos por rol: [permissions.md](./permissions.md).
 | AP-17 | `NO_SHOW → COMPLETED` vuelve a verificar el solapamiento: el hueco pudo darse a otro | ✔ |
 | AP-18 | Cambiar el servicio de una cita no es reagendar: se cancela y se reserva otra | ✔ |
 | AP-19 | Añadir una ausencia no cancela citas existentes: solo bloquea reservas nuevas | ✔ |
-| AP-9 | Un `NO_SHOW` no representa servicio prestado y no puede generar venta | ◻ |
+| AP-9 | Un `NO_SHOW` no representa servicio prestado y no puede generar venta | ✔ garantizada por SA-3: solo se cobra una cita `COMPLETED` |
 | AP-10 | Toda transición se registra con autor y momento | ✔ |
 
 ## Ventas
@@ -80,12 +92,12 @@ Matriz de permisos por rol: [permissions.md](./permissions.md).
 | # | Regla | Estado |
 |---|---|---|
 | SA-1 | El dinero usa `DECIMAL(12,2)`; nunca coma flotante | ✔ `Money` (máx. 9999999999.99) |
-| SA-2 | `total = subtotal - discount` y `discount <= subtotal` | ◻ |
-| SA-3 | Una cita genera como máximo una venta, y solo si está `COMPLETED` | ◻ |
-| SA-4 | Una venta no se edita ni se borra: se anula (`VOIDED`) con motivo y autor | ◻ |
-| SA-5 | Ingresos de un período = suma de `total` de las ventas `PAID` con `sold_at` en el período, en la zona horaria del negocio | ◻ |
-| SA-6 | La venta guarda su moneda como snapshot | ◻ |
-| SA-7 | Las líneas guardan descripción y precio unitario como snapshot | ? |
+| SA-2 | `total = subtotal - discount` y `discount <= subtotal` | ✔ entidad + CHECK en la base |
+| SA-3 | Una cita genera como máximo una venta, y solo si está `COMPLETED` | ✔ caso de uso + `UNIQUE(tenant_id, appointment_id)` |
+| SA-4 | Una venta no se edita ni se borra: se anula con motivo y autor — `CANCELLED` si nunca se cobró, `REFUNDED` si ya se había cobrado ([ADR 0010](./adr/0010-sales-and-money.md)) | ✔ no existen PATCH ni DELETE |
+| SA-5 | Ingresos de un período = suma de `total` de las ventas `PAID` con `sold_at` en el período, en la zona horaria del negocio | ✔ `GET /dashboard/summary` |
+| SA-6 | La venta guarda su moneda como snapshot | ✔ |
+| SA-7 | Las líneas guardan descripción y precio unitario como snapshot | ✔ renombrar o repreciar un servicio no reescribe una venta |
 
 ## Conversaciones y WhatsApp
 
@@ -110,4 +122,4 @@ Matriz de permisos por rol: [permissions.md](./permissions.md).
 |---|---|---|
 | TZ-1 | Todos los timestamps se almacenan en UTC | ✔ |
 | TZ-2 | Los días y rangos (agenda, ingresos del día) se calculan en la zona horaria del negocio | ✔ |
-| TZ-3 | Los horarios de atención se guardan como hora local del negocio, no en UTC | ✔ |
+| TZ-3 | Los horarios de atención y de los profesionales se guardan como hora local del negocio, no en UTC | ✔ `TIME` en `business_hours` y `staff_schedules` |

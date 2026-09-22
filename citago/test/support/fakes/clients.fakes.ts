@@ -5,6 +5,7 @@ import {
   type PageRequest,
 } from '../../../src/shared/domain/pagination.js';
 import type { PhoneNumber } from '../../../src/shared/domain/phone-number.js';
+import type { TimeRange } from '../../../src/shared/domain/time-range.js';
 import type { Client } from '../../../src/modules/clients/domain/client.entity.js';
 import {
   ClientRepository,
@@ -54,6 +55,19 @@ export class InMemoryClientRepository extends ClientRepository {
           client.tenantId === tenantId && client.phone?.value === phone.value,
       ) ?? null
     );
+  }
+
+  async countCreatedBetween(
+    tenantId: string,
+    range: TimeRange,
+  ): Promise<number> {
+    return [...this.clients.values()].filter(
+      (client) =>
+        client.tenantId === tenantId &&
+        !client.isDeleted &&
+        client.createdAt >= range.start &&
+        client.createdAt < range.end,
+    ).length;
   }
 
   async list(

@@ -11,7 +11,7 @@ import { StaffRepository } from '../../../domain/staff.repository.js';
 import {
   WeeklySchedule,
   type Weekday,
-} from '../../../domain/weekly-schedule.js';
+} from '../../../../../shared/domain/weekly-schedule.js';
 import { StaffMemberOrmEntity } from './entities/staff-member.orm-entity.js';
 import { StaffScheduleOrmEntity } from './entities/staff-schedule.orm-entity.js';
 import { StaffTimeOffOrmEntity } from './entities/staff-time-off.orm-entity.js';

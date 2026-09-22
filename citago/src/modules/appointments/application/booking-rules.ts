@@ -2,10 +2,6 @@ import { Injectable } from '@nestjs/common';
 
 import { Clock } from '../../../shared/application/ports/clock.port.js';
 import { BusinessCalendar } from '../../../shared/domain/business-calendar.js';
-import {
-  DomainError,
-  DomainErrorCategory,
-} from '../../../shared/domain/domain-error.js';
 import type { TimeRange } from '../../../shared/domain/time-range.js';
 import { ServiceRepository } from '../../catalog/domain/service.repository.js';
 import type { Service } from '../../catalog/domain/service.entity.js';
@@ -16,6 +12,7 @@ import { ServiceNotFoundError } from '../../catalog/domain/errors/catalog.errors
 import type { StaffMember } from '../../staff/domain/staff-member.entity.js';
 import { StaffMemberNotFoundError } from '../../staff/domain/staff.errors.js';
 import { StaffRepository } from '../../staff/domain/staff.repository.js';
+import { TenantNotAvailableError } from '../../tenants/domain/errors/tenant-not-available.error.js';
 import { TenantRepository } from '../../tenants/domain/tenant.repository.js';
 import { AppointmentRepository } from '../domain/appointment.repository.js';
 import {
@@ -25,15 +22,6 @@ import {
 } from '../domain/appointment.errors.js';
 import { AppointmentOverlapPolicy } from '../domain/appointment-overlap.policy.js';
 import { StaffAvailabilityPolicy } from '../domain/staff-availability.policy.js';
-
-class TenantNotAvailableError extends DomainError {
-  readonly code = 'TENANT_NOT_AVAILABLE';
-  readonly category = DomainErrorCategory.NotFound;
-
-  constructor() {
-    super('The business of this session is not available.');
-  }
-}
 
 export interface SlotCheck {
   readonly tenantId: string;

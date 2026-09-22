@@ -243,7 +243,7 @@ describe('WhatsApp (e2e)', () => {
     });
 
     it('is for OWNER and ADMIN only', async () => {
-      const { staffUser } = await addStaffUser(app, dataSource, owner);
+      const { staffUser } = await addStaffUser(app, owner);
 
       await connect(staffUser).expect(403);
       await request(server())
@@ -448,7 +448,7 @@ describe('WhatsApp (e2e)', () => {
     });
 
     it('lets STAFF answer too', async () => {
-      const { staffUser } = await addStaffUser(app, dataSource, owner);
+      const { staffUser } = await addStaffUser(app, owner);
 
       await reply(staffUser, conversationId).expect(201);
     });

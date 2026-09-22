@@ -10,7 +10,7 @@ import { StaffRepository } from '../domain/staff.repository.js';
 import {
   WeeklySchedule,
   type ScheduleRangeInput,
-} from '../domain/weekly-schedule.js';
+} from '../../../shared/domain/weekly-schedule.js';
 import { StaffUserLinkValidator } from './staff-user-link.validator.js';
 
 /**

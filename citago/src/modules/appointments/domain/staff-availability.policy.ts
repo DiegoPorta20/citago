@@ -1,7 +1,7 @@
 import type { BusinessCalendar } from '../../../shared/domain/business-calendar.js';
 import { TimeRange } from '../../../shared/domain/time-range.js';
 import type { StaffTimeOff } from '../../staff/domain/staff-time-off.entity.js';
-import type { WeeklySchedule } from '../../staff/domain/weekly-schedule.js';
+import type { WeeklySchedule } from '../../../shared/domain/weekly-schedule.js';
 import {
   AppointmentSpansDaysError,
   OutsideStaffScheduleError,

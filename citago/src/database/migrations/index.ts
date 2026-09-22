@@ -6,6 +6,8 @@ import { AddStaff1789704448728 } from './1789704448728-AddStaff.js';
 import { AddAppointments1789704978659 } from './1789704978659-AddAppointments.js';
 import { AddConversations1789707415253 } from './1789707415253-AddConversations.js';
 import { AddWhatsAppChannels1789734112708 } from './1789734112708-AddWhatsAppChannels.js';
+import { AddSales1790041223146 } from './1790041223146-AddSales.js';
+import { AddBusinessHours1790050069324 } from './1790050069324-AddBusinessHours.js';
 
 /**
  * Every migration, in the order it must be applied.
@@ -24,4 +26,6 @@ export const MIGRATIONS = [
   AddAppointments1789704978659,
   AddConversations1789707415253,
   AddWhatsAppChannels1789734112708,
+  AddSales1790041223146,
+  AddBusinessHours1790050069324,
 ];

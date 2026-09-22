@@ -35,16 +35,16 @@ token de inyección de NestJS.
 | Módulo | Responsabilidad | Estado |
 |---|---|---|
 | `health` | Liveness y conectividad con MySQL | implementado |
-| `identity` | Usuarios, credenciales, sesiones, membresías y roles | **implementado** |
-| `tenants` | Negocio, configuración y horario de atención | entidad y repositorio listos; endpoints pendientes |
+| `identity` | Usuarios, credenciales, sesiones, membresías, roles y gestión de accesos | **implementado** |
+| `tenants` | Negocio, configuración y horario de atención | **implementado** |
 | `catalog` | Servicios: duración, precio, estado | **implementado** |
 | `staff` | Profesionales, horario semanal, ausencias y bloqueo de agenda | **implementado** |
 | `clients` | Clientes y normalización de teléfono | **implementado** |
 | `appointments` | Agenda, máquina de estados, solapamientos, disponibilidad | **implementado** |
-| `sales` | Ventas, líneas, métodos de pago, anulación | pendiente |
+| `sales` | Ventas, líneas, métodos de pago, anulación ([ADR 0010](./adr/0010-sales-and-money.md)) | **implementado** |
 | `conversations` | Conversaciones y mensajes, independientes del canal | **implementado** |
 | `whatsapp` | Webhook, firma, conexión del número, envío por la Cloud API ([ADR 0009](./adr/0009-whatsapp-integration.md)) | **implementado** |
-| `dashboard` | Métricas por consulta (sin dominio) | pendiente |
+| `dashboard` | Métricas por consulta, sin dominio ni tabla propia ([ADR 0011](./adr/0011-dashboard-by-query.md)) | **implementado** |
 
 ## Contrato de la API
 
@@ -62,11 +62,17 @@ token de inyección de NestJS.
 | Método | Ruta | Acceso |
 |---|---|---|
 | GET | `/api/v1/health` | Público |
+| GET | `/api/v1/business` (configuración y horario) | Autenticado |
+| PATCH | `/api/v1/business` | OWNER, ADMIN |
+| PUT | `/api/v1/business/hours` | OWNER, ADMIN |
 | POST | `/api/v1/auth/register` | Público |
 | POST | `/api/v1/auth/login` | Público |
 | POST | `/api/v1/auth/refresh` | Público |
 | POST | `/api/v1/auth/logout` | Público |
 | GET | `/api/v1/auth/me` | Autenticado |
+| GET · POST | `/api/v1/users` (accesos del negocio, dar acceso) | OWNER, ADMIN |
+| PATCH | `/api/v1/users/:id` (cambiar rol) | OWNER, ADMIN (ADMIN solo sobre STAFF) |
+| POST | `/api/v1/users/:id/revoke` · `/restore` | OWNER, ADMIN (ADMIN solo sobre STAFF) |
 | POST | `/api/v1/services` | OWNER, ADMIN |
 | GET | `/api/v1/services` | Autenticado |
 | GET | `/api/v1/services/:id` | Autenticado |
@@ -90,6 +96,11 @@ token de inyección de NestJS.
 | GET | `/api/v1/appointments/availability` | Autenticado (STAFF: solo su agenda) |
 | GET, PATCH | `/api/v1/appointments/:id` | Autenticado (STAFF: solo su agenda) |
 | POST | `/api/v1/appointments/:id/{confirm,arrive,start,complete,cancel,no-show}` | Autenticado (STAFF: solo su agenda) |
+| POST | `/api/v1/sales` (cita completada o mostrador) | Autenticado (STAFF: solo lo suyo) |
+| GET | `/api/v1/sales` (rango obligatorio, máx. 366 días) | Autenticado (STAFF: solo lo suyo) |
+| GET | `/api/v1/sales/:id` | Autenticado (STAFF: solo lo suyo) |
+| POST | `/api/v1/sales/:id/pay` | Autenticado (STAFF: solo lo suyo) |
+| POST | `/api/v1/sales/:id/cancel` · `/refund` | OWNER, ADMIN |
 | GET | `/api/v1/conversations` (bandeja; `needsReply=true` = pendientes) | Autenticado |
 | GET | `/api/v1/conversations/:id` · `/:id/messages` (cursor `before`) | Autenticado |
 | POST | `/api/v1/conversations/:id/resolve` | Autenticado |
@@ -99,6 +110,8 @@ token de inyección de NestJS.
 | POST | `/api/v1/conversations/simulate-inbound` (solo con `DEV_TOOLS_ENABLED`) | OWNER, ADMIN |
 | POST | `/api/v1/conversations/:id/messages` (responder por el canal) | Autenticado |
 | GET · PUT · DELETE | `/api/v1/whatsapp/channel` (estado, conectar, desconectar) | OWNER, ADMIN |
+| GET | `/api/v1/dashboard/summary` (ingresos, agenda, clientes, top, por profesional) | OWNER, ADMIN |
+| GET | `/api/v1/dashboard/me` (mis atenciones del período) | Autenticado |
 | GET · POST | `/api/v1/webhooks/whatsapp` (verificación y entregas de Meta) | Público, con verify token / firma |
 
 La autenticación es **deny by default**: el guard es global y un endpoint solo

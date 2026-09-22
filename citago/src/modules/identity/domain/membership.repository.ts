@@ -20,6 +20,9 @@ export abstract class MembershipRepository {
 
   abstract findActiveByUserId(userId: string): Promise<Membership[]>;
 
+  /** Everyone with access to a business, active or revoked, oldest first. */
+  abstract listByTenant(tenantId: string): Promise<Membership[]>;
+
   abstract findByTenantAndUser(
     tenantId: string,
     userId: string,

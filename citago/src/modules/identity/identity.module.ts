@@ -16,6 +16,12 @@ import { SessionPolicy } from './application/ports/session-policy.port.js';
 import { RefreshSessionUseCase } from './application/refresh-session/refresh-session.use-case.js';
 import { RegisterBusinessUseCase } from './application/register-business/register-business.use-case.js';
 import { SessionIssuer } from './application/session-issuer.js';
+import {
+  AddTeamMemberUseCase,
+  ChangeTeamMemberAccessUseCase,
+  ListTeamMembersUseCase,
+  TeamPolicy,
+} from './application/team/team.use-cases.js';
 import { MembershipRepository } from './domain/membership.repository.js';
 import { UserRepository } from './domain/user.repository.js';
 import { TypeOrmMembershipRepository } from './infrastructure/persistence/typeorm/typeorm-membership.repository.js';
@@ -27,6 +33,7 @@ import { CryptoSecureTokenFactory } from './infrastructure/security/crypto-secur
 import { JwtAccessTokenService } from './infrastructure/security/jwt-access-token.service.js';
 import { AuthController } from './presentation/auth.controller.js';
 import { JwtAuthGuard } from './presentation/guards/jwt-auth.guard.js';
+import { TeamController } from './presentation/team.controller.js';
 import { RolesGuard } from './presentation/guards/roles.guard.js';
 
 /**
@@ -54,7 +61,7 @@ import { RolesGuard } from './presentation/guards/roles.guard.js';
       }),
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, TeamController],
   providers: [
     { provide: UserRepository, useClass: TypeOrmUserRepository },
     { provide: MembershipRepository, useClass: TypeOrmMembershipRepository },
@@ -73,6 +80,10 @@ import { RolesGuard } from './presentation/guards/roles.guard.js';
     RefreshSessionUseCase,
     LogoutUseCase,
     GetCurrentSessionUseCase,
+    TeamPolicy,
+    ListTeamMembersUseCase,
+    AddTeamMemberUseCase,
+    ChangeTeamMemberAccessUseCase,
 
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },

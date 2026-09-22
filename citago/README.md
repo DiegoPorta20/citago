@@ -84,8 +84,9 @@ pnpm seed
 
 Crea datos claramente ficticios y se puede re-ejecutar: el tenant `Barbería Demo`
 (PE / PEN / America/Lima), 6 servicios, 20 clientes, 2 profesionales con horario
-semanal y ~50 citas en todos los estados, **recalculadas alrededor de hoy en cada
-ejecución** (las citas del tenant demo se reemplazan). Usuarios, contraseña
+semanal, ~50 citas en todos los estados y una venta cobrada por cada cita
+completada, **recalculadas alrededor de hoy en cada ejecución** (las citas y las
+ventas del tenant demo se reemplazan). Usuarios, contraseña
 `Demo1234!`:
 
 | Email | Rol |

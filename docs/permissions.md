@@ -4,7 +4,9 @@ Los roles pertenecen al **tenant**, no a la plataforma: una persona es OWNER de
 un negocio, no "OWNER" en abstracto. El rol se lee de la membresía en cada
 request, así que revocar un acceso o cambiar un rol tiene efecto inmediato.
 
-> Implementada para autenticación, servicios, clientes, profesionales, citas, conversaciones y el canal de WhatsApp.
+> Implementada para autenticación, accesos de usuario, servicios, clientes,
+> profesionales, citas, ventas, conversaciones, el canal de WhatsApp y el
+> dashboard.
 > Los puntos abiertos al final siguen pendientes de confirmación.
 
 ## Roles
@@ -34,7 +36,7 @@ repositorio y la base de datos ([ADR 0004](./adr/0004-tenant-isolation.md)).
 | **Negocio** | | | |
 | Ver configuración del negocio | ✅ | ✅ | ✅ |
 | Editar configuración (moneda, zona horaria, horario) | ✅ | ✅ | ❌ |
-| Suspender o dar de baja el negocio | ✅ | ❌ | ❌ |
+| Suspender o dar de baja el negocio | ⏸ | ❌ | ❌ |
 | **Usuarios y accesos** | | | |
 | Ver usuarios del negocio | ✅ | ✅ | ❌ |
 | Invitar usuarios como STAFF | ✅ | ✅ | ❌ |
@@ -75,6 +77,10 @@ repositorio y la base de datos ([ADR 0004](./adr/0004-tenant-isolation.md)).
 | **Dashboard** | | | |
 | Ver ingresos y métricas del negocio | ✅ | ✅ | ❌ |
 | Ver sus propias métricas (atenciones del día) | ✅ | ✅ | ✅ |
+
+> ⏸ Suspender el negocio **no se expone por API**: un tenant suspendido corta
+> todas sus sesiones (regla ID-6), incluida la de quien lo desharía. Es una
+> acción de soporte, no un botón de la app (regla BU-4).
 
 ## Criterio detrás de la propuesta
 

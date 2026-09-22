@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 
 import type { AuthContext } from '../../../shared/application/auth-context.js';
 import { UserRole } from '../../../shared/domain/user-role.js';
-import { StaffRepository } from '../../staff/domain/staff.repository.js';
+import {
+  StaffScope,
+  type StaffScopeResult,
+} from '../../staff/application/staff-scope.js';
 import type { Appointment } from '../domain/appointment.entity.js';
 import {
   AppointmentNotFoundError,
@@ -10,11 +13,8 @@ import {
   ScheduleOverrideNotAllowedError,
 } from '../domain/appointment.errors.js';
 
-/** Which agendas a caller can see. */
-export type AgendaScope =
-  | { readonly kind: 'all' }
-  /** A STAFF user: only their staff member, or nothing if they have none. */
-  | { readonly kind: 'own'; readonly staffMemberId: string | null };
+/** Which agendas a caller can see: their own staff member, or every one. */
+export type AgendaScope = StaffScopeResult;
 
 /**
  * The per-resource half of authorization for appointments
@@ -26,16 +26,10 @@ export type AgendaScope =
  */
 @Injectable()
 export class AgendaAccess {
-  constructor(private readonly staff: StaffRepository) {}
+  constructor(private readonly scope: StaffScope) {}
 
-  async scopeFor(actor: AuthContext): Promise<AgendaScope> {
-    if (actor.role !== UserRole.Staff) {
-      return { kind: 'all' };
-    }
-
-    const own = await this.staff.findByUserId(actor.tenantId, actor.userId);
-
-    return { kind: 'own', staffMemberId: own?.id ?? null };
+  scopeFor(actor: AuthContext): Promise<AgendaScope> {
+    return this.scope.forActor(actor);
   }
 
   /** For writes: STAFF may only book or move appointments into their own agenda. */

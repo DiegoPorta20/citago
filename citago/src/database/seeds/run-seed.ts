@@ -34,6 +34,7 @@ async function main(): Promise<void> {
     console.log(`  ${summary.clientCount} clients`);
     console.log(`  ${summary.staffCount} staff members with a weekly schedule`);
     console.log(`  ${summary.appointmentCount} appointments around today`);
+    console.log(`  ${summary.saleCount} paid sales for the completed ones`);
     console.log(
       '  3 WhatsApp conversations (1 pending, 1 answered, 1 archived)',
     );

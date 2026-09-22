@@ -2,7 +2,7 @@ import { BusinessCalendar } from '../../../shared/domain/business-calendar.js';
 import { Money } from '../../../shared/domain/money.js';
 import { TimeRange } from '../../../shared/domain/time-range.js';
 import { StaffTimeOff } from '../../staff/domain/staff-time-off.entity.js';
-import { WeeklySchedule } from '../../staff/domain/weekly-schedule.js';
+import { WeeklySchedule } from '../../../shared/domain/weekly-schedule.js';
 import {
   AppointmentOverlapError,
   AppointmentSpansDaysError,

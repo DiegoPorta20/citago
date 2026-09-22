@@ -2,6 +2,7 @@ import { Clock } from '../../../src/shared/application/ports/clock.port.js';
 import { IdGenerator } from '../../../src/shared/application/ports/id-generator.port.js';
 import { TransactionRunner } from '../../../src/shared/application/ports/transaction-runner.port.js';
 import type { Email } from '../../../src/shared/domain/email.js';
+import { WeeklySchedule } from '../../../src/shared/domain/weekly-schedule.js';
 import { MembershipStatus } from '../../../src/modules/identity/domain/membership-status.js';
 import type { Membership } from '../../../src/modules/identity/domain/membership.entity.js';
 import { MembershipRepository } from '../../../src/modules/identity/domain/membership.repository.js';
@@ -51,6 +52,10 @@ export class InMemoryUserRepository extends UserRepository {
     return null;
   }
 
+  async findManyByIds(ids: readonly string[]): Promise<User[]> {
+    return [...this.users.values()].filter((user) => ids.includes(user.id));
+  }
+
   async existsByEmail(email: Email): Promise<boolean> {
     return (await this.findByEmail(email)) !== null;
   }
@@ -83,6 +88,12 @@ export class InMemoryMembershipRepository extends MembershipRepository {
       .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
   }
 
+  async listByTenant(tenantId: string): Promise<Membership[]> {
+    return [...this.memberships.values()]
+      .filter((membership) => membership.tenantId === tenantId)
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  }
+
   async findByTenantAndUser(
     tenantId: string,
     userId: string,
@@ -111,6 +122,7 @@ export class InMemoryMembershipRepository extends MembershipRepository {
 
 export class InMemoryTenantRepository extends TenantRepository {
   readonly tenants = new Map<string, Tenant>();
+  readonly hours = new Map<string, WeeklySchedule>();
 
   async findById(id: string): Promise<Tenant | null> {
     return this.tenants.get(id) ?? null;
@@ -118,6 +130,14 @@ export class InMemoryTenantRepository extends TenantRepository {
 
   async existsBySlug(slug: string): Promise<boolean> {
     return [...this.tenants.values()].some((tenant) => tenant.slug === slug);
+  }
+
+  async findHours(tenantId: string): Promise<WeeklySchedule> {
+    return this.hours.get(tenantId) ?? WeeklySchedule.empty();
+  }
+
+  async replaceHours(tenantId: string, hours: WeeklySchedule): Promise<void> {
+    this.hours.set(tenantId, hours);
   }
 
   async save(tenant: Tenant): Promise<void> {

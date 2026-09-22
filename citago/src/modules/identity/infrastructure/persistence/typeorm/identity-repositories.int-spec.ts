@@ -7,6 +7,7 @@ import {
 } from '../../../../../../test/support/test-data-source.js';
 import { Email } from '../../../../../shared/domain/email.js';
 import { UserRole } from '../../../../../shared/domain/user-role.js';
+import { UuidV7IdGenerator } from '../../../../../shared/infrastructure/uuid-v7-id-generator.js';
 import { TransactionalEntityManager } from '../../../../../shared/infrastructure/persistence/transactional-entity-manager.js';
 import { TypeOrmTransactionRunner } from '../../../../../shared/infrastructure/persistence/typeorm-transaction-runner.js';
 import { BusinessType } from '../../../../tenants/domain/business-type.js';
@@ -83,7 +84,7 @@ describe('Identity repositories (integration)', () => {
     dataSource = await createTestDataSource();
     context = new TransactionalEntityManager(dataSource);
     transaction = new TypeOrmTransactionRunner(dataSource, context);
-    tenants = new TypeOrmTenantRepository(context);
+    tenants = new TypeOrmTenantRepository(context, new UuidV7IdGenerator());
     users = new TypeOrmUserRepository(context);
     memberships = new TypeOrmMembershipRepository(context);
     refreshTokens = new TypeOrmRefreshTokenRepository(context);

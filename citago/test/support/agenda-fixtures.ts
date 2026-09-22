@@ -1,8 +1,6 @@
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DateTime, type WeekdayNumbers } from 'luxon';
 import request from 'supertest';
-import type { DataSource } from 'typeorm';
-import { v7 as uuidV7 } from 'uuid';
 
 import { UserRole } from '../../src/shared/domain/user-role.js';
 import {
@@ -92,39 +90,44 @@ export async function createAgenda(
 }
 
 /**
- * A STAFF account inside `owner`'s business, linked to a new staff member.
+ * A STAFF account inside the owner's business, linked to a new staff member.
  *
- * There is no invitation endpoint yet, so the membership is written directly.
- * Everything after that goes through the real API: login, linking, booking.
+ * Everything goes through the real API — the owner grants access, the person
+ * signs in, the owner links them to a barber — so the fixture walks the same
+ * path a business would.
  */
 export async function addStaffUser(
   app: NestExpressApplication,
-  dataSource: DataSource,
   owner: RegisteredBusiness,
 ): Promise<{ staffUser: RegisteredBusiness; staffMemberId: string }> {
   const server = app.getHttpServer();
-  const person = await registerBusiness(app);
+  const suffix = Math.random().toString(36).slice(2, 10);
+  const email = `barbero-${suffix}@demo.local`;
+  const password = 'unaClaveSegura1';
 
-  // Leave their own business and join the owner's as STAFF, so login lands there.
-  await dataSource.query(
-    'UPDATE memberships SET status = ? WHERE user_id = ?',
-    ['INACTIVE', person.userId],
-  );
-  await dataSource.query(
-    `INSERT INTO memberships (id, tenant_id, user_id, role, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, 'ACTIVE', NOW(3), NOW(3))`,
-    [uuidV7(), owner.tenantId, person.userId, UserRole.Staff],
-  );
+  await request(server)
+    .post(`${API}/users`)
+    .set(...authHeader(owner))
+    .send({ name: 'Barbero STAFF', email, role: UserRole.Staff, password })
+    .expect(201);
 
   const login = await request(server)
     .post(`${API}/auth/login`)
-    .send({ email: person.email, password: person.password })
+    .send({ email, password })
     .expect(200);
+
+  const session = login.body.data as {
+    tenantId: string;
+    userId: string;
+    role: UserRole;
+    accessToken: string;
+    refreshToken: string;
+  };
 
   const staff = await request(server)
     .post(`${API}/staff`)
     .set(...authHeader(owner))
-    .send({ displayName: 'Barbero STAFF', userId: person.userId })
+    .send({ displayName: 'Barbero STAFF', userId: session.userId })
     .expect(201);
 
   await request(server)
@@ -134,13 +137,7 @@ export async function addStaffUser(
     .expect(200);
 
   return {
-    staffUser: {
-      ...person,
-      tenantId: owner.tenantId,
-      role: UserRole.Staff,
-      accessToken: login.body.data.accessToken as string,
-      refreshToken: login.body.data.refreshToken as string,
-    },
+    staffUser: { ...session, email, password },
     staffMemberId: staff.body.data.id as string,
   };
 }

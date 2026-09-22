@@ -1,5 +1,14 @@
-import { TimeOfDay } from '../../../shared/domain/time-of-day.js';
-import { InvalidScheduleError } from './staff.errors.js';
+import { DomainError, DomainErrorCategory } from './domain-error.js';
+import { TimeOfDay } from './time-of-day.js';
+
+export class InvalidScheduleError extends DomainError {
+  readonly code = 'INVALID_SCHEDULE';
+  readonly category = DomainErrorCategory.Validation;
+
+  constructor(reason: string, details?: Record<string, unknown>) {
+    super(`Invalid weekly schedule: ${reason}`, details);
+  }
+}
 
 /** ISO weekday: 1 = Monday … 7 = Sunday. */
 export type Weekday = 1 | 2 | 3 | 4 | 5 | 6 | 7;

@@ -10,7 +10,10 @@ import { UserOrmEntity } from '../modules/identity/infrastructure/persistence/ty
 import { StaffMemberOrmEntity } from '../modules/staff/infrastructure/persistence/typeorm/entities/staff-member.orm-entity.js';
 import { StaffScheduleOrmEntity } from '../modules/staff/infrastructure/persistence/typeorm/entities/staff-schedule.orm-entity.js';
 import { StaffTimeOffOrmEntity } from '../modules/staff/infrastructure/persistence/typeorm/entities/staff-time-off.orm-entity.js';
+import { BusinessHoursOrmEntity } from '../modules/tenants/infrastructure/persistence/typeorm/entities/business-hours.orm-entity.js';
 import { TenantOrmEntity } from '../modules/tenants/infrastructure/persistence/typeorm/entities/tenant.orm-entity.js';
+import { SaleOrmEntity } from '../modules/sales/infrastructure/persistence/typeorm/entities/sale.orm-entity.js';
+import { SaleLineOrmEntity } from '../modules/sales/infrastructure/persistence/typeorm/entities/sale-line.orm-entity.js';
 import { WhatsAppChannelOrmEntity } from '../modules/whatsapp/infrastructure/persistence/typeorm/entities/whatsapp-channel.orm-entity.js';
 
 /**
@@ -25,6 +28,7 @@ import { WhatsAppChannelOrmEntity } from '../modules/whatsapp/infrastructure/per
  */
 export const ORM_ENTITIES = [
   TenantOrmEntity,
+  BusinessHoursOrmEntity,
   UserOrmEntity,
   MembershipOrmEntity,
   RefreshTokenOrmEntity,
@@ -37,5 +41,7 @@ export const ORM_ENTITIES = [
   AppointmentStatusHistoryOrmEntity,
   ConversationOrmEntity,
   MessageOrmEntity,
+  SaleOrmEntity,
+  SaleLineOrmEntity,
   WhatsAppChannelOrmEntity,
 ];

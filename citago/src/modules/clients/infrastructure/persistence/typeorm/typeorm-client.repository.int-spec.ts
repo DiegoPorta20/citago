@@ -6,6 +6,7 @@ import {
   truncateAll,
 } from '../../../../../../test/support/test-data-source.js';
 import { PhoneNumber } from '../../../../../shared/domain/phone-number.js';
+import { UuidV7IdGenerator } from '../../../../../shared/infrastructure/uuid-v7-id-generator.js';
 import { TransactionalEntityManager } from '../../../../../shared/infrastructure/persistence/transactional-entity-manager.js';
 import { BusinessType } from '../../../../tenants/domain/business-type.js';
 import { Tenant } from '../../../../tenants/domain/tenant.entity.js';
@@ -53,7 +54,7 @@ describe('TypeOrmClientRepository (integration)', () => {
     dataSource = await createTestDataSource();
     const context = new TransactionalEntityManager(dataSource);
     clients = new TypeOrmClientRepository(context);
-    tenants = new TypeOrmTenantRepository(context);
+    tenants = new TypeOrmTenantRepository(context, new UuidV7IdGenerator());
   }, 60_000);
 
   beforeEach(async () => {

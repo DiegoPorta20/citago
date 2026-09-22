@@ -490,7 +490,6 @@ describe('Appointments (e2e)', () => {
     it('lets STAFF manage their own agenda', async () => {
       const { staffUser, staffMemberId } = await addStaffUser(
         app,
-        dataSource,
         agenda.owner,
       );
 
@@ -501,7 +500,7 @@ describe('Appointments (e2e)', () => {
     });
 
     it('forbids STAFF from booking into another barber agenda', async () => {
-      const { staffUser } = await addStaffUser(app, dataSource, agenda.owner);
+      const { staffUser } = await addStaffUser(app, agenda.owner);
 
       const response = await book('10:00', {}, staffUser).expect(403);
 
@@ -509,7 +508,7 @@ describe('Appointments (e2e)', () => {
     });
 
     it('hides other barbers appointments from STAFF', async () => {
-      const { staffUser } = await addStaffUser(app, dataSource, agenda.owner);
+      const { staffUser } = await addStaffUser(app, agenda.owner);
       const others = await book('10:00').expect(201);
 
       await request(server())
@@ -535,7 +534,6 @@ describe('Appointments (e2e)', () => {
     it('forbids STAFF from overriding the schedule', async () => {
       const { staffUser, staffMemberId } = await addStaffUser(
         app,
-        dataSource,
         agenda.owner,
       );
 

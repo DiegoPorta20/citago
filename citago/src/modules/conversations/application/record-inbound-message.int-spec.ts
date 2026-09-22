@@ -93,6 +93,7 @@ describe('RecordInboundMessageUseCase (integration)', () => {
     );
     await new TypeOrmTenantRepository(
       new TransactionalEntityManager(dataSource),
+      new UuidV7IdGenerator(),
     ).save(tenant);
     tenantId = tenant.id;
   });

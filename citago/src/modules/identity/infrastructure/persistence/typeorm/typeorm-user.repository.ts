@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { In } from 'typeorm';
 
 import type { Email } from '../../../../../shared/domain/email.js';
 import { TransactionalEntityManager } from '../../../../../shared/infrastructure/persistence/transactional-entity-manager.js';
@@ -28,6 +29,16 @@ export class TypeOrmUserRepository extends UserRepository {
     const row = await this.repository.findOneBy({ email: email.value });
 
     return row ? this.toDomain(row) : null;
+  }
+
+  async findManyByIds(ids: readonly string[]): Promise<User[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    const rows = await this.repository.findBy({ id: In([...ids]) });
+
+    return rows.map((row) => this.toDomain(row));
   }
 
   async existsByEmail(email: Email): Promise<boolean> {

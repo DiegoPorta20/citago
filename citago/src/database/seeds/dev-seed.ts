@@ -14,6 +14,10 @@ import {
 } from '../../modules/conversations/domain/conversation.enums.js';
 import { ConversationOrmEntity } from '../../modules/conversations/infrastructure/persistence/typeorm/entities/conversation.orm-entity.js';
 import { MessageOrmEntity } from '../../modules/conversations/infrastructure/persistence/typeorm/entities/message.orm-entity.js';
+import { PaymentMethod } from '../../modules/sales/domain/payment-method.js';
+import { SaleStatus } from '../../modules/sales/domain/sale-status.js';
+import { SaleOrmEntity } from '../../modules/sales/infrastructure/persistence/typeorm/entities/sale.orm-entity.js';
+import { SaleLineOrmEntity } from '../../modules/sales/infrastructure/persistence/typeorm/entities/sale-line.orm-entity.js';
 import { StaffMemberStatus } from '../../modules/staff/domain/staff-member-status.js';
 import { StaffMemberOrmEntity } from '../../modules/staff/infrastructure/persistence/typeorm/entities/staff-member.orm-entity.js';
 import { StaffScheduleOrmEntity } from '../../modules/staff/infrastructure/persistence/typeorm/entities/staff-schedule.orm-entity.js';
@@ -28,6 +32,7 @@ import { UserOrmEntity } from '../../modules/identity/infrastructure/persistence
 import { Argon2PasswordHasher } from '../../modules/identity/infrastructure/security/argon2-password-hasher.js';
 import { BusinessType } from '../../modules/tenants/domain/business-type.js';
 import { TenantStatus } from '../../modules/tenants/domain/tenant-status.js';
+import { BusinessHoursOrmEntity } from '../../modules/tenants/infrastructure/persistence/typeorm/entities/business-hours.orm-entity.js';
 import { TenantOrmEntity } from '../../modules/tenants/infrastructure/persistence/typeorm/entities/tenant.orm-entity.js';
 
 /**
@@ -227,12 +232,14 @@ export interface SeedSummary {
   readonly clientCount: number;
   readonly staffCount: number;
   readonly appointmentCount: number;
+  readonly saleCount: number;
 }
 
 export async function runDevSeed(dataSource: DataSource): Promise<SeedSummary> {
   const hasher = new Argon2PasswordHasher();
   const passwordHash = await hasher.hash(DEMO_PASSWORD);
   let appointmentCount = 0;
+  let saleCount = 0;
 
   await dataSource.transaction(async (manager) => {
     const now = new Date();
@@ -253,6 +260,19 @@ export async function runDevSeed(dataSource: DataSource): Promise<SeedSummary> {
         updatedAt: now,
       },
       ['id'],
+    );
+
+    // The shop's opening hours: the same week the barbers work, which is what
+    // a real business would fill in first.
+    await manager
+      .getRepository(BusinessHoursOrmEntity)
+      .delete({ tenantId: DEMO_TENANT_ID });
+    await manager.getRepository(BusinessHoursOrmEntity).insert(
+      DEMO_WEEK.map((range) => ({
+        id: uuidV7(),
+        tenantId: DEMO_TENANT_ID,
+        ...range,
+      })),
     );
 
     for (const user of DEMO_USERS) {
@@ -346,6 +366,15 @@ export async function runDevSeed(dataSource: DataSource): Promise<SeedSummary> {
 
     // Appointments from a week ago to a week ahead, recomputed around "today"
     // on every run: two per barber per working day, never overlapping.
+    //
+    // Sales go first: they reference appointments with RESTRICT, which is the
+    // point — takings are never cascaded away, not even by a re-seed.
+    await manager
+      .getRepository(SaleLineOrmEntity)
+      .delete({ tenantId: DEMO_TENANT_ID });
+    await manager
+      .getRepository(SaleOrmEntity)
+      .delete({ tenantId: DEMO_TENANT_ID });
     await manager
       .getRepository(AppointmentStatusHistoryOrmEntity)
       .delete({ tenantId: DEMO_TENANT_ID });
@@ -420,6 +449,49 @@ export async function runDevSeed(dataSource: DataSource): Promise<SeedSummary> {
               changedAt: now,
             })),
           );
+
+          // Every service actually delivered is charged (rules SA-3, AP-9), so
+          // the till of the past week has something to show.
+          if (status === AppointmentStatus.Completed) {
+            const saleId = uuidV7();
+
+            await manager.getRepository(SaleOrmEntity).insert({
+              id: saleId,
+              tenantId: DEMO_TENANT_ID,
+              appointmentId: id,
+              clientId: clientIdAt(sequence % DEMO_CLIENTS.length),
+              staffMemberId: member.id,
+              status: SaleStatus.Paid,
+              currency: 'PEN',
+              subtotal: service.price,
+              discount: '0.00',
+              total: service.price,
+              paymentMethod:
+                sequence % 3 === 0 ? PaymentMethod.Card : PaymentMethod.Cash,
+              soldAt: endAt,
+              paidAt: endAt,
+              voidedAt: null,
+              voidReason: null,
+              voidedByUserId: null,
+              createdByUserId: DEMO_USERS[0].id,
+              createdAt: now,
+              updatedAt: now,
+            });
+
+            await manager.getRepository(SaleLineOrmEntity).insert({
+              id: uuidV7(),
+              tenantId: DEMO_TENANT_ID,
+              saleId,
+              serviceId: service.id,
+              description: service.name,
+              unitPrice: service.price,
+              quantity: 1,
+              lineTotal: service.price,
+              position: 0,
+            });
+
+            saleCount += 1;
+          }
 
           appointmentCount += 1;
         }
@@ -540,5 +612,6 @@ export async function runDevSeed(dataSource: DataSource): Promise<SeedSummary> {
     clientCount: DEMO_CLIENTS.length,
     staffCount: DEMO_STAFF.length,
     appointmentCount,
+    saleCount,
   };
 }

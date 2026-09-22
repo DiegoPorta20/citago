@@ -36,6 +36,15 @@ export class TypeOrmMembershipRepository extends MembershipRepository {
     return rows.map((row) => this.toDomain(row));
   }
 
+  async listByTenant(tenantId: string): Promise<Membership[]> {
+    const rows = await this.repository.find({
+      where: { tenantId },
+      order: { createdAt: 'ASC', id: 'ASC' },
+    });
+
+    return rows.map((row) => this.toDomain(row));
+  }
+
   async findByTenantAndUser(
     tenantId: string,
     userId: string,

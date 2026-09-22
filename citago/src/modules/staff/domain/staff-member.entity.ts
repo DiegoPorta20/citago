@@ -1,6 +1,6 @@
 import { InvalidStaffDataError } from './staff.errors.js';
 import { StaffMemberStatus } from './staff-member-status.js';
-import { WeeklySchedule } from './weekly-schedule.js';
+import { WeeklySchedule } from '../../../shared/domain/weekly-schedule.js';
 
 const MAX_NAME_LENGTH = 120;
 

@@ -1,5 +1,6 @@
 import type { PhoneNumber } from '../../../shared/domain/phone-number.js';
 import type { Page, PageRequest } from '../../../shared/domain/pagination.js';
+import type { TimeRange } from '../../../shared/domain/time-range.js';
 import type { Client } from './client.entity.js';
 
 export interface ClientListFilters {
@@ -46,6 +47,15 @@ export abstract class ClientRepository {
     tenantId: string,
     phone: PhoneNumber,
   ): Promise<Client | null>;
+
+  /**
+   * How many clients the business gained in a period, for the dashboard.
+   * Counts by `created_at` and ignores deleted ones.
+   */
+  abstract countCreatedBetween(
+    tenantId: string,
+    range: TimeRange,
+  ): Promise<number>;
 
   /** Never returns deleted clients. */
   abstract list(

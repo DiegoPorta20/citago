@@ -15,6 +15,7 @@ import {
   RemoveStaffTimeOffUseCase,
 } from './application/staff-time-off.use-cases.js';
 import { StaffAgendaLock } from './application/ports/staff-agenda-lock.port.js';
+import { StaffScope } from './application/staff-scope.js';
 import { StaffUserLinkValidator } from './application/staff-user-link.validator.js';
 import { StaffRepository } from './domain/staff.repository.js';
 import { TypeOrmStaffAgendaLock } from './infrastructure/persistence/typeorm/typeorm-staff-agenda-lock.js';
@@ -27,6 +28,8 @@ import { StaffController } from './presentation/staff.controller.js';
  * Imports `IdentityModule` for one check: a linked account must be a member of
  * the business. Exports the repository and the agenda lock, so appointments can
  * check schedules and serialize bookings without touching this module's tables.
+ * `StaffScope` travels with them: every module that limits a STAFF user to their
+ * own work resolves that link here, once.
  */
 @Module({
   imports: [IdentityModule],
@@ -34,6 +37,7 @@ import { StaffController } from './presentation/staff.controller.js';
   providers: [
     { provide: StaffRepository, useClass: TypeOrmStaffRepository },
     { provide: StaffAgendaLock, useClass: TypeOrmStaffAgendaLock },
+    StaffScope,
     StaffUserLinkValidator,
     CreateStaffMemberUseCase,
     UpdateStaffMemberUseCase,
@@ -45,6 +49,6 @@ import { StaffController } from './presentation/staff.controller.js';
     RemoveStaffTimeOffUseCase,
     ListStaffTimeOffUseCase,
   ],
-  exports: [StaffRepository, StaffAgendaLock],
+  exports: [StaffRepository, StaffAgendaLock, StaffScope],
 })
 export class StaffModule {}

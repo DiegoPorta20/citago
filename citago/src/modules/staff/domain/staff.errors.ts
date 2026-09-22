@@ -12,15 +12,6 @@ export class InvalidStaffDataError extends DomainError {
   }
 }
 
-export class InvalidScheduleError extends DomainError {
-  readonly code = 'INVALID_SCHEDULE';
-  readonly category = DomainErrorCategory.Validation;
-
-  constructor(reason: string, details?: Record<string, unknown>) {
-    super(`Invalid weekly schedule: ${reason}`, details);
-  }
-}
-
 /** Also raised for another tenant's staff member: same 404, no existence leak. */
 export class StaffMemberNotFoundError extends DomainError {
   readonly code = 'STAFF_MEMBER_NOT_FOUND';
