@@ -12,15 +12,6 @@ import { ClientRepository } from './domain/client.repository.js';
 import { TypeOrmClientRepository } from './infrastructure/persistence/typeorm/typeorm-client.repository.js';
 import { ClientsController } from './presentation/clients.controller.js';
 
-/**
- * Customers of each business.
- *
- * Imports `TenantsModule` to read the tenant's country, which is the default
- * region for phone normalization.
- *
- * Exports the repository contract (and the normalizer) so appointments and the
- * WhatsApp ingestion can find a client by phone without touching this table.
- */
 @Module({
   imports: [TenantsModule],
   controllers: [ClientsController],

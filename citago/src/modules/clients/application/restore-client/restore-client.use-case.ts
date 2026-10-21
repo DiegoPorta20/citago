@@ -6,14 +6,6 @@ import type { Client } from '../../domain/client.entity.js';
 import { ClientRepository } from '../../domain/client.repository.js';
 import { ClientNotFoundError } from '../../domain/errors/clients.errors.js';
 
-/**
- * Brings a deleted client back with all their history.
- *
- * This is the other half of decision F4: when a phone number collides with a
- * deleted client, the app offers this instead of creating a duplicate.
- *
- * Idempotent: restoring a client that is not deleted changes nothing.
- */
 @Injectable()
 export class RestoreClientUseCase {
   constructor(

@@ -21,17 +21,6 @@ import { TypeOrmAgendaReportQuery } from './infrastructure/persistence/typeorm/t
 import { TypeOrmAppointmentRepository } from './infrastructure/persistence/typeorm/typeorm-appointment.repository.js';
 import { AppointmentsController } from './presentation/appointments.controller.js';
 
-/**
- * The agenda: booking, rescheduling and the appointment lifecycle.
- *
- * Depends on the modules it books against — catalog (service), clients
- * (client), staff (barber, schedule, agenda lock) and tenants (time zone) —
- * always through their exported contracts, never their tables. Nothing depends
- * back on it, so there is no cycle.
- *
- * Exports the repository for the till, and `AgendaReportQuery` for the
- * dashboard: counters come from a port of their own, never from a table.
- */
 @Module({
   imports: [TenantsModule, CatalogModule, ClientsModule, StaffModule],
   controllers: [AppointmentsController],

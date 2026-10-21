@@ -65,14 +65,12 @@ describe('BusinessCalendar', () => {
   const madrid = new BusinessCalendar('Europe/Madrid');
 
   it('places a wall-clock time on the right instant', () => {
-    // Lima is UTC-5 all year.
     expect(lima.instantAt('2026-09-17', TimeOfDay.parse('09:00'))).toEqual(
       at('2026-09-17T14:00:00Z'),
     );
   });
 
   it('keeps 09:00 at 09:00 across a daylight-saving change', () => {
-    // Madrid moves from UTC+1 to UTC+2 on 2026-03-29.
     expect(madrid.instantAt('2026-03-28', TimeOfDay.parse('09:00'))).toEqual(
       at('2026-03-28T08:00:00Z'),
     );
@@ -87,14 +85,13 @@ describe('BusinessCalendar', () => {
   });
 
   it('reads the local date of an instant, not the UTC one', () => {
-    // 02:00 UTC is still the previous evening in Lima.
     expect(lima.localDateOf(at('2026-09-18T02:00:00Z'))).toBe('2026-09-17');
     expect(lima.localTimeOf(at('2026-09-18T02:00:00Z'))).toBe('21:00');
   });
 
   it('computes the ISO weekday of a local date', () => {
-    expect(lima.weekdayOf('2026-09-17')).toBe(4); // Thursday
-    expect(lima.weekdayOf('2026-09-20')).toBe(7); // Sunday
+    expect(lima.weekdayOf('2026-09-17')).toBe(4);
+    expect(lima.weekdayOf('2026-09-20')).toBe(7);
   });
 
   it.each(['2026-02-30', '17/09/2026', 'mañana'])(

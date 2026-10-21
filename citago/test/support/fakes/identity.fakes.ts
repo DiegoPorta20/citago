@@ -27,14 +27,6 @@ import type { UserRole } from '../../../src/shared/domain/user-role.js';
 import type { Tenant } from '../../../src/modules/tenants/domain/tenant.entity.js';
 import { TenantRepository } from '../../../src/modules/tenants/domain/tenant.repository.js';
 
-/**
- * Hand-written fakes, not mocks.
- *
- * A mock returning whatever the test expects would happily hide a repository
- * that forgot its tenant filter. These behave like the real thing — including
- * tenant scoping — so a use case that misuses them fails here.
- */
-
 export class InMemoryUserRepository extends UserRepository {
   readonly users = new Map<string, User>();
 
@@ -74,7 +66,6 @@ export class InMemoryMembershipRepository extends MembershipRepository {
   ): Promise<Membership | null> {
     const membership = this.memberships.get(id);
 
-    // Tenant scoping is part of the contract, so the fake honours it too.
     return membership && membership.tenantId === tenantId ? membership : null;
   }
 
@@ -198,7 +189,6 @@ export class InMemoryRefreshTokenRepository extends RefreshTokenRepository {
   }
 }
 
-/** Password "hashing" that is reversible on purpose, so tests stay fast. */
 export class FakePasswordHasher extends PasswordHasher {
   async hash(plainPassword: string): Promise<string> {
     return `hashed:${plainPassword}`;
@@ -270,7 +260,6 @@ export class SequentialIdGenerator extends IdGenerator {
   }
 }
 
-/** Runs the work without a database; commit semantics are covered by integration tests. */
 export class ImmediateTransactionRunner extends TransactionRunner {
   calls = 0;
 

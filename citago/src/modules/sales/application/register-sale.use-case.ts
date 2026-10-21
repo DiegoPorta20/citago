@@ -29,39 +29,21 @@ import { SaleRepository } from '../domain/sale.repository.js';
 import { SalesAccess } from './sales-access.js';
 
 export interface RegisterSaleLineInput {
-  /** A catalogue service; its name and price are copied into the line. */
   readonly serviceId?: string | null;
-  /** Required for a line that is not a service (a product, a tip). */
   readonly description?: string | null;
-  /** Decimal string. Overrides the service price for this sale only. */
   readonly unitPrice?: string | null;
   readonly quantity?: number;
 }
 
 export interface RegisterSaleInput {
-  /** Charges a completed appointment: client, barber and line come from it. */
   readonly appointmentId?: string | null;
   readonly clientId?: string | null;
   readonly staffMemberId?: string | null;
   readonly lines?: readonly RegisterSaleLineInput[];
   readonly discount?: string | null;
-  /** Given when the client pays right away; absent leaves the sale PENDING. */
   readonly paymentMethod?: PaymentMethod | null;
 }
 
-/**
- * Records a sale: for a completed appointment, or straight over the counter.
- *
- * Two things are frozen here and never recomputed afterwards: the **currency**
- * of the business (rule SA-6) and the **description and price of every line**
- * (rule SA-7). A price list that changes next month must not rewrite what a
- * client paid today.
- *
- * Everything runs in one transaction, so a sale is never half-written, and the
- * appointment is read inside it — together with the unique key on
- * `(tenant_id, appointment_id)`, that is what keeps rule SA-3 true when two
- * tills charge the same appointment at the same moment.
- */
 @Injectable()
 export class RegisterSaleUseCase {
   constructor(
@@ -120,7 +102,6 @@ export class RegisterSaleUseCase {
     });
   }
 
-  /** Rules SA-3 and AP-9: only a completed appointment, and only once. */
   private async billableAppointment(
     tenantId: string,
     appointmentId: string,
@@ -149,11 +130,6 @@ export class RegisterSaleUseCase {
     return appointment;
   }
 
-  /**
-   * A sale must not point at a client or a barber of another tenant, or at one
-   * that does not exist. The composite foreign keys would refuse it anyway;
-   * this turns a database error into a clear one.
-   */
   private async assertReferencesExist(
     tenantId: string,
     clientId: string | null,
@@ -197,7 +173,6 @@ export class RegisterSaleUseCase {
       return [await this.lineFromAppointment(tenantId, appointment)];
     }
 
-    // One query for every service referenced, whatever the number of lines.
     const serviceIds = [
       ...new Set(
         requested
@@ -246,10 +221,6 @@ export class RegisterSaleUseCase {
     });
   }
 
-  /**
-   * The appointment keeps the price agreed when booking (rule AP-2), so the
-   * charge is that price — not what the service costs today.
-   */
   private async lineFromAppointment(
     tenantId: string,
     appointment: Appointment,

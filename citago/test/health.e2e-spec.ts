@@ -50,7 +50,6 @@ describe('Foundation (e2e)', () => {
   it('applies helmet: no technology fingerprint, and content sniffing blocked', async () => {
     const response = await request(app.getHttpServer()).get('/api/v1/health');
 
-    // helmet is applied by setupApp, the same code path production uses.
     expect(response.headers['x-powered-by']).toBeUndefined();
     expect(response.headers['x-content-type-options']).toBe('nosniff');
   });

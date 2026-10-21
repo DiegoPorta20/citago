@@ -1,17 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-/**
- * Phase 5 — clients.
- *
- * - `UNIQUE(tenant_id, phone_e164)` makes the phone the customer's identity
- *   inside a business (rule CL-2). MySQL accepts any number of NULLs in a
- *   unique index, so clients registered without a phone never collide.
- * - `UNIQUE(tenant_id, id)` is the target of the composite foreign keys that
- *   appointments and sales will use (ADR 0004).
- * - `deleted_at` implements soft delete (rule CL-3). A deleted client keeps its
- *   phone on purpose: re-registering the number offers a restore instead of
- *   splitting the person's history in two.
- */
 export class AddClients1789699896955 implements MigrationInterface {
   name = 'AddClients1789699896955';
 

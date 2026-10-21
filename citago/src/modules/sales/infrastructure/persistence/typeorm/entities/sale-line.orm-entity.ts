@@ -10,13 +10,6 @@ import {
 import { ServiceOrmEntity } from '../../../../../catalog/infrastructure/persistence/typeorm/entities/service.orm-entity.js';
 import { SaleOrmEntity } from './sale.orm-entity.js';
 
-/**
- * One charged item of a sale.
- *
- * `description`, `unit_price` and `line_total` are snapshots (rule SA-7):
- * `service_id` is kept for reporting, but nothing on the line is read back from
- * the catalogue. Lines are written once and never updated.
- */
 @Entity('sale_lines')
 @Index('ix_sale_lines_sale', ['tenantId', 'saleId', 'position'])
 export class SaleLineOrmEntity {
@@ -44,7 +37,6 @@ export class SaleLineOrmEntity {
   @Column({ name: 'line_total', type: 'decimal', precision: 12, scale: 2 })
   lineTotal: string;
 
-  /** Keeps the lines in the order they were charged. */
   @Column({ name: 'position', type: 'smallint', unsigned: true })
   position: number;
 

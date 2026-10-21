@@ -1,19 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-/**
- * Phase 6b — appointments and their status history.
- *
- * - Every reference carries `tenant_id` (ADR 0004, layer 4): an appointment
- *   cannot point at another tenant's client, service or barber, even through a
- *   bug in the application.
- * - All RESTRICT: deleting a client, service or barber must never cascade into
- *   history. They are soft-deleted or deactivated instead.
- * - `price` and `end_at` are snapshots taken at booking (rules AP-1, AP-2).
- * - The CHECKs hold even for hand-written SQL.
- *
- * Overlaps are not expressible as a constraint in MySQL; they are prevented by
- * the agenda lock plus the domain policy (rule AP-5).
- */
 export class AddAppointments1789704978659 implements MigrationInterface {
   name = 'AddAppointments1789704978659';
 

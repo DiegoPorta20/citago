@@ -18,12 +18,6 @@ export interface UpdateServiceInput {
   readonly price?: string;
 }
 
-/**
- * Edits a service in place.
- *
- * Changing the price or the duration does **not** touch existing appointments:
- * each one carries its own snapshot (rules AP-1 and AP-2).
- */
 @Injectable()
 export class UpdateServiceUseCase {
   constructor(
@@ -40,7 +34,6 @@ export class UpdateServiceUseCase {
       actor.tenantId,
     );
 
-    // A service of another tenant lands here too, and gets the same 404.
     if (!service) {
       throw new ServiceNotFoundError();
     }

@@ -23,17 +23,6 @@ export interface ConnectWhatsAppInput {
   readonly wabaId?: string | null;
 }
 
-/**
- * Connects the business's WhatsApp number manually: the owner pastes the
- * phone number id and a token from Meta's dashboard. (Meta's Embedded Signup,
- * decision D2, replaces this later without changing the stored shape.)
- *
- * The credentials are checked against Meta **before** anything is stored. That
- * also stops a business from claiming a number it does not control, which
- * would route someone else's customers into its inbox.
- *
- * Connecting again replaces the number and the token.
- */
 @Injectable()
 export class ConnectWhatsAppChannelUseCase {
   constructor(
@@ -106,18 +95,11 @@ export class ConnectWhatsAppChannelUseCase {
 export class GetWhatsAppChannelUseCase {
   constructor(private readonly channels: WhatsAppChannelRepository) {}
 
-  /** `null` when the business has not connected WhatsApp. */
   execute(actor: AuthContext): Promise<WhatsAppChannel | null> {
     return this.channels.findByTenant(actor.tenantId);
   }
 }
 
-/**
- * Forgets the number and **deletes the token**. Conversations and messages
- * stay: they are the business's history, not the channel's.
- *
- * Idempotent: disconnecting twice is not an error.
- */
 @Injectable()
 export class DisconnectWhatsAppChannelUseCase {
   constructor(private readonly channels: WhatsAppChannelRepository) {}

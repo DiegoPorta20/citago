@@ -12,7 +12,6 @@ import {
 
 import { BusinessType } from '../../../tenants/domain/business-type.js';
 
-/** Long enough to resist guessing, with no composition rules (NIST guidance). */
 export const MIN_PASSWORD_LENGTH = 10;
 const MAX_PASSWORD_LENGTH = 128;
 

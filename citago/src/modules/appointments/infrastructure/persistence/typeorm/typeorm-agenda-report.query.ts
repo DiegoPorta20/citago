@@ -24,12 +24,6 @@ interface StaffRow {
   appointments: string | number;
 }
 
-/**
- * Agenda counters, computed by MySQL.
- *
- * Served by `ix_appointments_start` and `ix_appointments_staff_start`: tenant
- * and start time lead both indexes, so a period reads only its own rows.
- */
 @Injectable()
 export class TypeOrmAgendaReportQuery extends AgendaReportQuery {
   constructor(private readonly context: TransactionalEntityManager) {

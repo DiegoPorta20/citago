@@ -10,9 +10,7 @@ import {
 import { TenantOrmEntity } from '../../../../../tenants/infrastructure/persistence/typeorm/entities/tenant.orm-entity.js';
 
 @Entity('whatsapp_channels')
-/** One WhatsApp number per business in the MVP. */
 @Unique('uq_whatsapp_channels_tenant', ['tenantId'])
-/** A number belongs to one business: it decides where inbound messages go (rule CO-5). */
 @Unique('uq_whatsapp_channels_phone_number', ['phoneNumberId'])
 export class WhatsAppChannelOrmEntity {
   @PrimaryColumn({ name: 'id', type: 'char', length: 36 })
@@ -38,7 +36,6 @@ export class WhatsAppChannelOrmEntity {
   })
   verifiedName: string | null;
 
-  /** AES-256-GCM ciphertext. Never plaintext. */
   @Column({ name: 'encrypted_access_token', type: 'varbinary', length: 2048 })
   encryptedAccessToken: Buffer;
 

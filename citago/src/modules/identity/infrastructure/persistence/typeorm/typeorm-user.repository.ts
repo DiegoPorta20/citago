@@ -24,8 +24,6 @@ export class TypeOrmUserRepository extends UserRepository {
   }
 
   async findByEmail(email: Email): Promise<User | null> {
-    // The stored value is already normalized by the Email value object, so a
-    // plain equality match is enough — no LOWER() that would skip the index.
     const row = await this.repository.findOneBy({ email: email.value });
 
     return row ? this.toDomain(row) : null;

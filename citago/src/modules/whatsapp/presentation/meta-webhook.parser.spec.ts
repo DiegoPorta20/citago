@@ -1,7 +1,6 @@
 import { MessageType } from '../../conversations/domain/conversation.enums.js';
 import { parseMetaWebhook } from './meta-webhook.parser.js';
 
-/** Meta's envelope around a list of messages. */
 function webhook(
   messages: unknown[],
   extra: Record<string, unknown> = {},

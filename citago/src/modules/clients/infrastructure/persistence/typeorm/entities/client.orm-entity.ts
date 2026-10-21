@@ -11,12 +11,7 @@ import {
 import { TenantOrmEntity } from '../../../../../tenants/infrastructure/persistence/typeorm/entities/tenant.orm-entity.js';
 
 @Entity('clients')
-/** Target of the composite foreign keys appointments and sales will use (ADR 0004). */
 @Unique('uq_clients_tenant_id', ['tenantId', 'id'])
-/**
- * One client per phone per business (rule CL-2). MySQL allows several NULLs in
- * a unique index, so walk-ins registered without a number do not collide.
- */
 @Unique('uq_clients_tenant_phone', ['tenantId', 'phoneE164'])
 @Index('ix_clients_tenant_name', ['tenantId', 'name'])
 export class ClientOrmEntity {
@@ -38,7 +33,6 @@ export class ClientOrmEntity {
   @Column({ name: 'notes', type: 'text', nullable: true })
   notes: string | null;
 
-  /** Soft delete: the row outlives the UI "delete" so history keeps its customer. */
   @Column({
     name: 'deleted_at',
     type: 'datetime',

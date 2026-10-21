@@ -38,16 +38,6 @@ import { ListServicesQueryDto } from './dto/list-services.query.dto.js';
 import { ServiceResponseDto } from './dto/service.response.dto.js';
 import { UpdateServiceRequestDto } from './dto/update-service.request.dto.js';
 
-/**
- * The service catalogue.
- *
- * There is **no DELETE**: a service with history is deactivated, never removed
- * (rule CA-3). `POST /:id/deactivate` is the honest name for that action.
- *
- * Reading is open to every member of the tenant — staff need to know what the
- * business offers. Changing the catalogue is OWNER or ADMIN
- * (see docs/permissions.md).
- */
 @ApiTags('services')
 @ApiBearerAuth()
 @Controller('services')
@@ -100,7 +90,6 @@ export class ServicesController {
       query: query.q,
     });
 
-    // The response interceptor turns a Page into { data, meta }.
     return {
       items: page.items.map((service) =>
         ServiceResponseDto.fromDomain(service),

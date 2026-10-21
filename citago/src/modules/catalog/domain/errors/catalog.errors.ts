@@ -12,12 +12,6 @@ export class InvalidServiceDataError extends DomainError {
   }
 }
 
-/**
- * Raised for a service of another tenant too.
- *
- * Reporting "forbidden" instead would confirm that the id exists, which is the
- * information an IDOR probe is looking for.
- */
 export class ServiceNotFoundError extends DomainError {
   readonly code = 'SERVICE_NOT_FOUND';
   readonly category = DomainErrorCategory.NotFound;

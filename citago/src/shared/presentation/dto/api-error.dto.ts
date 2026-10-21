@@ -1,6 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-/** The single error shape every endpoint returns. */
 export class ApiErrorDto {
   @ApiProperty({ example: 409 })
   statusCode: number;

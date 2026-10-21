@@ -66,7 +66,6 @@ describe('Tenant', () => {
     );
 
     it('rejects a time zone the runtime does not know', () => {
-      // An unknown zone would silently break every agenda and daily total.
       expect(() =>
         Tenant.create({ ...validInput, timezone: 'America/Atlantis' }, NOW),
       ).toThrow(InvalidTenantDataError);

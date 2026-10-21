@@ -9,14 +9,6 @@ import { AddWhatsAppChannels1789734112708 } from './1789734112708-AddWhatsAppCha
 import { AddSales1790041223146 } from './1790041223146-AddSales.js';
 import { AddBusinessHours1790050069324 } from './1790050069324-AddBusinessHours.js';
 
-/**
- * Every migration, in the order it must be applied.
- *
- * Registered explicitly for the same reason as the entities: glob loading uses
- * dynamic `import()` and misbehaves under the ESM test runner.
- *
- * **Append new migrations at the end. Never reorder or edit an applied one.**
- */
 export const MIGRATIONS = [
   InitTenancyAndIdentity1789674597432,
   AddTenantToRefreshTokens1789677885914,

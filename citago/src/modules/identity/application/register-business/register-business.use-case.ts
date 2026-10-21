@@ -36,15 +36,6 @@ export interface RegisterBusinessResult {
   readonly session: IssuedSession;
 }
 
-/**
- * Signs up a business and its first user.
- *
- * Creates the tenant, the account and the OWNER membership **atomically**:
- * a half-finished sign-up would leave an account that cannot enter anywhere.
- *
- * This is also where business rule ID-1 starts holding — every tenant is born
- * with exactly one active OWNER.
- */
 @Injectable()
 export class RegisterBusinessUseCase {
   constructor(
@@ -123,10 +114,6 @@ export class RegisterBusinessUseCase {
     });
   }
 
-  /**
-   * Slugs are globally unique, so two businesses with the same name need
-   * distinct handles. Tries `barberia-lima`, then `barberia-lima-2`, and so on.
-   */
   private async resolveSlug(businessName: string): Promise<string> {
     for (const candidate of buildSlugCandidates(businessName)) {
       if (!(await this.tenants.existsBySlug(candidate))) {
@@ -134,8 +121,6 @@ export class RegisterBusinessUseCase {
       }
     }
 
-    // Exhausting every candidate means a pathological amount of collisions;
-    // a random suffix ends the loop rather than failing the sign-up.
     return `${buildSlugCandidates(businessName)[0]}-${this.ids
       .generate()
       .slice(0, 8)}`;

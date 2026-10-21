@@ -9,12 +9,6 @@ export class InvalidTimeRangeError extends DomainError {
   }
 }
 
-/**
- * A half-open interval of instants: `[start, end)`.
- *
- * Half-open is what makes back-to-back bookings work: 10:00–11:00 and
- * 11:00–12:00 share the instant 11:00 but do **not** overlap (rule AP-3).
- */
 export class TimeRange {
   private constructor(
     readonly start: Date,

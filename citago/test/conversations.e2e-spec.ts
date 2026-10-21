@@ -264,8 +264,6 @@ describe('Conversations (e2e)', () => {
 
       expect((await inbox(tenantB)).body.meta.total).toBe(0);
 
-      // Built one at a time: supertest starts the server per request, and
-      // creating several up front makes them race for the listener.
       const calls = [
         () => request(server()).get(`${API}/conversations/${conversationId}`),
         () =>

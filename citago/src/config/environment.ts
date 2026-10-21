@@ -25,12 +25,6 @@ export enum NodeEnvironment {
 const asBoolean = () =>
   Transform(({ value }) => value === true || value === 'true' || value === '1');
 
-/**
- * Every environment-dependent value the application needs.
- *
- * The application must fail at boot when one of these is missing or invalid:
- * a misconfigured service that starts is worse than one that refuses to.
- */
 export class EnvironmentVariables {
   @IsEnum(NodeEnvironment)
   NODE_ENV: NodeEnvironment = NodeEnvironment.Development;
@@ -55,7 +49,6 @@ export class EnvironmentVariables {
   @MaxLength(255)
   DB_USERNAME: string;
 
-  /** May be empty for a local database without a password. */
   @IsString()
   DB_PASSWORD: string;
 
@@ -63,17 +56,14 @@ export class EnvironmentVariables {
   @MaxLength(64)
   DB_DATABASE: string;
 
-  /** Logs every SQL statement. Useful in development, noisy anywhere else. */
   @asBoolean()
   @IsBoolean()
   DB_LOGGING: boolean = false;
 
-  /** Signing key for access tokens. Must be long enough to resist guessing. */
   @IsString()
   @MinLength(32)
   JWT_ACCESS_SECRET: string;
 
-  /** Access token lifetime. Short by design: revocation relies on it. */
   @Type(() => Number)
   @IsInt()
   @Min(60)
@@ -90,68 +80,43 @@ export class EnvironmentVariables {
   @IsBoolean()
   SWAGGER_ENABLED: boolean = true;
 
-  /**
-   * Development-only endpoints, such as the inbound message simulator.
-   * Off by default: forgetting to set it can never expose them.
-   */
   @asBoolean()
   @IsBoolean()
   DEV_TOOLS_ENABLED: boolean = false;
 
-  /**
-   * Comma-separated list of allowed browser origins. Empty disables CORS,
-   * which is the correct default: the client is a native application.
-   */
   @IsOptional()
   @IsString()
   CORS_ORIGINS: string = '';
 
-  /** Requests allowed per window, per IP. */
   @Type(() => Number)
   @IsInt()
   @Min(1)
   THROTTLE_LIMIT: number = 120;
 
-  /** Rate limit window in milliseconds. */
   @Type(() => Number)
   @IsInt()
   @Min(1000)
   THROTTLE_TTL: number = 60_000;
 
-  /**
-   * Requests allowed per window on the authentication endpoints, per IP.
-   * Much stricter than the global limit: this is the credential-stuffing door.
-   */
   @Type(() => Number)
   @IsInt()
   @Min(1)
   AUTH_THROTTLE_LIMIT: number = 20;
 
-  /**
-   * Key for encrypting secrets at rest (WhatsApp access tokens): 32 random
-   * bytes, base64-encoded. Losing it makes stored tokens unreadable; leaking it
-   * exposes them. Keep it out of the database backups' reach.
-   */
   @IsBase64()
   @Length(44, 44, {
     message: 'ENCRYPTION_KEY must be 32 bytes encoded in base64',
   })
   ENCRYPTION_KEY: string;
 
-  /**
-   * Meta app secret. Verifies the X-Hub-Signature-256 of every webhook.
-   * Empty disables the webhook: it rejects everything (fails closed).
-   */
   @IsOptional()
   @IsString()
   WHATSAPP_APP_SECRET: string = '';
 
-  /** Shared secret Meta echoes when subscribing the webhook. Empty disables it. */
   @IsOptional()
   @IsString()
   WHATSAPP_VERIFY_TOKEN: string = '';
 
-  /** Graph API base URL. Overridden in tests with a local fake. */
   @IsUrl({ require_tld: false, protocols: ['http', 'https'] })
   WHATSAPP_GRAPH_API_URL: string = 'https://graph.facebook.com';
 

@@ -1,4 +1,3 @@
-/** A tenant is never deleted: it is suspended. */
 export enum TenantStatus {
   Active = 'ACTIVE',
   Suspended = 'SUSPENDED',

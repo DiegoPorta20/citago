@@ -12,7 +12,6 @@ import {
 } from '../domain/staff.errors.js';
 import { StaffRepository } from '../domain/staff.repository.js';
 
-/** Bounds a listing query so nobody can ask for ten years of time off at once. */
 const MAX_LIST_RANGE_DAYS = 366;
 
 @Injectable()
@@ -23,11 +22,6 @@ export class AddStaffTimeOffUseCase {
     private readonly clock: Clock,
   ) {}
 
-  /**
-   * Existing appointments inside the new time off are **not** cancelled: that
-   * is a conversation with each client, not an automatic side effect. The time
-   * off only blocks new bookings.
-   */
   async execute(
     actor: AuthContext,
     input: {
@@ -77,8 +71,6 @@ export class RemoveStaffTimeOffUseCase {
       actor.tenantId,
     );
 
-    // The time off must belong to this tenant *and* to the staff member in the
-    // URL: a valid id under the wrong parent is still "not found".
     if (!timeOff || timeOff.staffMemberId !== input.staffMemberId) {
       throw new TimeOffNotFoundError();
     }

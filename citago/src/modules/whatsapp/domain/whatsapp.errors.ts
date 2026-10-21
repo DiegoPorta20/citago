@@ -12,7 +12,6 @@ export class InvalidWhatsAppChannelDataError extends DomainError {
   }
 }
 
-/** Meta refused the token or the phone number id when connecting. */
 export class WhatsAppCredentialsRejectedError extends DomainError {
   readonly code = 'WHATSAPP_CREDENTIALS_REJECTED';
   readonly category = DomainErrorCategory.BusinessRule;
@@ -33,10 +32,6 @@ export class WhatsAppUnavailableError extends DomainError {
   }
 }
 
-/**
- * The number is already connected to another business. Deliberately vague:
- * it must not reveal which one.
- */
 export class WhatsAppNumberInUseError extends DomainError {
   readonly code = 'WHATSAPP_NUMBER_IN_USE';
   readonly category = DomainErrorCategory.Conflict;
@@ -46,7 +41,6 @@ export class WhatsAppNumberInUseError extends DomainError {
   }
 }
 
-/** A webhook without a valid Meta signature. */
 export class InvalidWebhookSignatureError extends DomainError {
   readonly code = 'INVALID_SIGNATURE';
   readonly category = DomainErrorCategory.Unauthorized;

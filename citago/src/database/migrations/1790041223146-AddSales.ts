@@ -1,20 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-/**
- * Phase 9 — sales and their lines.
- *
- * - `currency`, `description` and `unit_price` are snapshots (rules SA-6, SA-7):
- *   changing the price list tomorrow must not rewrite what a client paid today.
- * - The amounts are checked by the database too (rule SA-2): `total` is always
- *   `subtotal - discount`, and a discount can never exceed the subtotal. Even a
- *   hand-written UPDATE cannot leave a till that does not add up.
- * - `uq_sales_appointment` enforces rule SA-3 — one appointment, one sale.
- *   MySQL does not compare NULLs in a unique index, so counter sales, which
- *   have no appointment, are unaffected.
- * - Every reference carries `tenant_id` (ADR 0004, layer 4) and is RESTRICT:
- *   takings are history and are never cascaded away. The only CASCADE is from a
- *   sale to its own lines, which are part of it.
- */
 export class AddSales1790041223146 implements MigrationInterface {
   name = 'AddSales1790041223146';
 

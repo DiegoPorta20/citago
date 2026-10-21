@@ -8,7 +8,6 @@ type RateLimitHandler = (request: Request, response: Response) => void;
 
 import { API_PREFIX, JSON_BODY_LIMIT } from './config/api.constants.js';
 
-/** Same error shape as every other endpoint. */
 const tooManyRequests: RateLimitHandler = (request, response) => {
   response.status(HttpStatus.TOO_MANY_REQUESTS).json({
     statusCode: HttpStatus.TOO_MANY_REQUESTS,
@@ -20,13 +19,9 @@ const tooManyRequests: RateLimitHandler = (request, response) => {
 };
 
 export interface AppSetupOptions {
-  /** Comma-separated browser origins. Empty disables CORS. */
   readonly corsOrigins?: string;
-  /** Rate limit window in milliseconds. */
   readonly throttleTtl?: number;
-  /** Requests allowed per window, per IP. */
   readonly throttleLimit?: number;
-  /** Requests allowed per window on /auth, per IP. */
   readonly authThrottleLimit?: number;
 }
 
@@ -35,27 +30,12 @@ const WEBHOOKS_PATH = `/${API_PREFIX}/webhooks/`;
 const DEFAULT_THROTTLE_LIMIT = 120;
 const DEFAULT_AUTH_THROTTLE_LIMIT = 20;
 
-/**
- * Applies the global HTTP pipeline.
- *
- * Shared by `main.ts` and the end-to-end test harness so tests exercise the
- * same prefix, validation and hardening as production.
- */
 export function setupApp(
   app: NestExpressApplication,
   options: AppSetupOptions = {},
 ): void {
   app.use(helmet());
 
-  // Coarse protection against abuse and credential stuffing. Per-endpoint
-  // limits (login, webhook) are added by their own modules.
-  //
-  // In-memory store: correct for a single instance. Running several instances
-  // will need a shared store.
-  //
-  // Webhooks are exempt: Meta delivers from a handful of IPs and would hit a
-  // per-IP limit at any real volume, and a throttled delivery is a delayed
-  // customer message. Unsigned requests are rejected before any database work.
   app.use(
     rateLimit({
       windowMs: options.throttleTtl ?? DEFAULT_THROTTLE_TTL,
@@ -67,8 +47,6 @@ export function setupApp(
     }),
   );
 
-  // Authentication is the credential-stuffing door, so it gets its own,
-  // much stricter budget on top of the global one.
   app.use(
     `/${API_PREFIX}/auth`,
     rateLimit({
@@ -88,15 +66,12 @@ export function setupApp(
     .map((origin) => origin.trim())
     .filter((origin) => origin.length > 0);
 
-  // The client is a native app, so no browser origin is allowed by default.
   if (corsOrigins.length > 0) {
     app.enableCors({ origin: corsOrigins, credentials: true });
   }
 
   app.useGlobalPipes(
     new ValidationPipe({
-      // Strips unknown properties and rejects them: blocks mass assignment,
-      // including any attempt to send tenantId from the client.
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,

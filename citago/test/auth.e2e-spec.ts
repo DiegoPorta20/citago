@@ -52,7 +52,6 @@ describe('Authentication (e2e)', () => {
       });
       expect(response.body.data.accessToken).toEqual(expect.any(String));
       expect(response.body.data.refreshToken).toEqual(expect.any(String));
-      // Nothing sensitive leaks into the response.
       expect(JSON.stringify(response.body)).not.toContain('unaClaveSegura1');
       expect(JSON.stringify(response.body)).not.toContain('passwordHash');
     });
@@ -156,7 +155,6 @@ describe('Authentication (e2e)', () => {
         .send({ email: 'nadie@demo.local', password: 'otraClave12345' })
         .expect(401);
 
-      // Identical responses: the API cannot be used to enumerate accounts.
       expect(wrongPassword.body.code).toBe('INVALID_CREDENTIALS');
       expect(unknownEmail.body.code).toBe('INVALID_CREDENTIALS');
       expect(wrongPassword.body.message).toBe(unknownEmail.body.message);
@@ -230,8 +228,6 @@ describe('Authentication (e2e)', () => {
         ['INACTIVE', owner.userId],
       );
 
-      // The access token is still cryptographically valid: what changed is the
-      // membership, which the guard re-reads on every request.
       const response = await request(app.getHttpServer())
         .get(`${API}/auth/me`)
         .set(...authHeader(owner))
@@ -269,7 +265,6 @@ describe('Authentication (e2e)', () => {
         .set(...authHeader(owner))
         .expect(200);
 
-      // The role is read from the membership, never from the token claims.
       expect(response.body.data.role).toBe(UserRole.Staff);
     });
   });
@@ -300,13 +295,11 @@ describe('Authentication (e2e)', () => {
         .send({ refreshToken: owner.refreshToken })
         .expect(200);
 
-      // Replaying the rotated token means it leaked.
       await request(app.getHttpServer())
         .post(`${API}/auth/refresh`)
         .send({ refreshToken: owner.refreshToken })
         .expect(401);
 
-      // ...so even the legitimate new token is dead: sign in again.
       const afterRevocation = await request(app.getHttpServer())
         .post(`${API}/auth/refresh`)
         .send({ refreshToken: refreshed.body.data.refreshToken })
@@ -371,9 +364,6 @@ describe('Authentication (e2e)', () => {
     it('does not let a token survive being re-pointed at another tenant', async () => {
       const { tenantA, tenantB } = await createTwoTenants(app);
 
-      // Forge the situation an attacker wants: A's membership id presented for
-      // B's tenant. The guard looks the membership up *within* the tenant, so
-      // it simply does not resolve.
       await dataSource.query(
         'UPDATE memberships SET tenant_id = ? WHERE user_id = ?',
         [tenantB.tenantId, tenantA.userId],

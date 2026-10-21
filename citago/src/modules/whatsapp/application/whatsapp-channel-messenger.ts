@@ -19,15 +19,8 @@ import {
   WhatsAppCloudApi,
 } from './ports/whatsapp-cloud-api.port.js';
 
-/** Meta's customer service window. */
 const WHATSAPP_REPLY_WINDOW_MS = 24 * 60 * 60 * 1000;
 
-/**
- * Conversations' outbound port, implemented for WhatsApp.
- *
- * The token is decrypted here, used for one call and dropped; it is never
- * logged, returned or kept in memory beyond the request.
- */
 @Injectable()
 export class WhatsAppChannelMessenger extends ChannelMessenger {
   constructor(

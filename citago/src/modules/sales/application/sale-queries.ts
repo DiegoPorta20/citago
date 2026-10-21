@@ -18,10 +18,8 @@ import { SaleRepository } from '../domain/sale.repository.js';
 import type { SaleStatus } from '../domain/sale-status.js';
 import { SalesAccess } from './sales-access.js';
 
-/** A year and a day: enough for any report screen, still a bounded query. */
 const MAX_SALES_DAYS = 366;
 
-/** A sale with the names a screen needs, resolved in bulk. */
 export interface SaleView {
   readonly sale: Sale;
   readonly client: { readonly id: string; readonly name: string } | null;
@@ -31,12 +29,6 @@ export interface SaleView {
   } | null;
 }
 
-/**
- * Attaches client and staff names to a batch of sales.
- *
- * Two queries for the whole page, whatever its size — never one per row — and
- * each through the owning module's repository, never its tables.
- */
 @Injectable()
 export class SaleViewAssembler {
   constructor(
@@ -114,13 +106,6 @@ export interface ListSalesInput extends PageRequest {
   readonly staffMemberId?: string;
 }
 
-/**
- * The till: sales recorded inside a time range.
- *
- * STAFF users only ever see their own, whatever filter they send
- * (docs/permissions.md). A STAFF account not linked to a staff member gets an
- * empty list rather than an error — same as the agenda.
- */
 @Injectable()
 export class ListSalesUseCase {
   constructor(
@@ -146,7 +131,6 @@ export class ListSalesUseCase {
       return buildPage([], 0, page);
     }
 
-    // A STAFF user asking for someone else's sales simply gets none.
     if (
       scope.kind === 'own' &&
       input.staffMemberId !== undefined &&

@@ -159,7 +159,6 @@ describe('RecordInboundMessageUseCase (integration)', () => {
       expect(await count('conversations')).toBe(1);
       expect(await count('messages')).toBe(5);
 
-      // Every message was applied to the thread: none was lost to a race.
       const [row] = await queryRows<{ last_message_preview: string }>(
         dataSource,
         'SELECT last_message_preview FROM conversations',

@@ -4,7 +4,6 @@ import {
 } from '../../../../shared/domain/domain-error.js';
 import type { MembershipStatus } from '../membership-status.js';
 
-/** Also raised for a membership of another tenant: never disclose which. */
 export class MembershipNotFoundError extends DomainError {
   readonly code = 'MEMBERSHIP_NOT_FOUND';
   readonly category = DomainErrorCategory.NotFound;
@@ -14,7 +13,6 @@ export class MembershipNotFoundError extends DomainError {
   }
 }
 
-/** Rule ID-1: a business without an active OWNER can never be administered again. */
 export class LastOwnerError extends DomainError {
   readonly code = 'LAST_OWNER';
   readonly category = DomainErrorCategory.BusinessRule;
@@ -26,12 +24,6 @@ export class LastOwnerError extends DomainError {
   }
 }
 
-/**
- * Rule ID-7: nobody revokes or demotes themselves.
- *
- * Not paternalism: it is what stops the only administrator of a shop from
- * locking themselves out with one tap, which no other endpoint can undo.
- */
 export class CannotChangeOwnAccessError extends DomainError {
   readonly code = 'CANNOT_CHANGE_OWN_ACCESS';
   readonly category = DomainErrorCategory.Forbidden;
@@ -41,7 +33,6 @@ export class CannotChangeOwnAccessError extends DomainError {
   }
 }
 
-/** An ADMIN manages STAFF only; peers and owners are the OWNER's business. */
 export class RoleChangeNotAllowedError extends DomainError {
   readonly code = 'ROLE_CHANGE_NOT_ALLOWED';
   readonly category = DomainErrorCategory.Forbidden;

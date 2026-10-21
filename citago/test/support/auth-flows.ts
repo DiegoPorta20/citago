@@ -25,12 +25,6 @@ export interface RegisterOptions {
   readonly timezone?: string;
 }
 
-/**
- * Registers a business through the real HTTP endpoint.
- *
- * Tests build their world the way a client would, so nothing can pass here and
- * fail in production.
- */
 export async function registerBusiness(
   app: NestExpressApplication,
   options: RegisterOptions = {},
@@ -63,10 +57,6 @@ export async function registerBusiness(
   return { ...data, email, password };
 }
 
-/**
- * Two independent businesses, for the isolation checks every tenant-owned
- * feature must include: what tenant A does must never reach tenant B.
- */
 export async function createTwoTenants(app: NestExpressApplication): Promise<{
   tenantA: RegisteredBusiness;
   tenantB: RegisteredBusiness;

@@ -1,4 +1,3 @@
-// @ts-check
 import eslint from '@eslint/js';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import tseslint from 'typescript-eslint';
@@ -29,9 +28,6 @@ export default tseslint.config(
     },
   },
 
-  // ── Architecture boundaries ────────────────────────────────────────────────
-  // The domain layer must not know that a framework, an ORM or a transport
-  // exists. Enforced by the linter so it cannot erode silently.
   {
     files: ['src/**/domain/**/*.ts'],
     rules: {
@@ -62,8 +58,6 @@ export default tseslint.config(
       ],
     },
   },
-  // The application layer orchestrates use cases. It may use Nest decorators
-  // for dependency injection, but must never reach for persistence details.
   {
     files: ['src/**/application/**/*.ts'],
     rules: {
@@ -93,8 +87,6 @@ export default tseslint.config(
   {
     files: ['**/*.spec.ts', 'test/**/*.ts'],
     rules: {
-      // Fakes implement Promise-returning contracts without awaiting anything;
-      // `async` is the clearest way to satisfy the signature.
       '@typescript-eslint/require-await': 'off',
       '@typescript-eslint/unbound-method': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
@@ -102,9 +94,6 @@ export default tseslint.config(
       '@typescript-eslint/no-unsafe-argument': 'off',
     },
   },
-  // Integration tests exist to compose real adapters with the use cases they
-  // serve, so they cross layers on purpose. Unit specs are still bound by the
-  // rules above: a domain test that needs TypeORM is a design smell.
   {
     files: ['**/*.int-spec.ts'],
     rules: {

@@ -49,13 +49,6 @@ import {
   UpdateStaffMemberRequestDto,
 } from './staff.dto.js';
 
-/**
- * The people who perform the services, their weekly schedule and their time off.
- *
- * Every member may read it (the barber needs to see the team's week); only
- * OWNER and ADMIN change it (see docs/permissions.md). Staff members are never
- * deleted: they are deactivated and keep their history.
- */
 @ApiTags('staff')
 @ApiBearerAuth()
 @Controller('staff')

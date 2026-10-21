@@ -30,15 +30,7 @@ import {
 import { ConversationsDevController } from './presentation/conversations-dev.controller.js';
 import { ConversationsController } from './presentation/conversations.controller.js';
 
-/**
- * Conversations with clients, independent of the channel they happen on.
- *
- * Exports `RecordInboundMessageUseCase`: that is the single entry point every
- * channel adapter (WhatsApp first) uses to deliver a message. The channel never
- * writes to these tables directly.
- */
 @Module({
-  // WhatsAppModule provides the ChannelMessenger port used to reply.
   imports: [ClientsModule, IdentityModule, WhatsAppModule],
   controllers: [ConversationsController, ConversationsDevController],
   providers: [

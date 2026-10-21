@@ -12,6 +12,7 @@ import {
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNoContentResponse,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -21,11 +22,13 @@ import {
 import type { AuthContext } from '../../../shared/application/auth-context.js';
 import { ApiErrorDto } from '../../../shared/presentation/dto/api-error.dto.js';
 import { GetCurrentSessionUseCase } from '../application/get-current-session/get-current-session.use-case.js';
+import { ListMyTenantsUseCase } from '../application/list-my-tenants/list-my-tenants.use-case.js';
 import { LoginUseCase } from '../application/login/login.use-case.js';
 import { LogoutUseCase } from '../application/logout/logout.use-case.js';
 import { RefreshSessionUseCase } from '../application/refresh-session/refresh-session.use-case.js';
 import { RegisterBusinessUseCase } from '../application/register-business/register-business.use-case.js';
 import type { IssuedSession } from '../application/session-issuer.js';
+import { SwitchTenantUseCase } from '../application/switch-tenant/switch-tenant.use-case.js';
 import { CurrentAuth } from '../../../shared/presentation/decorators/current-auth.decorator.js';
 import { Public } from '../../../shared/presentation/decorators/public.decorator.js';
 import { CurrentSessionResponseDto } from './dto/current-session.response.dto.js';
@@ -33,13 +36,9 @@ import { LoginRequestDto } from './dto/login.request.dto.js';
 import { RefreshTokenRequestDto } from './dto/refresh-token.request.dto.js';
 import { RegisterBusinessRequestDto } from './dto/register-business.request.dto.js';
 import { SessionResponseDto } from './dto/session.response.dto.js';
+import { SwitchTenantRequestDto } from './dto/switch-tenant.request.dto.js';
+import { TenantSummaryResponseDto } from './dto/tenant-summary.response.dto.js';
 
-/**
- * Authentication endpoints.
- *
- * The controller stays thin on purpose: validate, call one use case, map the
- * result. No business decision is taken here.
- */
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
@@ -49,6 +48,8 @@ export class AuthController {
     private readonly refreshSession: RefreshSessionUseCase,
     private readonly logout: LogoutUseCase,
     private readonly getCurrentSession: GetCurrentSessionUseCase,
+    private readonly listMyTenants: ListMyTenantsUseCase,
+    private readonly switchTenant: SwitchTenantUseCase,
   ) {}
 
   @Public()
@@ -147,6 +148,49 @@ export class AuthController {
     @CurrentAuth() auth: AuthContext,
   ): Promise<CurrentSessionResponseDto> {
     return this.getCurrentSession.execute(auth);
+  }
+
+  @Get('tenants')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'List the businesses the caller can switch into',
+    description:
+      'Active memberships whose business is available. The current session’s business is flagged with `current: true`.',
+  })
+  @ApiOkResponse({ type: TenantSummaryResponseDto, isArray: true })
+  @ApiUnauthorizedResponse({ description: 'UNAUTHORIZED', type: ApiErrorDto })
+  async tenants(
+    @CurrentAuth() auth: AuthContext,
+  ): Promise<TenantSummaryResponseDto[]> {
+    const views = await this.listMyTenants.execute(auth);
+
+    return views.map((view) => TenantSummaryResponseDto.fromView(view));
+  }
+
+  @Post('switch-tenant')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Switch to another of the caller’s businesses',
+    description:
+      'Issues a new session for the target membership and revokes the session family of the presented refresh token, so the previous business’s session can no longer be refreshed.',
+  })
+  @ApiOkResponse({ type: SessionResponseDto })
+  @ApiUnauthorizedResponse({
+    description: 'INVALID_REFRESH_TOKEN',
+    type: ApiErrorDto,
+  })
+  @ApiNotFoundResponse({ description: 'NOT_A_MEMBER', type: ApiErrorDto })
+  async switch(
+    @CurrentAuth() auth: AuthContext,
+    @Body() body: SwitchTenantRequestDto,
+  ): Promise<SessionResponseDto> {
+    const result = await this.switchTenant.execute(auth, {
+      tenantId: body.tenantId,
+      refreshToken: body.refreshToken,
+    });
+
+    return toSessionResponse(result);
   }
 }
 

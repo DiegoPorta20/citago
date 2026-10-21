@@ -9,13 +9,6 @@ import {
 
 import { TenantOrmEntity } from './tenant.orm-entity.js';
 
-/**
- * One opening range of one weekday.
- *
- * Local wall-clock time of the business, never UTC (rule TZ-3): a shop opens at
- * nine o'clock on its own clock, and that does not move when daylight saving
- * does.
- */
 @Entity('business_hours')
 @Index('ix_business_hours_tenant', ['tenantId', 'weekday'])
 export class BusinessHoursOrmEntity {
@@ -28,7 +21,6 @@ export class BusinessHoursOrmEntity {
   @Column({ name: 'weekday', type: 'tinyint', unsigned: true })
   weekday: number;
 
-  /** Returned by MySQL as `HH:mm:ss`. */
   @Column({ name: 'starts_at', type: 'time' })
   startsAt: string;
 

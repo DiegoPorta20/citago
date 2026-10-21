@@ -16,7 +16,6 @@ async function bootstrap(): Promise<void> {
   const isProduction = process.env.NODE_ENV === NodeEnvironment.Production;
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    // Needed later to verify WhatsApp webhook signatures over the exact bytes.
     rawBody: true,
     bufferLogs: true,
     logger: new ConsoleLogger({ json: isProduction }),

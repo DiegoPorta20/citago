@@ -32,7 +32,6 @@ describe('Team (e2e)', () => {
   const login = (email: string, password: string) =>
     request(server()).post(`${API}/auth/login`).send({ email, password });
 
-  /** Grants access and signs in as that person. */
   const memberSession = async (
     role: UserRole,
     email: string,
@@ -87,7 +86,6 @@ describe('Team (e2e)', () => {
 
       expect(temporaryPassword).toEqual(expect.any(String));
 
-      // It works exactly once as a real password, and is never shown again.
       await login('luis@demo.local', temporaryPassword).expect(200);
 
       const list = await request(server())
@@ -183,7 +181,6 @@ describe('Team (e2e)', () => {
         .set(...authHeader(owner))
         .expect(200);
 
-      // Same token, still unexpired: the membership is checked every time.
       await request(server())
         .get(`${API}/auth/me`)
         .set(...authHeader(session))
@@ -195,7 +192,6 @@ describe('Team (e2e)', () => {
     it('never leaves the business without an owner (rule ID-1)', async () => {
       const second = await memberSession(UserRole.Owner, 'ana@demo.local');
 
-      // Two owners: one of them can go.
       const revoked = await request(server())
         .post(`${API}/users/${second.membershipId}/revoke`)
         .set(...authHeader(owner))
@@ -203,8 +199,6 @@ describe('Team (e2e)', () => {
 
       expect(revoked.body.data.status).toBe('INACTIVE');
 
-      // The one left cannot be pushed out by anyone: not by themselves
-      // (rule ID-7) and not by an ADMIN, who may not touch an owner.
       const admin = await memberSession(UserRole.Admin, 'admin@demo.local');
       const list = await request(server())
         .get(`${API}/users`)

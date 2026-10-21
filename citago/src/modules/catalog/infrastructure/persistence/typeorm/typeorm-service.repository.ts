@@ -23,7 +23,6 @@ export class TypeOrmServiceRepository extends ServiceRepository {
   }
 
   private get repository() {
-    // Resolved per call so writes join the current transaction, if any.
     return this.context.manager.getRepository(ServiceOrmEntity);
   }
 
@@ -56,7 +55,6 @@ export class TypeOrmServiceRepository extends ServiceRepository {
   ): Promise<Page<Service>> {
     const query = this.repository
       .createQueryBuilder('service')
-      // Every listing starts from the tenant, and the alias keeps it explicit.
       .where('service.tenant_id = :tenantId', { tenantId });
 
     if (filters.status) {
@@ -64,8 +62,6 @@ export class TypeOrmServiceRepository extends ServiceRepository {
     }
 
     if (filters.query) {
-      // Prefix match: it can use the (tenant_id, status, name) index, unlike a
-      // leading wildcard. Good enough for a catalogue of a few dozen rows.
       query.andWhere('service.name LIKE :name', { name: `${filters.query}%` });
     }
 
@@ -91,8 +87,6 @@ export class TypeOrmServiceRepository extends ServiceRepository {
       .createQueryBuilder('service')
       .where('service.tenant_id = :tenantId', { tenantId })
       .andWhere('service.status = :status', { status: ServiceStatus.Active })
-      // The column collation is utf8mb4_0900_ai_ci, so `=` already ignores
-      // case and accents: "Corte" and "corte" collide, as intended.
       .andWhere('service.name = :name', { name });
 
     if (excludeServiceId) {

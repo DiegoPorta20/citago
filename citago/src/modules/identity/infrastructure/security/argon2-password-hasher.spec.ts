@@ -28,7 +28,6 @@ describe('Argon2PasswordHasher', () => {
   });
 
   it('treats an unreadable hash as a wrong password instead of failing', async () => {
-    // A legacy or corrupted value must produce 401, not 500.
     await expect(hasher.verify('not-a-hash', password)).resolves.toBe(false);
   });
 });

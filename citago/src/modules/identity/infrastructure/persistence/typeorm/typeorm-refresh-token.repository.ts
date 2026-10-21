@@ -65,8 +65,6 @@ export class TypeOrmRefreshTokenRepository extends RefreshTokenRepository {
   }
 
   async revokeFamily(familyId: string, revokedAt: Date): Promise<void> {
-    // Only tokens still alive are touched, so an earlier revocation timestamp
-    // is preserved for auditing.
     await this.repository.update(
       { familyId, revokedAt: IsNull() },
       { revokedAt },

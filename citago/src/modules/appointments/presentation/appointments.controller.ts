@@ -47,18 +47,6 @@ import {
   TransitionRequestDto,
 } from './appointments.dto.js';
 
-/**
- * The agenda.
- *
- * No `@Roles` here on purpose: every member works with appointments. What each
- * role may touch depends on *which* appointment, so it is enforced in the use
- * cases — OWNER and ADMIN manage every agenda, STAFF only their own
- * (docs/permissions.md).
- *
- * The lifecycle has one explicit endpoint per action rather than a generic
- * "set status": the API reads like the business, and each action documents
- * its own rules.
- */
 @ApiTags('appointments')
 @ApiBearerAuth()
 @Controller('appointments')

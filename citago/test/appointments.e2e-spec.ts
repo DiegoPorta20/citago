@@ -339,7 +339,6 @@ describe('Appointments (e2e)', () => {
     });
 
     it('re-checks the slot when a no-show turns into a completed visit', async () => {
-      // Recorded in the past on purpose, so the no-show is allowed.
       const past = limaInstant(futureLocalDate(1, -1), '10:00');
       const missed = await book('10:00', {
         startAt: past,
@@ -348,12 +347,10 @@ describe('Appointments (e2e)', () => {
       const missedId = missed.body.data.id as string;
       await act(missedId, 'no-show').expect(200);
 
-      // The freed slot went to a walk-in…
       await book('10:00', { startAt: past, allowOutsideSchedule: true }).expect(
         201,
       );
 
-      // …so the late client cannot be recorded on top of it.
       const response = await act(missedId, 'complete').expect(409);
 
       expect(response.body.code).toBe('APPOINTMENT_OVERLAP');
@@ -473,12 +470,10 @@ describe('Appointments (e2e)', () => {
 
       expect(response.body.data.timezone).toBe('America/Lima');
       expect(times[0]).toBe('09:00');
-      // 09:45 would run into the 10:00 booking; 10:15 overlaps it.
       expect(times).toContain('09:30');
       expect(times).not.toContain('09:45');
       expect(times).not.toContain('10:15');
       expect(times).toContain('10:30');
-      // Lunch break: nothing that ends after 13:00 or starts before 15:00.
       expect(times).not.toContain('12:45');
       expect(times).not.toContain('14:00');
       expect(times).toContain('15:00');
@@ -569,7 +564,6 @@ describe('Appointments (e2e)', () => {
       const intruder = await registerBusiness(app);
       const intruderAgenda = await createAgenda(app, intruder);
 
-      // Intruder's own barber and service, but the victim's client id.
       const response = await request(server())
         .post(`${API}/appointments`)
         .set(...authHeader(intruder))
@@ -588,8 +582,6 @@ describe('Appointments (e2e)', () => {
       const intruder = await registerBusiness(app);
       const intruderAgenda = await createAgenda(app, intruder);
 
-      // Bypass the application entirely: the composite foreign key refuses an
-      // appointment of tenant B that points at tenant A's client.
       await expect(
         dataSource.query(
           `INSERT INTO appointments

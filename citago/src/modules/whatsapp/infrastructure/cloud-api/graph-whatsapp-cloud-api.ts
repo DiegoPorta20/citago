@@ -11,24 +11,16 @@ import {
 
 const REQUEST_TIMEOUT_MS = 10_000;
 
-/** Meta error codes that mean "not now" rather than "never". */
 const THROTTLING_CODES = new Set([4, 80007, 130429, 131048, 131056]);
 const INVALID_TOKEN_CODE = 190;
 const OUTSIDE_WINDOW_CODE = 131047;
 
-/** Ids go into the URL path: anything but digits is refused before any request. */
 const META_ID = /^\d{1,32}$/;
 
 interface GraphErrorBody {
   readonly error?: { readonly code?: unknown };
 }
 
-/**
- * Meta's Graph API over plain `fetch`: two endpoints do not justify an SDK.
- *
- * The access token travels only in the Authorization header and never appears
- * in an error message or a log line.
- */
 @Injectable()
 export class GraphWhatsAppCloudApi extends WhatsAppCloudApi {
   private readonly baseUrl: string;
@@ -90,7 +82,6 @@ export class GraphWhatsAppCloudApi extends WhatsAppCloudApi {
     const id = (body as { messages?: { id?: unknown }[] }).messages?.[0]?.id;
 
     if (typeof id !== 'string' || id.length === 0) {
-      // Meta answered 2xx without an id: treat as not sent rather than guess.
       throw new WhatsAppApiError('UNAVAILABLE');
     }
 
@@ -122,7 +113,6 @@ export class GraphWhatsAppCloudApi extends WhatsAppCloudApi {
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
     } catch {
-      // Network failure or timeout. The original error may echo the request.
       throw new WhatsAppApiError('UNAVAILABLE');
     }
 

@@ -1,16 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-/**
- * Opening hours of the business.
- *
- * `TIME` in the business's wall clock, like `staff_schedules` (rule TZ-3): a
- * shop opens at nine o'clock on its own clock, and daylight saving does not
- * move that.
- *
- * CASCADE from the tenant because the hours are part of it, not a record of
- * their own — the only cascade allowed by ADR 0004, which is why it points at
- * `tenants(id)` and not at a composite key.
- */
 export class AddBusinessHours1790050069324 implements MigrationInterface {
   name = 'AddBusinessHours1790050069324';
 

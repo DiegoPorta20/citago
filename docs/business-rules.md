@@ -33,6 +33,7 @@ Matriz de permisos por rol: [permissions.md](./permissions.md).
 | ID-1 | Todo tenant conserva al menos un OWNER activo | ✔ nadie puede revocar ni degradar al último OWNER activo |
 | ID-7 | Nadie cambia su propio rol ni revoca su propio acceso: otra persona con permiso debe hacerlo | ✔ evita que el único administrador se deje fuera con un toque |
 | ID-8 | Un email que ya tiene cuenta se vincula al negocio, no se duplica: una persona puede trabajar en dos negocios | ✔ su acceso al otro negocio no se toca |
+| ID-10 | Cambiar de negocio exige una membresía activa en el destino e invalida la familia de la sesión anterior; un destino ajeno, revocado o suspendido responde `404 NOT_A_MEMBER` | ✔ casos de uso con tests unitarios; e2e escrito, pendiente de ejecutar con el contenedor de pruebas |
 | ID-9 | La contraseña temporal de un alta se muestra una sola vez y nunca se guarda en texto plano | ✔ solo se persiste el hash argon2id |
 | ID-2 | Las contraseñas se guardan con hash (argon2id), nunca en texto plano ni en el JWT | ✔ |
 | ID-3 | El rol se valida contra la membresía en cada request, no se confía en el claim del token | ✔ |

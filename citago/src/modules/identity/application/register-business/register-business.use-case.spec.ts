@@ -111,9 +111,6 @@ describe('RegisterBusinessUseCase', () => {
     const result = await useCase.execute(validInput);
     const user = await users.findById(result.userId);
 
-    // The fake hash is reversible on purpose (fast tests); what matters here
-    // is that the use case persists the hasher's output and not the input.
-    // Argon2PasswordHasher has its own spec for the real algorithm.
     expect(user?.passwordHash).toBe(
       await new FakePasswordHasher().hash(validInput.password),
     );
@@ -123,7 +120,6 @@ describe('RegisterBusinessUseCase', () => {
   it('writes everything inside one transaction', async () => {
     await useCase.execute(validInput);
 
-    // A half-created business would leave an account that cannot enter anywhere.
     expect(transaction.calls).toBe(1);
   });
 

@@ -15,23 +15,10 @@ export interface OwnDashboard {
     readonly to: string;
     readonly timezone: string;
   };
-  /** Null for an account with no staff member: then every counter is zero. */
   readonly staffMemberId: string | null;
   readonly appointments: AppointmentCounters;
 }
 
-/**
- * What the person in front of the screen did: their own attentions for the
- * period, defaulting to today.
- *
- * Open to every member, including STAFF — it is the one dashboard they may see
- * (docs/permissions.md). It deliberately carries **no money**: whether a staff
- * member sees the revenue they generated is still an open product decision, and
- * the safe default is the one that cannot leak it.
- *
- * An OWNER or ADMIN asking for this sees their own agenda too, if their account
- * is linked to a staff member.
- */
 @Injectable()
 export class GetOwnDashboardUseCase {
   constructor(

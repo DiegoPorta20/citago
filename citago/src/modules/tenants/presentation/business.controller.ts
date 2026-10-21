@@ -23,19 +23,6 @@ import {
   UpdateBusinessRequestDto,
 } from './business.dto.js';
 
-/**
- * The business itself: its settings and when it opens.
- *
- * Singular resource — there is exactly one business per session, and it is
- * never named in the URL: it comes from the token like everything else.
- *
- * Everyone can read it (staff need the time zone and the opening hours to make
- * sense of the agenda); only OWNER and ADMIN can change it.
- *
- * Suspending a business is deliberately **not** here. A suspended tenant stops
- * every session of that business (rule ID-6), including the one that would undo
- * it, so it is an operator action and not a button in the app.
- */
 @ApiTags('business')
 @ApiBearerAuth()
 @Controller('business')

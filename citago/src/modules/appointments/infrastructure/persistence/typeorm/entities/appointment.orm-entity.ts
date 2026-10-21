@@ -16,13 +16,9 @@ import { AppointmentSource } from '../../../../domain/appointment-source.js';
 import { AppointmentStatus } from '../../../../domain/appointment-status.js';
 
 @Entity('appointments')
-/** Target of the composite keys from the status history and, later, sales. */
 @Unique('uq_appointments_tenant_id', ['tenantId', 'id'])
-/** Overlap detection and per-barber agenda. The most important index here. */
 @Index('ix_appointments_staff_start', ['tenantId', 'staffMemberId', 'startAt'])
-/** Day and week views across all staff. */
 @Index('ix_appointments_start', ['tenantId', 'startAt'])
-/** A client's history. */
 @Index('ix_appointments_client_start', ['tenantId', 'clientId', 'startAt'])
 export class AppointmentOrmEntity {
   @PrimaryColumn({ name: 'id', type: 'char', length: 36 })
@@ -54,7 +50,6 @@ export class AppointmentOrmEntity {
   })
   status: AppointmentStatus;
 
-  /** Snapshot of the service price at booking (rule AP-2). String: DECIMAL, never float. */
   @Column({ name: 'price', type: 'decimal', precision: 12, scale: 2 })
   price: string;
 
@@ -106,11 +101,6 @@ export class AppointmentOrmEntity {
 
   @Column({ name: 'updated_at', type: 'datetime', precision: 3 })
   updatedAt: Date;
-
-  // ── Composite tenant keys (ADR 0004, layer 4) ─────────────────────────────
-  // Each reference carries tenant_id, so the database refuses an appointment
-  // that points at another tenant's client, service or barber — even if the
-  // application had a bug. All RESTRICT: history is never cascaded away.
 
   @ManyToOne(() => ClientOrmEntity, {
     onDelete: 'RESTRICT',

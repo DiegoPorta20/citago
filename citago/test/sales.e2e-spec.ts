@@ -42,7 +42,6 @@ describe('Sales (e2e)', () => {
       .set(...authHeader(token))
       .send(body);
 
-  /** Books an appointment at `time` and walks it to COMPLETED. */
   const completedAppointment = async (time = '10:00'): Promise<string> => {
     const booked = await request(server())
       .post(`${API}/appointments`)

@@ -9,21 +9,11 @@ export class InvalidTimeOfDayError extends DomainError {
   }
 }
 
-/** `09:00`, and also `09:00:00` as MySQL returns TIME columns. */
 const PATTERN = /^([01]\d|2[0-3]):([0-5]\d)(:00)?$/;
 const MINUTES_PER_HOUR = 60;
 
-/**
- * A wall-clock time with no date and no time zone: "we open at 09:00".
- *
- * Opening hours are stored like this on purpose (rule TZ-3). "09:00" must stay
- * 09:00 when daylight saving time changes, which a UTC instant would not.
- */
 export class TimeOfDay {
-  private constructor(
-    /** Minutes since midnight, 0–1439. */
-    readonly minutes: number,
-  ) {}
+  private constructor(readonly minutes: number) {}
 
   static parse(value: string): TimeOfDay {
     const match = PATTERN.exec(value.trim());
@@ -53,7 +43,6 @@ export class TimeOfDay {
     return this.minutes === other.minutes;
   }
 
-  /** `HH:mm`, the wire and display format. */
   toString(): string {
     return `${String(this.hour).padStart(2, '0')}:${String(this.minute).padStart(2, '0')}`;
   }

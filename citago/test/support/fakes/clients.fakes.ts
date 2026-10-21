@@ -12,10 +12,6 @@ import {
   type ClientListFilters,
 } from '../../../src/modules/clients/domain/client.repository.js';
 
-/**
- * In-memory client repository honouring tenant scoping, soft delete and the
- * "deleted clients still own their phone" rule.
- */
 export class InMemoryClientRepository extends ClientRepository {
   readonly clients = new Map<string, Client>();
 

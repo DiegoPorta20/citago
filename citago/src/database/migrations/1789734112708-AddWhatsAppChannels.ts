@@ -1,14 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-/**
- * Phase 8 — the WhatsApp number each business connects.
- *
- * - `uq_whatsapp_channels_phone_number`: **global**. A number routes inbound
- *   messages to exactly one business (rule CO-5).
- * - `uq_whatsapp_channels_tenant`: one number per business in the MVP.
- * - `encrypted_access_token`: AES-256-GCM ciphertext (VARBINARY). The token is
- *   never stored in plaintext.
- */
 export class AddWhatsAppChannels1789734112708 implements MigrationInterface {
   name = 'AddWhatsAppChannels1789734112708';
 

@@ -25,7 +25,6 @@ import {
 } from '../domain/conversation.enums.js';
 import type { Message } from '../domain/message.entity.js';
 
-/** Query strings are text: "true"/"false" become booleans; anything else fails validation. */
 const queryBoolean = ({ value }: { value: unknown }): unknown =>
   value === 'true' ? true : value === 'false' ? false : value;
 

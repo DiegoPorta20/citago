@@ -1,19 +1,6 @@
 import { MessageType } from '../../conversations/domain/conversation.enums.js';
 import type { WhatsAppInboundMessage } from '../application/process-whatsapp-webhook.use-case.js';
 
-/**
- * Translates Meta's webhook payload into CitaGo's inbound messages.
- *
- * Meta's shape stops here: nothing past this file knows about `entry`,
- * `changes` or `wa_id`. The payload is read defensively — it is external
- * input, even when signed — and anything unexpected is skipped, not thrown:
- *
- * - `statuses` (sent/delivered/read receipts) are ignored in the MVP;
- * - reactions are ignored: they are not a new message and must not mark the
- *   conversation as waiting for an answer;
- * - an entry without the fields a message needs is skipped.
- */
-
 const MAX_BODY_LENGTH = 4096;
 const MAX_ID_LENGTH = 128;
 
@@ -143,7 +130,6 @@ function content(
     };
   }
 
-  // Quick-reply buttons and list choices are the client's answer, as text.
   if (type === 'button') {
     return withText(text(part.text));
   }

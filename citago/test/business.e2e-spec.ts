@@ -40,7 +40,6 @@ describe('Business (e2e)', () => {
       .set(...authHeader(token))
       .send({ ranges });
 
-  /** A STAFF account of the same business, signed in. */
   const staffSession = async (): Promise<RegisteredBusiness> => {
     const email = `staff-${Math.random().toString(36).slice(2, 10)}@demo.local`;
     const password = 'unaClaveSegura1';
@@ -122,7 +121,10 @@ describe('Business (e2e)', () => {
     it('never lets the currency be changed', async () => {
       const response = await update({ currency: 'USD' }).expect(400);
 
-      expect(response.body.message).toMatch(/currency/i);
+      expect(response.body.code).toBe('VALIDATION_ERROR');
+      expect(JSON.stringify(response.body.details)).toMatch(
+        /currency should not exist/,
+      );
 
       const after = await read().expect(200);
 
@@ -155,7 +157,6 @@ describe('Business (e2e)', () => {
         { weekday: 6, startsAt: '10:00', endsAt: '14:00' },
       ]);
 
-      // They survive a settings change, and a re-read.
       await update({ name: 'Otro nombre' }).expect(200);
 
       const after = await read().expect(200);

@@ -3,10 +3,6 @@ import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
 import { BusinessType } from '../../../../domain/business-type.js';
 import { TenantStatus } from '../../../../domain/tenant-status.js';
 
-/**
- * Persistence shape of a tenant (a business). No business logic lives here:
- * rules belong to the domain entity, this class only maps columns.
- */
 @Entity('tenants')
 export class TenantOrmEntity {
   @PrimaryColumn({ name: 'id', type: 'char', length: 36 })
@@ -15,7 +11,6 @@ export class TenantOrmEntity {
   @Column({ name: 'name', type: 'varchar', length: 120 })
   name: string;
 
-  /** Globally unique, human-readable handle. Used by support and, later, public booking pages. */
   @Index('uq_tenants_slug', { unique: true })
   @Column({ name: 'slug', type: 'varchar', length: 60 })
   slug: string;
@@ -28,15 +23,12 @@ export class TenantOrmEntity {
   })
   businessType: BusinessType;
 
-  /** ISO 3166-1 alpha-2. Default region when normalizing phone numbers. */
   @Column({ name: 'country', type: 'char', length: 2 })
   country: string;
 
-  /** ISO 4217. The currency every amount of this tenant is expressed in. */
   @Column({ name: 'currency', type: 'char', length: 3 })
   currency: string;
 
-  /** IANA time zone, e.g. `America/Lima`. Agenda and daily totals are computed in it. */
   @Column({ name: 'timezone', type: 'varchar', length: 64 })
   timezone: string;
 

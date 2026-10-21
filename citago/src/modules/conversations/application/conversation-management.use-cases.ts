@@ -13,11 +13,6 @@ import {
 } from '../domain/conversation.errors.js';
 import { ConversationRepository } from '../domain/conversation.repositories.js';
 
-/**
- * Shared shape of every conversation change: inside a transaction, load the
- * thread **locked**, apply the change, save. The lock is what keeps an archive
- * from overwriting a message that arrived in the same instant.
- */
 @Injectable()
 export class ConversationChanges {
   constructor(
@@ -50,7 +45,6 @@ export class ConversationChanges {
   }
 }
 
-/** "Handled": clears the pending flag even if the answer went by phone. */
 @Injectable()
 export class MarkConversationResolvedUseCase {
   constructor(private readonly changes: ConversationChanges) {}
@@ -62,7 +56,6 @@ export class MarkConversationResolvedUseCase {
   }
 }
 
-/** Out of the inbox until the client writes again. */
 @Injectable()
 export class ArchiveConversationUseCase {
   constructor(private readonly changes: ConversationChanges) {}
@@ -85,10 +78,6 @@ export class ReopenConversationUseCase {
   }
 }
 
-/**
- * Says who this contact is. The client must belong to this business and not be
- * deleted; `null` unlinks a wrong match.
- */
 @Injectable()
 export class LinkConversationClientUseCase {
   constructor(
@@ -124,10 +113,6 @@ export class LinkConversationClientUseCase {
   }
 }
 
-/**
- * Puts a member in charge of a conversation. The assignee must be an **active
- * member of this business**; `null` unassigns.
- */
 @Injectable()
 export class AssignConversationUseCase {
   constructor(

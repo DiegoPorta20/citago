@@ -18,7 +18,6 @@ import {
 const MAX_NOTES_LENGTH = 500;
 const MAX_REASON_LENGTH = 255;
 
-/** One entry of the audit trail (decision F5): who moved it, when, and why. */
 export interface AppointmentStatusChange {
   readonly fromStatus: AppointmentStatus | null;
   readonly toStatus: AppointmentStatus;
@@ -36,7 +35,6 @@ export interface AppointmentSnapshot {
   readonly startAt: Date;
   readonly endAt: Date;
   readonly status: AppointmentStatus;
-  /** Decimal string: the price agreed when booking, never the current one. */
   readonly price: string;
   readonly notes: string | null;
   readonly source: AppointmentSource;
@@ -60,21 +58,9 @@ export interface BookAppointmentInput {
   readonly source: AppointmentSource;
   readonly initialStatus:
     AppointmentStatus.Pending | AppointmentStatus.Confirmed;
-  /** Null when the system created it (e.g. from a WhatsApp message). */
   readonly createdByUserId: string | null;
 }
 
-/**
- * A booked service: a client, a staff member and a time.
- *
- * Owns the state machine and the snapshots that keep history true:
- * - `price` is copied from the service when booking (rule AP-2);
- * - the duration is fixed by `startAt`/`endAt`, so a later change to the
- *   service's duration does not move existing appointments (rule AP-1).
- *
- * What it does **not** decide is whether it collides with other appointments:
- * that needs to look at other rows, so it lives in `AppointmentOverlapPolicy`.
- */
 export class Appointment {
   private readonly pendingChanges: AppointmentStatusChange[] = [];
 
@@ -181,7 +167,6 @@ export class Appointment {
     return this._updatedAt;
   }
 
-  /** Whether this appointment occupies its staff member's time (rule AP-4). */
   get isBlocking(): boolean {
     return isBlocking(this._status);
   }
@@ -190,13 +175,6 @@ export class Appointment {
     return ALLOWED_TRANSITIONS[this._status].includes(target);
   }
 
-  /**
-   * Moves the appointment through its lifecycle.
-   *
-   * Callers must check overlaps first when `target` blocks and the current
-   * status does not (`NO_SHOW → COMPLETED`): the slot may have been given to
-   * someone else meanwhile.
-   */
   transitionTo(
     target: AppointmentStatus,
     context: {
@@ -216,7 +194,6 @@ export class Appointment {
       this._status === AppointmentStatus.InProgress &&
       !reason
     ) {
-      // Stopping a service halfway is unusual enough to need an explanation.
       throw new CancellationReasonRequiredError();
     }
 
@@ -247,10 +224,6 @@ export class Appointment {
     }
   }
 
-  /**
-   * Moves the appointment to another time and/or staff member, keeping its
-   * duration and its price. Callers must re-check overlaps and the schedule.
-   */
   reschedule(
     changes: { readonly startAt?: Date; readonly staffMemberId?: string },
     now: Date,
@@ -280,7 +253,6 @@ export class Appointment {
     this._updatedAt = now;
   }
 
-  /** Hands the new audit entries to the repository, exactly once. */
   pullStatusChanges(): AppointmentStatusChange[] {
     return this.pendingChanges.splice(0, this.pendingChanges.length);
   }

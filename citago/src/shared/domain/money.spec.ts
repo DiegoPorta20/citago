@@ -66,7 +66,6 @@ describe('Money', () => {
 
   describe('arithmetic', () => {
     it('adds without floating point drift', () => {
-      // The classic failure: 0.1 + 0.2 !== 0.3 with numbers.
       const total = Money.fromDecimalString('0.10').add(
         Money.fromDecimalString('0.20'),
       );
@@ -93,7 +92,6 @@ describe('Money', () => {
     });
 
     it('refuses to go negative', () => {
-      // A discount larger than the subtotal is a bug, not a value.
       expect(() =>
         Money.fromDecimalString('10.00').subtract(
           Money.fromDecimalString('10.01'),

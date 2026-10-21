@@ -12,7 +12,6 @@ import { TenantNotAvailableError } from '../domain/errors/tenant-not-available.e
 import type { Tenant } from '../domain/tenant.entity.js';
 import { TenantRepository } from '../domain/tenant.repository.js';
 
-/** The business as a screen shows it: its settings and when it opens. */
 export interface BusinessView {
   readonly tenant: Tenant;
   readonly hours: WeeklySchedule;
@@ -44,19 +43,6 @@ export class GetBusinessUseCase {
   }
 }
 
-/**
- * Edits the business settings.
- *
- * The **currency is not editable**, on purpose. Every price in the catalogue is
- * stored as a bare amount and read as "in the tenant's currency", so switching
- * it would silently reprice the whole shop — a 25.00 haircut would become 25.00
- * of something else. Past sales would survive (they snapshot their own currency,
- * rule SA-6), but the catalogue would not. Changing it is a migration, not a
- * setting.
- *
- * The time zone **is** editable: it changes how future days are interpreted,
- * and existing instants are stored in UTC, so nothing is rewritten.
- */
 @Injectable()
 export class UpdateBusinessUseCase {
   constructor(
@@ -86,8 +72,6 @@ export class UpdateBusinessUseCase {
         {
           country: input.country,
           timezone: input.timezone,
-          // The shop's own number is normalized like a client's (rule CL-1),
-          // with the country it is being saved with.
           phone:
             input.phone === undefined
               ? undefined
@@ -114,15 +98,6 @@ export class UpdateBusinessUseCase {
   }
 }
 
-/**
- * Replaces the opening hours.
- *
- * These hours describe the shop; they do **not** gate bookings. What decides
- * whether an appointment fits is the staff member's own weekly schedule (rule
- * AP-14), which is the only timetable a barber actually works to. Two sources
- * of truth for the same answer would eventually disagree, and the agenda is the
- * one the business feels.
- */
 @Injectable()
 export class ReplaceBusinessHoursUseCase {
   constructor(private readonly tenants: TenantRepository) {}

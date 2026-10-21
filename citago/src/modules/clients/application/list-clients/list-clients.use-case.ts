@@ -9,7 +9,6 @@ import type { Client } from '../../domain/client.entity.js';
 import { ClientRepository } from '../../domain/client.repository.js';
 
 export interface ListClientsInput extends PageRequest {
-  /** Name prefix, or part of the phone number. */
   readonly query?: string;
 }
 

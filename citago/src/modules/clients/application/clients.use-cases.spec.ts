@@ -118,7 +118,6 @@ describe('Clients use cases', () => {
 
       await expect(attempt).rejects.toThrow(ClientPhoneAlreadyRegisteredError);
       await attempt.catch((error: ClientPhoneAlreadyRegisteredError) => {
-        // The app can open the existing client instead of guessing.
         expect(error.details).toEqual({ clientId: first.id });
       });
     });

@@ -37,12 +37,6 @@ export interface CurrentSession {
   readonly role: UserRole;
 }
 
-/**
- * Describes the caller: who they are, which business they are in, and with
- * which role. The mobile app uses it to bootstrap after sign-in.
- *
- * Everything comes from the verified session, never from the request body.
- */
 @Injectable()
 export class GetCurrentSessionUseCase {
   constructor(

@@ -18,7 +18,6 @@ import { SaleOrmEntity } from './entities/sale.orm-entity.js';
 
 const ZERO = '0.00';
 
-/** `SUM` returns NULL when nothing matched, and `COUNT` a driver-dependent shape. */
 const amount = (value: string | null): string => value ?? ZERO;
 const count = (value: string | number): number => Number(value);
 
@@ -47,13 +46,6 @@ interface ServiceRow {
   total: string | null;
 }
 
-/**
- * The dashboard figures, computed by MySQL.
- *
- * Every query is served by `ix_sales_sold_at` or `ix_sales_staff_sold_at`:
- * the tenant and the period are always the leading columns, so a business with
- * years of history still reads only the rows of the period asked for.
- */
 @Injectable()
 export class TypeOrmSalesReportQuery extends SalesReportQuery {
   constructor(private readonly context: TransactionalEntityManager) {
@@ -162,9 +154,6 @@ export class TypeOrmSalesReportQuery extends SalesReportQuery {
       });
     }
 
-    // Grouped by name as well as by service: the line keeps the description it
-    // was sold under (rule SA-7), and a service renamed mid-period really did
-    // sell under two names.
     const rows = await query
       .select('line.service_id', 'serviceId')
       .addSelect('line.description', 'description')
@@ -184,7 +173,6 @@ export class TypeOrmSalesReportQuery extends SalesReportQuery {
     }));
   }
 
-  /** Tenant and period first: the shape every index here is built for. */
   private scoped(
     tenantId: string,
     range: TimeRange,

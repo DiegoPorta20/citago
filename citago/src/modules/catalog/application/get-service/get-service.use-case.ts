@@ -15,8 +15,6 @@ export class GetServiceUseCase {
       actor.tenantId,
     );
 
-    // Another tenant's service is indistinguishable from one that never
-    // existed: same 404, no existence leak.
     if (!service) {
       throw new ServiceNotFoundError();
     }

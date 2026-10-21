@@ -18,21 +18,17 @@ import {
 
 @Entity('conversations')
 @Unique('uq_conversations_tenant_id', ['tenantId', 'id'])
-/** One thread per contact and channel (decision F11); also settles concurrent first messages. */
 @Unique('uq_conversations_contact', [
   'tenantId',
   'channel',
   'contactIdentifier',
 ])
-/** The "pending" counter and filtered inbox. */
 @Index('ix_conversations_needs_reply', [
   'tenantId',
   'needsReply',
   'lastMessageAt',
 ])
-/** The default inbox, most recent first. */
 @Index('ix_conversations_status', ['tenantId', 'status', 'lastMessageAt'])
-/** A client's conversation, from the client screen. */
 @Index('ix_conversations_client', ['tenantId', 'clientId'])
 export class ConversationOrmEntity {
   @PrimaryColumn({ name: 'id', type: 'char', length: 36 })
@@ -125,7 +121,6 @@ export class ConversationOrmEntity {
   })
   tenant?: TenantOrmEntity;
 
-  /** Composite: a conversation can only point at a client of its own tenant. */
   @ManyToOne(() => ClientOrmEntity, {
     onDelete: 'RESTRICT',
     onUpdate: 'RESTRICT',
@@ -140,7 +135,6 @@ export class ConversationOrmEntity {
   ])
   client?: ClientOrmEntity;
 
-  /** Composite into memberships: only a member of this business can be the assignee. */
   @ManyToOne(() => MembershipOrmEntity, {
     onDelete: 'RESTRICT',
     onUpdate: 'RESTRICT',

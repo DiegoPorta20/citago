@@ -33,6 +33,7 @@ repositorio y la base de datos ([ADR 0004](./adr/0004-tenant-isolation.md)).
 |---|---|---|---|
 | **Sesión** | | | |
 | Iniciar sesión, refrescar, cerrar sesión, ver `/auth/me` | ✅ | ✅ | ✅ |
+| Listar sus negocios y cambiar de negocio (`/auth/tenants`, `/auth/switch-tenant`) | ✅ | ✅ | ✅ |
 | **Negocio** | | | |
 | Ver configuración del negocio | ✅ | ✅ | ✅ |
 | Editar configuración (moneda, zona horaria, horario) | ✅ | ✅ | ❌ |

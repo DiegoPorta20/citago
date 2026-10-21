@@ -3,12 +3,6 @@ import {
   DomainErrorCategory,
 } from '../../../../shared/domain/domain-error.js';
 
-/**
- * Deliberately says nothing about *why*.
- *
- * Unknown email, wrong password and malformed hash all produce this same
- * error, so the API cannot be used to discover which emails have an account.
- */
 export class InvalidCredentialsError extends DomainError {
   readonly code = 'INVALID_CREDENTIALS';
   readonly category = DomainErrorCategory.Unauthorized;
@@ -27,7 +21,6 @@ export class EmailAlreadyRegisteredError extends DomainError {
   }
 }
 
-/** The account exists, but no business grants it access. */
 export class NoActiveMembershipError extends DomainError {
   readonly code = 'NO_ACTIVE_MEMBERSHIP';
   readonly category = DomainErrorCategory.Forbidden;
@@ -52,6 +45,15 @@ export class MembershipRevokedError extends DomainError {
 
   constructor() {
     super('Your access to this business has been revoked.');
+  }
+}
+
+export class NotAMemberError extends DomainError {
+  readonly code = 'NOT_A_MEMBER';
+  readonly category = DomainErrorCategory.NotFound;
+
+  constructor() {
+    super('That business was not found.');
   }
 }
 

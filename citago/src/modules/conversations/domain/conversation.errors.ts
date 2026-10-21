@@ -3,7 +3,6 @@ import {
   DomainErrorCategory,
 } from '../../../shared/domain/domain-error.js';
 
-/** Also raised for another tenant's conversation: same 404, no existence leak. */
 export class ConversationNotFoundError extends DomainError {
   readonly code = 'CONVERSATION_NOT_FOUND';
   readonly category = DomainErrorCategory.NotFound;
@@ -31,7 +30,6 @@ export class InvalidConversationDataError extends DomainError {
   }
 }
 
-/** Only an active member of this business can be put in charge of a conversation. */
 export class AssigneeNotMemberError extends DomainError {
   readonly code = 'ASSIGNEE_NOT_MEMBER';
   readonly category = DomainErrorCategory.BusinessRule;
@@ -41,7 +39,6 @@ export class AssigneeNotMemberError extends DomainError {
   }
 }
 
-/** The inbound simulator is a development tool and is off in production. */
 export class DevToolsDisabledError extends DomainError {
   readonly code = 'NOT_FOUND';
   readonly category = DomainErrorCategory.NotFound;
@@ -51,7 +48,6 @@ export class DevToolsDisabledError extends DomainError {
   }
 }
 
-/** The business has not connected the channel this conversation happens on. */
 export class ChannelNotConnectedError extends DomainError {
   readonly code = 'CHANNEL_NOT_CONNECTED';
   readonly category = DomainErrorCategory.BusinessRule;
@@ -61,10 +57,6 @@ export class ChannelNotConnectedError extends DomainError {
   }
 }
 
-/**
- * The channel only allows a free-form reply for a while after the contact's
- * last message (WhatsApp: 24 hours). After that, only pre-approved templates.
- */
 export class ReplyWindowClosedError extends DomainError {
   readonly code = 'REPLY_WINDOW_CLOSED';
   readonly category = DomainErrorCategory.BusinessRule;
@@ -76,15 +68,8 @@ export class ReplyWindowClosedError extends DomainError {
   }
 }
 
-export type DeliveryFailureReason =
-  /** The channel refused our credentials (expired or revoked token). */
-  | 'CHANNEL_AUTH'
-  /** The channel refused this particular message. */
-  | 'REJECTED'
-  /** The channel could not be reached or failed on its side. */
-  | 'UNAVAILABLE';
+export type DeliveryFailureReason = 'CHANNEL_AUTH' | 'REJECTED' | 'UNAVAILABLE';
 
-/** The message was not sent. Nothing was recorded. */
 export class MessageDeliveryFailedError extends DomainError {
   readonly code = 'MESSAGE_DELIVERY_FAILED';
   readonly category = DomainErrorCategory.ExternalService;

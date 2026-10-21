@@ -12,16 +12,6 @@ export interface SetServiceStatusInput {
   readonly status: ServiceStatus;
 }
 
-/**
- * Activates or deactivates a service.
- *
- * One use case for both directions because it is one business action — "is this
- * still on the menu?" — and splitting it would duplicate the lookup, the
- * tenant check and the save.
- *
- * A service is never deleted: deactivating keeps every past appointment and
- * sale intact (rule CA-3).
- */
 @Injectable()
 export class SetServiceStatusUseCase {
   constructor(

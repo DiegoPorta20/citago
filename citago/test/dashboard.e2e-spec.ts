@@ -47,7 +47,6 @@ describe('Dashboard (e2e)', () => {
       .query(query)
       .set(...authHeader(token));
 
-  /** A completed appointment plus the sale that charged it. */
   const completedAndCharged = async (time = '10:00'): Promise<void> => {
     const booked = await request(server())
       .post(`${API}/appointments`)
@@ -227,7 +226,6 @@ describe('Dashboard (e2e)', () => {
         to: agenda.monday,
       }).expect(200);
 
-      // The OWNER of this fixture is not linked to a staff member.
       expect(response.body.data.staffMemberId).toBeNull();
       expect(response.body.data.appointments.total).toBe(0);
     });

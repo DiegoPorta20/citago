@@ -6,6 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import type { EnvironmentVariables } from '../../config/environment.js';
 import { TenantsModule } from '../tenants/tenants.module.js';
 import { GetCurrentSessionUseCase } from './application/get-current-session/get-current-session.use-case.js';
+import { ListMyTenantsUseCase } from './application/list-my-tenants/list-my-tenants.use-case.js';
 import { LoginUseCase } from './application/login/login.use-case.js';
 import { LogoutUseCase } from './application/logout/logout.use-case.js';
 import { AccessTokenService } from './application/ports/access-token.service.js';
@@ -16,6 +17,7 @@ import { SessionPolicy } from './application/ports/session-policy.port.js';
 import { RefreshSessionUseCase } from './application/refresh-session/refresh-session.use-case.js';
 import { RegisterBusinessUseCase } from './application/register-business/register-business.use-case.js';
 import { SessionIssuer } from './application/session-issuer.js';
+import { SwitchTenantUseCase } from './application/switch-tenant/switch-tenant.use-case.js';
 import {
   AddTeamMemberUseCase,
   ChangeTeamMemberAccessUseCase,
@@ -36,18 +38,6 @@ import { JwtAuthGuard } from './presentation/guards/jwt-auth.guard.js';
 import { TeamController } from './presentation/team.controller.js';
 import { RolesGuard } from './presentation/guards/roles.guard.js';
 
-/**
- * Accounts, memberships, sessions and the authorization primitives every other
- * module relies on.
- *
- * Depends on `TenantsModule` (a business is created during sign-up and its
- * status is checked on every request); the dependency runs one way only.
- *
- * The two guards are registered here as global guards: declaring them in this
- * module lets them inject identity providers while still protecting the whole
- * API. Order matters — authentication resolves the session, then the role
- * check runs against it.
- */
 @Module({
   imports: [
     TenantsModule,
@@ -80,6 +70,8 @@ import { RolesGuard } from './presentation/guards/roles.guard.js';
     RefreshSessionUseCase,
     LogoutUseCase,
     GetCurrentSessionUseCase,
+    ListMyTenantsUseCase,
+    SwitchTenantUseCase,
     TeamPolicy,
     ListTeamMembersUseCase,
     AddTeamMemberUseCase,

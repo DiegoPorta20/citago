@@ -20,17 +20,6 @@ import {
   OwnDashboardResponseDto,
 } from './dashboard.dto.js';
 
-/**
- * The numbers.
- *
- * Two endpoints rather than one payload that changes shape with the role: the
- * business dashboard shows money and is OWNER or ADMIN only, while every member
- * can see their own attentions (docs/permissions.md). A reader of the API
- * should be able to tell which is which without reading the guard.
- *
- * Periods are **local dates** of the business, never UTC instants: "today" is
- * the shop's today (rule TZ-2).
- */
 @ApiTags('dashboard')
 @ApiBearerAuth()
 @Controller('dashboard')

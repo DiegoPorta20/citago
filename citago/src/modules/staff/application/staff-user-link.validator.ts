@@ -7,17 +7,6 @@ import {
 } from '../domain/staff.errors.js';
 import { StaffRepository } from '../domain/staff.repository.js';
 
-/**
- * Checks that an account may be linked to a staff member.
- *
- * Shared by create and update so the two rules cannot drift apart:
- * - the user must have an **active membership in this tenant** — otherwise a
- *   business could attach someone else's account to its staff;
- * - one account maps to at most one staff member per business.
- *
- * The database backs both: `(tenant_id, user_id)` references `memberships` and
- * is unique on `staff_members`.
- */
 @Injectable()
 export class StaffUserLinkValidator {
   constructor(

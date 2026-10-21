@@ -17,7 +17,6 @@ export interface ConversationView {
   readonly client: { readonly id: string; readonly name: string } | null;
 }
 
-/** Attaches client names to a batch of conversations in one query. */
 @Injectable()
 export class ConversationViewAssembler {
   constructor(private readonly clients: ClientRepository) {}
@@ -49,7 +48,6 @@ export class ConversationViewAssembler {
   }
 }
 
-/** The inbox. Every member of the business sees every conversation. */
 @Injectable()
 export class ListInboxUseCase {
   constructor(
@@ -122,8 +120,6 @@ export class ListMessagesUseCase {
       readonly limit: number;
     },
   ): Promise<MessagePage> {
-    // Checked first: messages are only reachable through a conversation of the
-    // caller's tenant, so a conversation id from elsewhere reveals nothing.
     const conversation = await this.conversations.findByIdForTenant(
       input.conversationId,
       actor.tenantId,

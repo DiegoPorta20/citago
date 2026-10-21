@@ -13,15 +13,11 @@ export interface ConversationSnapshot {
   readonly id: string;
   readonly tenantId: string;
   readonly channel: ConversationChannel;
-  /** Who is on the other side, normalized per channel (E.164 for WhatsApp). */
   readonly contactIdentifier: string;
-  /** The name the channel reports (WhatsApp profile name), if any. */
   readonly contactName: string | null;
-  /** Null until the contact is known to be a client (rule CO-6). */
   readonly clientId: string | null;
   readonly assignedUserId: string | null;
   readonly status: ConversationStatus;
-  /** The "pending" of the dashboard: the client wrote and nobody answered. */
   readonly needsReply: boolean;
   readonly lastMessageAt: Date | null;
   readonly lastInboundAt: Date | null;
@@ -31,18 +27,6 @@ export interface ConversationSnapshot {
   readonly updatedAt: Date;
 }
 
-/**
- * The thread between the business and one contact on one channel.
- *
- * One thread per contact and channel (decision F11): WhatsApp is a continuous
- * conversation, not a ticket system.
- *
- * Two independent facts, kept apart on purpose (decision F10):
- * - `status` — is it in the inbox? Only a person archives; a new message from
- *   the client brings it back.
- * - `needsReply` — does someone owe an answer? A message from the client turns
- *   it on; any answer, or "mark as resolved", turns it off.
- */
 export class Conversation {
   private constructor(private state: ConversationSnapshot) {}
 
@@ -128,13 +112,6 @@ export class Conversation {
     return this.state.lastInboundAt;
   }
 
-  /**
-   * Whether a free-form reply is still allowed (rule CO-10). Some channels only
-   * accept one for a while after the contact's last message; `windowMs` is
-   * that while, or `null` when the channel has no such limit.
-   *
-   * A conversation the contact never wrote in has no open window.
-   */
   canReplyFreely(now: Date, windowMs: number | null): boolean {
     if (windowMs === null) {
       return true;
@@ -146,12 +123,6 @@ export class Conversation {
     return now.getTime() - this.state.lastInboundAt.getTime() < windowMs;
   }
 
-  /**
-   * Updates the thread for a new message (rule CO-4).
-   *
-   * Timestamps only move forward: a delayed webhook for an older message must
-   * not make the inbox think it is the latest one.
-   */
   registerMessage(message: Message, now: Date): void {
     const isLatest =
       this.state.lastMessageAt === null ||
@@ -166,10 +137,7 @@ export class Conversation {
 
     if (message.direction === MessageDirection.Inbound) {
       next.lastInboundAt = latest(this.state.lastInboundAt, message.sentAt);
-      // A client writing again brings an archived thread back to the inbox.
       next.status = ConversationStatus.Open;
-      // Only the newest message decides whether an answer is owed: an old
-      // inbound arriving late must not re-open something already answered.
       if (
         this.state.lastOutboundAt === null ||
         message.sentAt.getTime() > this.state.lastOutboundAt.getTime()
@@ -189,7 +157,6 @@ export class Conversation {
     this.state = next;
   }
 
-  /** The contact's display name can arrive later (e.g. with the first message). */
   updateContactName(name: string | null, now: Date): void {
     const normalized = normalizeName(name);
 
@@ -198,12 +165,10 @@ export class Conversation {
     }
   }
 
-  /** "Handled", even if the answer went through another channel (a call, the phone). */
   markResolved(now: Date): void {
     this.state = { ...this.state, needsReply: false, updatedAt: now };
   }
 
-  /** Out of the inbox until the client writes again. Also clears the pending flag. */
   archive(now: Date): void {
     this.state = {
       ...this.state,
@@ -221,12 +186,10 @@ export class Conversation {
     };
   }
 
-  /** `null` unlinks. */
   linkClient(clientId: string | null, now: Date): void {
     this.state = { ...this.state, clientId, updatedAt: now };
   }
 
-  /** `null` unassigns. */
   assignTo(userId: string | null, now: Date): void {
     this.state = { ...this.state, assignedUserId: userId, updatedAt: now };
   }

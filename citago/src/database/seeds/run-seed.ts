@@ -8,12 +8,6 @@ import {
 import { buildDataSourceOptions } from '../typeorm.config.js';
 import { runDevSeed } from './dev-seed.js';
 
-/**
- * Entry point for `pnpm seed`.
- *
- * Refuses to run against production. Seeding is a development convenience, and
- * a mistake here would write fake businesses into real data.
- */
 async function main(): Promise<void> {
   loadDotEnv({ quiet: true });
 

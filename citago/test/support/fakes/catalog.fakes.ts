@@ -11,11 +11,6 @@ import {
 } from '../../../src/modules/catalog/domain/service.repository.js';
 import { ServiceStatus } from '../../../src/modules/catalog/domain/service-status.js';
 
-/**
- * In-memory service repository that honours tenant scoping and the
- * case-insensitive name rule, so a use case misusing it fails here rather than
- * in production.
- */
 export class InMemoryServiceRepository extends ServiceRepository {
   readonly services = new Map<string, Service>();
 

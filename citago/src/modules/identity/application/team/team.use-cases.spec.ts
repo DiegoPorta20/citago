@@ -179,7 +179,6 @@ describe('Team management', () => {
 
       expect(result.member.user.id).toBe(outsider.user.id);
       expect(result.temporaryPassword).toBeNull();
-      // Their access to the other business is untouched.
       expect(outsider.membership.role).toBe(UserRole.Owner);
     });
 
@@ -252,7 +251,6 @@ describe('Team management', () => {
       );
       const ana = auth(UserRole.Owner, second.user.id);
 
-      // Only one other owner left: the first one cannot be pushed out.
       await expect(change.revoke(ana, 'membership-1')).resolves.toBeDefined();
 
       await expect(

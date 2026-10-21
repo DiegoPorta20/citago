@@ -14,20 +14,11 @@ import { ClientPhoneNormalizer } from '../client-phone-normalizer.js';
 
 export interface CreateClientInput {
   readonly name: string;
-  /** As typed: `999 999 999`, `+51 999 999 999`… normalized to E.164 here. */
   readonly phone?: string | null;
   readonly email?: string | null;
   readonly notes?: string | null;
 }
 
-/**
- * Registers a customer.
- *
- * The phone is the customer's identity (it is how WhatsApp will find them), so
- * before creating anything this checks whether the number already belongs to
- * someone — including a deleted client, which is offered for restore instead of
- * being silently duplicated (decision F4).
- */
 @Injectable()
 export class CreateClientUseCase {
   constructor(

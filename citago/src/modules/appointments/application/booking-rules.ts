@@ -28,17 +28,10 @@ export interface SlotCheck {
   readonly staffMember: StaffMember;
   readonly range: TimeRange;
   readonly calendar: BusinessCalendar;
-  /** OWNER/ADMIN decision: book outside working hours, during time off or in the past. */
   readonly allowOutsideSchedule: boolean;
-  /** When rescheduling, the appointment itself must not count as a conflict. */
   readonly ignoreAppointmentId?: string;
 }
 
-/**
- * The checks shared by booking, rescheduling and re-activating an appointment.
- *
- * One place so the three can never disagree about what a valid slot is.
- */
 @Injectable()
 export class BookingRules {
   constructor(
@@ -60,7 +53,6 @@ export class BookingRules {
     return new BusinessCalendar(tenant.timezone);
   }
 
-  /** An active service of this tenant (rule CA-4). */
   async bookableService(tenantId: string, serviceId: string): Promise<Service> {
     const service = await this.services.findByIdForTenant(serviceId, tenantId);
 
@@ -74,7 +66,6 @@ export class BookingRules {
     return service;
   }
 
-  /** A non-deleted client of this tenant (rule AP-11 / CL-3). */
   async bookableClient(tenantId: string, clientId: string): Promise<Client> {
     const client = await this.clients.findByIdForTenant(clientId, tenantId);
 
@@ -85,7 +76,6 @@ export class BookingRules {
     return client;
   }
 
-  /** An active staff member of this tenant. */
   async bookableStaffMember(
     tenantId: string,
     staffMemberId: string,
@@ -102,10 +92,6 @@ export class BookingRules {
     return member;
   }
 
-  /**
-   * Validates a slot. **Must run after the staff agenda lock is held**,
-   * otherwise the overlap check can race with another booking.
-   */
   async assertSlotIsBookable(check: SlotCheck): Promise<void> {
     StaffAvailabilityPolicy.assertWithinOneDay(check.range, check.calendar);
 
@@ -130,7 +116,6 @@ export class BookingRules {
     await this.assertNoOverlap(check);
   }
 
-  /** The overlap rule alone: it applies even when the schedule is overridden. */
   async assertNoOverlap(
     check: Pick<
       SlotCheck,

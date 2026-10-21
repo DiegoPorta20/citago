@@ -4,7 +4,6 @@ import {
 } from '../../../shared/domain/domain-error.js';
 import type { AppointmentStatus } from './appointment-status.js';
 
-/** Also raised for another tenant's appointment, or one a STAFF user may not see. */
 export class AppointmentNotFoundError extends DomainError {
   readonly code = 'APPOINTMENT_NOT_FOUND';
   readonly category = DomainErrorCategory.NotFound;
@@ -23,7 +22,6 @@ export class InvalidAppointmentTransitionError extends DomainError {
   }
 }
 
-/** The staff member already has an appointment that occupies part of this time (rule AP-3). */
 export class AppointmentOverlapError extends DomainError {
   readonly code = 'APPOINTMENT_OVERLAP';
   readonly category = DomainErrorCategory.Conflict;
@@ -145,7 +143,6 @@ export class InvalidAppointmentDataError extends DomainError {
   }
 }
 
-/** A STAFF user may only book and manage appointments of their own agenda. */
 export class OwnAgendaOnlyError extends DomainError {
   readonly code = 'OWN_AGENDA_ONLY';
   readonly category = DomainErrorCategory.Forbidden;
@@ -155,7 +152,6 @@ export class OwnAgendaOnlyError extends DomainError {
   }
 }
 
-/** Booking outside working hours or during time off is an OWNER/ADMIN decision. */
 export class ScheduleOverrideNotAllowedError extends DomainError {
   readonly code = 'SCHEDULE_OVERRIDE_NOT_ALLOWED';
   readonly category = DomainErrorCategory.Forbidden;

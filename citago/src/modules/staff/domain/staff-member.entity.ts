@@ -15,14 +15,6 @@ export interface StaffMemberSnapshot {
   readonly updatedAt: Date;
 }
 
-/**
- * The person who performs the service — the barber.
- *
- * Separate from `User` on purpose (decision B3): a barber may not use the app
- * at all, and an owner may run the business without cutting hair. When the
- * barber does have an account, `userId` links the two, which is how a STAFF
- * user is restricted to "their own" appointments.
- */
 export class StaffMember {
   private constructor(
     readonly id: string,
@@ -98,7 +90,6 @@ export class StaffMember {
     this._updatedAt = now;
   }
 
-  /** `null` unlinks the account; the staff member keeps working without it. */
   linkUser(userId: string | null, now: Date): void {
     this._userId = userId;
     this._updatedAt = now;
@@ -109,7 +100,6 @@ export class StaffMember {
     this._updatedAt = now;
   }
 
-  /** Idempotent. An inactive staff member keeps their history but takes no new bookings. */
   activate(now: Date): void {
     if (!this.isActive) {
       this._status = StaffMemberStatus.Active;

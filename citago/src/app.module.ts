@@ -44,9 +44,6 @@ import { ResponseEnvelopeInterceptor } from './shared/presentation/interceptors/
     WhatsAppWebhookModule,
   ],
   providers: [
-    // Rate limiting is applied as Express middleware in app.setup.ts, because
-    // @nestjs/throttler is still CommonJS and cannot be loaded from the
-    // ESM-only @nestjs/common of Nest 12 (see docs/adr/0003-esm-and-jest.md).
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_INTERCEPTOR, useClass: RequestLoggingInterceptor },
     { provide: APP_INTERCEPTOR, useClass: ResponseEnvelopeInterceptor },

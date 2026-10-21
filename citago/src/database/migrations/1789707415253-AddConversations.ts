@@ -1,19 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-/**
- * Phase 7 — conversations and messages.
- *
- * - `uq_conversations_contact (tenant_id, channel, contact_identifier)`: one
- *   thread per contact (decision F11), and the arbiter when two first messages
- *   from the same contact arrive at the same time.
- * - `uq_messages_external_id`: **global** idempotency key for channel messages
- *   (rule CO-2). NULLs (messages without a channel id) do not collide.
- * - Composite tenant keys everywhere: a conversation can only point at a client
- *   of its tenant, only be assigned to a member of its tenant, and a message
- *   only belong to a conversation of its tenant.
- * - Messages CASCADE with their conversation (same aggregate); nothing else
- *   cascades.
- */
 export class AddConversations1789707415253 implements MigrationInterface {
   name = 'AddConversations1789707415253';
 

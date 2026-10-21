@@ -22,19 +22,6 @@ export interface TransitionAppointmentInput {
   readonly reason?: string | null;
 }
 
-/**
- * Moves an appointment through its lifecycle: confirm, arrive, start,
- * complete, cancel, no-show.
- *
- * One use case rather than six: they are the same business action — "advance
- * this appointment" — and the rules that differ between them live in the
- * domain's state machine, not here. The HTTP layer still exposes one explicit
- * endpoint per action.
- *
- * The one subtle case: moving from a status that frees the slot to one that
- * occupies it (`NO_SHOW → COMPLETED`). Someone may have been booked into the
- * freed time meanwhile, so that path re-checks overlaps under the agenda lock.
- */
 @Injectable()
 export class TransitionAppointmentUseCase {
   constructor(

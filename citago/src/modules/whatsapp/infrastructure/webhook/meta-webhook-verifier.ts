@@ -7,15 +7,6 @@ import type { EnvironmentVariables } from '../../../../config/environment.js';
 
 const SIGNATURE_PREFIX = 'sha256=';
 
-/**
- * Proves a webhook comes from Meta.
- *
- * - `X-Hub-Signature-256` is an HMAC-SHA256 of the **raw** body with the app
- *   secret. The parsed JSON cannot be used: re-serializing it changes bytes.
- * - Comparisons are constant-time.
- * - Without a configured secret or verify token everything is rejected: a
- *   missing variable must never mean "accept anything".
- */
 @Injectable()
 export class MetaWebhookVerifier {
   private readonly appSecret: string;
@@ -44,7 +35,6 @@ export class MetaWebhookVerifier {
     );
   }
 
-  /** The subscription handshake: Meta echoes the token we gave it. */
   isValidSubscription(
     mode: string | undefined,
     token: string | undefined,

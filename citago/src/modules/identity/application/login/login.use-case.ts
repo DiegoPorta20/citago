@@ -25,13 +25,6 @@ export interface LoginResult {
   readonly session: IssuedSession;
 }
 
-/**
- * An argon2id hash of a value nobody knows.
- *
- * Verified when the email does not exist so that a missing account costs the
- * same time as a wrong password: otherwise response times would reveal which
- * emails are registered.
- */
 const DUMMY_HASH =
   '$argon2id$v=19$m=19456,t=2,p=1$c2FsdHNhbHRzYWx0c2FsdA$Iq0ynGQTz8PP0IFcxhwMJiOeGbYj1P8uSQZdXJmmvHM';
 
@@ -75,14 +68,6 @@ export class LoginUseCase {
     };
   }
 
-  /**
-   * Picks the business this sign-in enters.
-   *
-   * The data model already supports a person working at several businesses,
-   * but the MVP has no tenant switcher: the oldest active membership whose
-   * tenant is active wins. Adding `POST /auth/switch-tenant` later only needs
-   * to reissue the pair for another membership.
-   */
   private async resolveMembership(userId: string) {
     const memberships = await this.memberships.findActiveByUserId(userId);
 

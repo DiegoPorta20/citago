@@ -8,13 +8,6 @@ export interface LogoutInput {
   readonly refreshToken: string;
 }
 
-/**
- * Ends a session by revoking its whole rotation family.
- *
- * Deliberately silent about unknown tokens: signing out twice, or with a
- * garbage value, succeeds. Reporting "no such token" would turn sign-out into
- * an oracle for guessing valid ones.
- */
 @Injectable()
 export class LogoutUseCase {
   constructor(

@@ -22,19 +22,6 @@ export interface SendReplyInput {
   readonly body: string;
 }
 
-/**
- * Answers a client from CitaGo (decision D1).
- *
- * The message is sent **before** it is recorded, and the network call happens
- * **outside** the database transaction: holding a row lock while waiting on
- * Meta would stall every inbound message of that conversation. Consequences:
- *
- * - if sending fails, nothing is recorded and the caller gets the error;
- * - if sending succeeds but recording fails (the database went away in
- *   between), the client has the message and the inbox does not. That is
- *   logged; it is the lesser evil compared to recording a message that was
- *   never delivered.
- */
 @Injectable()
 export class SendReplyUseCase {
   private readonly logger = new Logger(SendReplyUseCase.name);
@@ -58,7 +45,6 @@ export class SendReplyUseCase {
       throw new ConversationNotFoundError();
     }
 
-    // Validates the text before anything leaves the building.
     const draft = this.buildMessage(actor, conversation, input.body, null);
 
     if (

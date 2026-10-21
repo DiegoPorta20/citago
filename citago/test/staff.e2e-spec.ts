@@ -257,7 +257,6 @@ describe('Staff (e2e)', () => {
         })
         .expect(201);
 
-      // B uses its own staff id in the URL with A's time-off id.
       await request(server())
         .delete(
           `${API}/staff/${staffB.body.data.id}/time-off/${off.body.data.id}`,

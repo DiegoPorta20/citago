@@ -35,13 +35,6 @@ import { TenantStatus } from '../../modules/tenants/domain/tenant-status.js';
 import { BusinessHoursOrmEntity } from '../../modules/tenants/infrastructure/persistence/typeorm/entities/business-hours.orm-entity.js';
 import { TenantOrmEntity } from '../../modules/tenants/infrastructure/persistence/typeorm/entities/tenant.orm-entity.js';
 
-/**
- * Development data. Obviously fake, and idempotent: running it twice leaves the
- * same rows, so it is safe to re-run after a migration.
- *
- * Identifiers are fixed (not random) so that fixtures, screenshots and manual
- * testing keep referring to the same records.
- */
 export const DEMO_TENANT_ID = '01999999-0000-7000-8000-000000000001';
 
 const DEMO_PASSWORD = 'Demo1234!';
@@ -87,7 +80,6 @@ interface DemoService {
   readonly status: ServiceStatus;
 }
 
-/** A plausible barbershop menu, in the tenant currency (PEN). */
 const DEMO_SERVICES: readonly DemoService[] = [
   {
     id: '01999999-0000-7000-8000-000000000031',
@@ -141,7 +133,6 @@ const DEMO_SERVICES: readonly DemoService[] = [
 
 interface DemoClient {
   readonly name: string;
-  /** Test range +51 900 000 0XX: clearly fake, but valid Peruvian mobiles. */
   readonly phoneE164: string | null;
   readonly notes: string | null;
 }
@@ -172,7 +163,6 @@ const DEMO_CLIENT_NAMES = [
 const DEMO_CLIENTS: readonly DemoClient[] = DEMO_CLIENT_NAMES.map(
   (name, index) => ({
     name,
-    // Two walk-ins without phone, as happens in real life.
     phoneE164:
       index >= 18 ? null : `+5190000${String(index + 1).padStart(4, '0')}`,
     notes: index === 0 ? 'Prefiere corte con tijera' : null,
@@ -182,7 +172,6 @@ const DEMO_CLIENTS: readonly DemoClient[] = DEMO_CLIENT_NAMES.map(
 const clientIdAt = (index: number) =>
   `01999999-0000-7000-8000-00000000${String(index + 100).padStart(4, '0')}`;
 
-/** Two barbers, linked to the demo OWNER and STAFF accounts. */
 const DEMO_STAFF = [
   {
     id: '01999999-0000-7000-8000-000000000041',
@@ -196,13 +185,11 @@ const DEMO_STAFF = [
   },
 ] as const;
 
-/** Monday to Saturday with a lunch break, in Lima wall-clock time. */
 const DEMO_WEEK = [1, 2, 3, 4, 5, 6].flatMap((weekday) => [
   { weekday, startsAt: '09:00:00', endsAt: '13:00:00' },
   { weekday, startsAt: '15:00:00', endsAt: '20:00:00' },
 ]);
 
-/** Past appointments get realistic outcomes; future ones are still open. */
 function demoStatusFor(dayOffset: number, slot: number): AppointmentStatus {
   if (dayOffset > 0) {
     return slot % 2 === 0
@@ -262,8 +249,6 @@ export async function runDevSeed(dataSource: DataSource): Promise<SeedSummary> {
       ['id'],
     );
 
-    // The shop's opening hours: the same week the barbers work, which is what
-    // a real business would fill in first.
     await manager
       .getRepository(BusinessHoursOrmEntity)
       .delete({ tenantId: DEMO_TENANT_ID });
@@ -350,7 +335,6 @@ export async function runDevSeed(dataSource: DataSource): Promise<SeedSummary> {
         ['id'],
       );
 
-      // Replace the week so re-running the seed never duplicates ranges.
       await manager
         .getRepository(StaffScheduleOrmEntity)
         .delete({ tenantId: DEMO_TENANT_ID, staffMemberId: member.id });
@@ -364,11 +348,6 @@ export async function runDevSeed(dataSource: DataSource): Promise<SeedSummary> {
       );
     }
 
-    // Appointments from a week ago to a week ahead, recomputed around "today"
-    // on every run: two per barber per working day, never overlapping.
-    //
-    // Sales go first: they reference appointments with RESTRICT, which is the
-    // point — takings are never cascaded away, not even by a re-seed.
     await manager
       .getRepository(SaleLineOrmEntity)
       .delete({ tenantId: DEMO_TENANT_ID });
@@ -391,7 +370,7 @@ export async function runDevSeed(dataSource: DataSource): Promise<SeedSummary> {
       const day = today.plus({ days: dayOffset });
 
       if (day.weekday === 7) {
-        continue; // Sunday: closed.
+        continue;
       }
 
       for (const [staffIndex, member] of DEMO_STAFF.entries()) {
@@ -450,8 +429,6 @@ export async function runDevSeed(dataSource: DataSource): Promise<SeedSummary> {
             })),
           );
 
-          // Every service actually delivered is charged (rules SA-3, AP-9), so
-          // the till of the past week has something to show.
           if (status === AppointmentStatus.Completed) {
             const saleId = uuidV7();
 
@@ -498,7 +475,6 @@ export async function runDevSeed(dataSource: DataSource): Promise<SeedSummary> {
       }
     }
 
-    // Three WhatsApp threads, one per inbox state: pending, answered, archived.
     await manager
       .getRepository(MessageOrmEntity)
       .delete({ tenantId: DEMO_TENANT_ID });

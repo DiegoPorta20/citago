@@ -38,21 +38,6 @@ import {
   TeamMemberResponseDto,
 } from './dto/team.dto.js';
 
-/**
- * Who can enter the business, and as what.
- *
- * The resource is the **membership**, not the person: a user account belongs to
- * the platform, access belongs to one business. Revoking here closes a door
- * without touching an account that may work at another shop.
- *
- * There is **no DELETE**: access is revoked and can be restored, and the
- * history of who did what stays readable (a cancelled appointment still names
- * the person who cancelled it).
- *
- * OWNER and ADMIN reach these endpoints; which rows each may touch depends on
- * the role being granted or withdrawn, so that half lives in the use case
- * (docs/permissions.md).
- */
 @ApiTags('team')
 @ApiBearerAuth()
 @Roles(UserRole.Owner, UserRole.Admin)

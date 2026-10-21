@@ -18,14 +18,6 @@ import type { BusinessView } from '../application/business.use-cases.js';
 import { BusinessType } from '../domain/business-type.js';
 import { TenantStatus } from '../domain/tenant-status.js';
 
-/**
- * Partial update: only the fields present are applied.
- *
- * `currency` is **not** here, and a request that sends it is rejected by the
- * global whitelist. Every price in the catalogue is stored as a bare amount in
- * the tenant currency, so switching it would reprice the whole shop without
- * touching a single price.
- */
 export class UpdateBusinessRequestDto {
   @ApiPropertyOptional({ example: 'Barbería Los Ángeles', maxLength: 120 })
   @IsOptional()

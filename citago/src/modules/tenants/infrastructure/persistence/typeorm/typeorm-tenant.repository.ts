@@ -23,7 +23,6 @@ export class TypeOrmTenantRepository extends TenantRepository {
   }
 
   private get repository() {
-    // Resolved per call so writes join the current transaction, if any.
     return this.context.manager.getRepository(TenantOrmEntity);
   }
 
@@ -57,8 +56,6 @@ export class TypeOrmTenantRepository extends TenantRepository {
   }
 
   async replaceHours(tenantId: string, hours: WeeklySchedule): Promise<void> {
-    // Delete and insert rather than diff: the week is edited as one thing, and
-    // a handful of rows makes any cleverness a loss.
     await this.hours.delete({ tenantId });
 
     const ranges = hours.all();

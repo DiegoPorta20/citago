@@ -55,8 +55,6 @@ export class TypeOrmAppointmentRepository extends AppointmentRepository {
     staffMemberId: string,
     range: TimeRange,
   ): Promise<Appointment[]> {
-    // Half-open overlap: starts before the range ends and ends after it starts.
-    // Served by ix_appointments_staff_start (tenant_id, staff_member_id, start_at).
     const rows = await this.appointments.find({
       where: {
         tenantId,

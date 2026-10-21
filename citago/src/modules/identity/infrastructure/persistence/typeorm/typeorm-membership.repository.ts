@@ -17,7 +17,6 @@ export class TypeOrmMembershipRepository extends MembershipRepository {
     return this.context.manager.getRepository(MembershipOrmEntity);
   }
 
-  /** Tenant-scoped: an id from another tenant simply does not resolve. */
   async findByIdForTenant(
     id: string,
     tenantId: string,
@@ -54,7 +53,6 @@ export class TypeOrmMembershipRepository extends MembershipRepository {
     return row ? this.toDomain(row) : null;
   }
 
-  /** Supports rule ID-1: a tenant must keep at least one active OWNER. */
   async countActiveByRole(tenantId: string, role: UserRole): Promise<number> {
     return this.repository.countBy({
       tenantId,

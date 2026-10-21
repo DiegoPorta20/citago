@@ -3,12 +3,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import type { Service } from '../../domain/service.entity.js';
 import { ServiceStatus } from '../../domain/service-status.js';
 
-/**
- * The public shape of a service.
- *
- * The domain entity is never serialized directly: the API contract must be
- * able to stay stable while the entity evolves.
- */
 export class ServiceResponseDto {
   @ApiProperty({ format: 'uuid' })
   id: string;
@@ -40,8 +34,6 @@ export class ServiceResponseDto {
   static fromDomain(service: Service): ServiceResponseDto {
     const snapshot = service.toSnapshot();
 
-    // `tenantId` is deliberately not exposed: the client never needs it, and
-    // publishing it invites clients to start sending it back.
     return {
       id: snapshot.id,
       name: snapshot.name,

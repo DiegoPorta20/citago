@@ -18,7 +18,6 @@ import {
 import { SaleLineOrmEntity } from './entities/sale-line.orm-entity.js';
 import { SaleOrmEntity } from './entities/sale.orm-entity.js';
 
-/** MySQL reports a unique-key violation with this code and the key name. */
 function isDuplicateOn(error: unknown, keyName: string): boolean {
   if (!(error instanceof QueryFailedError)) {
     return false;
@@ -97,7 +96,6 @@ export class TypeOrmSaleRepository extends SaleRepository {
       .take(page.limit)
       .getManyAndCount();
 
-    // One query for the lines of the whole page, never one per sale.
     const linesBySale = await this.linesOf(
       tenantId,
       rows.map((row) => row.id),
@@ -137,8 +135,6 @@ export class TypeOrmSaleRepository extends SaleRepository {
     try {
       await this.sales.save(row);
     } catch (error) {
-      // Rule SA-3 under concurrency: two tills charging the same appointment
-      // both pass the application check, and the unique key settles it.
       if (isDuplicateOn(error, 'uq_sales_appointment')) {
         throw new AppointmentAlreadyBilledError();
       }
@@ -146,8 +142,6 @@ export class TypeOrmSaleRepository extends SaleRepository {
       throw error;
     }
 
-    // Lines are immutable, so re-saving an existing sale rewrites identical
-    // rows rather than needing to know whether this is the first save.
     await this.lines.upsert(
       snapshot.lines.map((line, position) => ({
         id: line.id,
@@ -164,7 +158,6 @@ export class TypeOrmSaleRepository extends SaleRepository {
     );
   }
 
-  /** The lines of the given sales, grouped by sale and kept in order. */
   private async linesOf(
     tenantId: string,
     saleIds: readonly string[],

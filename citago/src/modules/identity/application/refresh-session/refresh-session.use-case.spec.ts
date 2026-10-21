@@ -157,13 +157,10 @@ describe('RefreshSessionUseCase', () => {
       const refreshToken = await seedSession();
       const first = await useCase.execute({ refreshToken });
 
-      // The old token is replayed: it leaked.
       await expect(useCase.execute({ refreshToken })).rejects.toThrow(
         InvalidRefreshTokenError,
       );
 
-      // Every token of the family dies, including the legitimate new one, so
-      // both the attacker and the real user must sign in again.
       const issued = refreshTokens.tokens.get(first.session.refreshTokenId);
       expect(issued?.revokedAt).not.toBeNull();
 

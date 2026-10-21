@@ -12,7 +12,6 @@ export class InvalidStaffDataError extends DomainError {
   }
 }
 
-/** Also raised for another tenant's staff member: same 404, no existence leak. */
 export class StaffMemberNotFoundError extends DomainError {
   readonly code = 'STAFF_MEMBER_NOT_FOUND';
   readonly category = DomainErrorCategory.NotFound;
@@ -22,7 +21,6 @@ export class StaffMemberNotFoundError extends DomainError {
   }
 }
 
-/** The account must belong to this business before it can be linked. */
 export class UserNotMemberOfTenantError extends DomainError {
   readonly code = 'USER_NOT_MEMBER_OF_TENANT';
   readonly category = DomainErrorCategory.BusinessRule;

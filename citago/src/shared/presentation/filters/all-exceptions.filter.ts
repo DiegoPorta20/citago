@@ -11,7 +11,6 @@ import type { Request, Response } from 'express';
 import { DomainError, DomainErrorCategory } from '../../domain/domain-error.js';
 import type { ApiErrorDto } from '../dto/api-error.dto.js';
 
-/** Lowest status code that means "our fault", and therefore must be logged. */
 const SERVER_ERROR_MIN_STATUS = 500;
 
 const CATEGORY_STATUS: Record<DomainErrorCategory, HttpStatus> = {
@@ -24,7 +23,6 @@ const CATEGORY_STATUS: Record<DomainErrorCategory, HttpStatus> = {
   [DomainErrorCategory.ExternalService]: HttpStatus.BAD_GATEWAY,
 };
 
-/** Error code returned for framework exceptions that carry no domain code. */
 const STATUS_CODE_NAMES: Record<number, string> = {
   [HttpStatus.BAD_REQUEST]: 'BAD_REQUEST',
   [HttpStatus.UNAUTHORIZED]: 'UNAUTHORIZED',
@@ -35,14 +33,6 @@ const STATUS_CODE_NAMES: Record<number, string> = {
   [HttpStatus.TOO_MANY_REQUESTS]: 'TOO_MANY_REQUESTS',
 };
 
-/**
- * The single translation point between failures and HTTP responses.
- *
- * One filter instead of several avoids depending on Nest's global filter
- * ordering, and keeps the whole error contract readable in one file.
- *
- * Nothing internal ever reaches the client: no stack traces, no SQL, no paths.
- */
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
@@ -53,8 +43,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = http.getResponse<Response>();
 
     const body = this.toErrorBody(exception, request.originalUrl);
-    // Logged without the query string: it can carry personal data (a searched
-    // phone number) or secrets (the webhook verify token).
     const path = request.originalUrl.split('?')[0];
 
     if (body.statusCode >= SERVER_ERROR_MIN_STATUS) {
@@ -104,8 +92,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const statusCode = exception.getStatus();
     const payload = exception.getResponse();
 
-    // The global ValidationPipe throws BadRequestException with an array of
-    // messages. Surface them as structured details instead of a raw array.
     if (
       typeof payload === 'object' &&
       payload !== null &&

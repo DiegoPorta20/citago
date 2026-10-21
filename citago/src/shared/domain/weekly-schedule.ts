@@ -10,7 +10,6 @@ export class InvalidScheduleError extends DomainError {
   }
 }
 
-/** ISO weekday: 1 = Monday … 7 = Sunday. */
 export type Weekday = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export interface ScheduleRange {
@@ -25,20 +24,8 @@ export interface ScheduleRangeInput {
   readonly endsAt: string;
 }
 
-/** Enough for a split shift with a couple of breaks; more is a data-entry mistake. */
 const MAX_RANGES_PER_DAY = 4;
 
-/**
- * When a staff member works, week after week, in the business's wall-clock
- * time.
- *
- * Several ranges per day model a lunch break: `09:00–13:00` + `15:00–20:00`.
- * A day with no range is a day off. Dates off (holidays, a sick day) are
- * separate: see `StaffTimeOff`.
- *
- * Ranges on the same day may touch (`13:00` end, `13:00` start) but not
- * overlap: an overlap is always a typo, and silently merging it would hide it.
- */
 export class WeeklySchedule {
   private constructor(private readonly ranges: readonly ScheduleRange[]) {}
 
@@ -90,7 +77,6 @@ export class WeeklySchedule {
     );
   }
 
-  /** Rehydrates stored ranges; they were validated when written. */
   static restore(ranges: readonly ScheduleRange[]): WeeklySchedule {
     return new WeeklySchedule(ranges);
   }

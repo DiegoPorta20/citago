@@ -5,23 +5,14 @@ export class InvalidEmailError extends DomainError {
   readonly category = DomainErrorCategory.Validation;
 
   constructor() {
-    // The offending value is never echoed back or logged.
     super('The email address is not valid.');
   }
 }
 
 const MAX_LENGTH = 160;
 
-/**
- * Pragmatic shape check. Full RFC 5322 validation is famously useless in
- * practice: what proves an address real is sending mail to it.
- */
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
 
-/**
- * An email address, normalized once so that `Ana@Demo.local` and
- * `ana@demo.local` can never become two accounts.
- */
 export class Email {
   private constructor(readonly value: string) {}
 

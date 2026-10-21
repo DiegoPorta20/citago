@@ -6,21 +6,12 @@ import { ConfigService } from '@nestjs/config';
 import type { EnvironmentVariables } from '../../../config/environment.js';
 import { SecretCipher } from '../../application/ports/secret-cipher.port.js';
 
-/** Format version, so the key or algorithm can be rotated later. */
 const FORMAT_V1 = 1;
 const KEY_BYTES = 32;
 const IV_BYTES = 12;
 const TAG_BYTES = 16;
 const HEADER_BYTES = 1 + IV_BYTES + TAG_BYTES;
 
-/**
- * AES-256-GCM: confidentiality plus integrity. Layout of the stored value:
- *
- *   [version:1][iv:12][auth tag:16][ciphertext:n]
- *
- * A fresh random IV per encryption; the context is authenticated data, so it
- * is not stored but must match on decryption.
- */
 @Injectable()
 export class AesGcmSecretCipher extends SecretCipher {
   private readonly key: Buffer;

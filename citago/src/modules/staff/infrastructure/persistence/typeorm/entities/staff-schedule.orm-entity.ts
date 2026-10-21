@@ -9,7 +9,6 @@ import {
 
 import { StaffMemberOrmEntity } from './staff-member.orm-entity.js';
 
-/** One working range of one weekday. Local wall-clock time, not UTC (rule TZ-3). */
 @Entity('staff_schedules')
 @Index('ix_staff_schedules_staff', ['tenantId', 'staffMemberId', 'weekday'])
 export class StaffScheduleOrmEntity {
@@ -25,7 +24,6 @@ export class StaffScheduleOrmEntity {
   @Column({ name: 'weekday', type: 'tinyint', unsigned: true })
   weekday: number;
 
-  /** Returned by MySQL as `HH:mm:ss`. */
   @Column({ name: 'starts_at', type: 'time' })
   startsAt: string;
 

@@ -113,7 +113,6 @@ describe('TypeOrmServiceRepository (integration)', () => {
     });
 
     it('rejects a negative price at the database level (rule CA-2)', async () => {
-      // The CHECK constraint holds even for SQL written by hand.
       await expect(
         dataSource.query(
           `INSERT INTO services (id, tenant_id, name, duration_minutes, price, status, created_at, updated_at)
@@ -177,7 +176,6 @@ describe('TypeOrmServiceRepository (integration)', () => {
     it('ignores case and accents, because the collation does', async () => {
       await addService(tenantA, 'Corte de Cabello');
 
-      // utf8mb4_0900_ai_ci: accent-insensitive, case-insensitive.
       await expect(
         services.existsActiveWithName(tenantA, 'corte de cabello'),
       ).resolves.toBe(true);

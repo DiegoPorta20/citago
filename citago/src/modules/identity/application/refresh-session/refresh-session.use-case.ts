@@ -25,15 +25,6 @@ export interface RefreshSessionResult {
   readonly session: IssuedSession;
 }
 
-/**
- * Exchanges a refresh token for a new pair, rotating it.
- *
- * Every failure returns the same error: a caller probing tokens learns nothing
- * about why one was rejected.
- *
- * Access is re-checked here, not just at sign-in — a revoked membership or a
- * suspended business cannot be kept alive by refreshing.
- */
 @Injectable()
 export class RefreshSessionUseCase {
   private readonly logger = new Logger(RefreshSessionUseCase.name);
@@ -97,9 +88,6 @@ export class RefreshSessionUseCase {
   private async assertUsable(stored: StoredRefreshToken): Promise<void> {
     const now = this.clock.now();
 
-    // Reuse detection: a token that was already rotated or revoked is being
-    // replayed, which means it leaked. The whole rotation chain dies, so the
-    // legitimate holder is signed out too and has to authenticate again.
     if (stored.revokedAt !== null || stored.replacedById !== null) {
       this.logger.warn(
         `Refresh token reuse detected for family ${stored.familyId}; revoking it`,

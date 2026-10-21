@@ -147,8 +147,6 @@ describe('LoginUseCase', () => {
   });
 
   it('rejects an unknown email with the same error as a wrong password', async () => {
-    // Identical error and identical work: the API cannot be used to find out
-    // which emails have an account.
     await expect(
       useCase.execute({ email: 'nadie@barberia.pe', password: PASSWORD }),
     ).rejects.toThrow(InvalidCredentialsError);
@@ -180,7 +178,6 @@ describe('LoginUseCase', () => {
       }),
     ).rejects.toThrow(InvalidCredentialsError);
 
-    // Equal timing: a missing account still pays for one hash verification.
     expect(verify).toHaveBeenCalledTimes(1);
   });
 
@@ -268,7 +265,6 @@ describe('LoginUseCase', () => {
       password: PASSWORD,
     });
 
-    // MVP behaviour: no tenant switcher yet, so the oldest access wins.
     expect(result.tenantId).toBe('tenant-old');
   });
 

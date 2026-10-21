@@ -29,11 +29,13 @@ Detalle de variables, migraciones y tests: [`citago/README.md`](./citago/README.
 ```bash
 cd citagof
 flutter pub get
-flutter run
+flutter run --dart-define=API_BASE_URL=http://localhost:3000/api/v1
 ```
 
-> Todavía es la plantilla generada por Flutter. Se implementa después de
-> validar el backend.
+> Incluye inicio de sesión, registro, dashboard, agenda, cobro, conversaciones,
+> clientes y la administración de servicios, profesionales, equipo, negocio,
+> WhatsApp y ventas. Falta la recuperación de contraseña (necesita proveedor de correo).
+> Ver [`citagof/README.md`](./citagof/README.md).
 
 ## Documentación
 

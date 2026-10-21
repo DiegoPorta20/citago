@@ -1,20 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-/**
- * Phase 4 — the service catalogue.
- *
- * Two details that the entity alone cannot express, and that matter later:
- *
- * - `UNIQUE(tenant_id, id)` exists so appointments and sale items can point at
- *   a service with a **composite** foreign key `(tenant_id, service_id)`,
- *   making a cross-tenant reference impossible in the database (ADR 0004).
- * - The `CHECK` constraints keep a zero-minute or negative-price service out of
- *   the table even if someone writes SQL by hand (rules CA-1 and CA-2).
- *
- * There is no `UNIQUE(tenant_id, name)`: an inactive service keeps its name, so
- * uniqueness only applies among the active ones, which MySQL cannot express.
- * The rule lives in the use case (decision F3).
- */
 export class AddServices1789684045518 implements MigrationInterface {
   name = 'AddServices1789684045518';
 

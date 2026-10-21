@@ -68,7 +68,6 @@ describe('Catalog use cases', () => {
     it('creates a service in the tenant of the session', async () => {
       const service = await createHaircut();
 
-      // The tenant comes from the AuthContext, never from the input.
       expect(service.tenantId).toBe('tenant-a');
       expect(service.status).toBe(ServiceStatus.Active);
       expect(service.price.toDecimalString()).toBe('25.00');
@@ -93,7 +92,6 @@ describe('Catalog use cases', () => {
         status: ServiceStatus.Inactive,
       });
 
-      // The old service keeps its name for history; the catalogue can move on.
       await expect(createHaircut()).resolves.toMatchObject({
         name: 'Corte de cabello',
       });
@@ -162,7 +160,6 @@ describe('Catalog use cases', () => {
     it('cannot touch a service of another tenant', async () => {
       const service = await createHaircut(tenantA);
 
-      // The IDOR attempt: a real id used from the wrong session.
       await expect(
         update.execute(tenantB, { serviceId: service.id, price: '1.00' }),
       ).rejects.toThrow(ServiceNotFoundError);
@@ -294,7 +291,6 @@ describe('Catalog use cases', () => {
     it('reports another tenant service as not found, not as forbidden', async () => {
       const service = await createHaircut(tenantA);
 
-      // 404, never 403: a 403 would confirm the id exists.
       await expect(get.execute(tenantB, service.id)).rejects.toThrow(
         ServiceNotFoundError,
       );

@@ -61,7 +61,6 @@ describe('Services (e2e)', () => {
         price: '25.00',
         status: 'ACTIVE',
       });
-      // The tenant is never echoed back: clients must not learn to send it.
       expect(response.body.data.tenantId).toBeUndefined();
     });
 
@@ -87,7 +86,6 @@ describe('Services (e2e)', () => {
     });
 
     it('rejects a price sent as a JSON number', async () => {
-      // Money crosses the wire as a decimal string, so it never touches a float.
       const response = await createService(owner, { price: 25 }).expect(400);
 
       expect(response.body.code).toBe('VALIDATION_ERROR');
@@ -306,9 +304,6 @@ describe('Services (e2e)', () => {
     const asStaff = async (): Promise<RegisteredBusiness> => {
       const staff = await registerBusiness(app, { email: 'staff@demo.local' });
 
-      // There is no invite endpoint yet (that is user management), so the role
-      // is downgraded directly. The guard reads it from the membership on every
-      // request, so the existing token now behaves as STAFF.
       await dataSource.query(
         'UPDATE memberships SET role = ? WHERE user_id = ?',
         [UserRole.Staff, staff.userId],
@@ -386,7 +381,6 @@ describe('Services (e2e)', () => {
       const { tenantA, tenantB } = await createTwoTenants(app);
       const created = await createService(tenantA).expect(201);
 
-      // 403 would confirm the id exists. 404 reveals nothing.
       const response = await request(app.getHttpServer())
         .get(`${API}/services/${created.body.data.id}`)
         .set(...authHeader(tenantB))
@@ -411,7 +405,6 @@ describe('Services (e2e)', () => {
         .set(...authHeader(tenantB))
         .expect(404);
 
-      // The original is untouched.
       const unchanged = await request(app.getHttpServer())
         .get(`${API}/services/${id}`)
         .set(...authHeader(tenantA))

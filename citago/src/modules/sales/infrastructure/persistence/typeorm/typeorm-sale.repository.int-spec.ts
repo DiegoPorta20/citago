@@ -21,11 +21,6 @@ import { TypeOrmSaleRepository } from './typeorm-sale.repository.js';
 
 const NOW = new Date('2026-09-21T15:00:00.000Z');
 
-/**
- * What the database guarantees about the till, independently of the
- * application: the amounts add up, an appointment is charged once, and a sale
- * never reaches across tenants.
- */
 describe('TypeOrmSaleRepository (integration)', () => {
   let dataSource: DataSource;
   let sales: TypeOrmSaleRepository;

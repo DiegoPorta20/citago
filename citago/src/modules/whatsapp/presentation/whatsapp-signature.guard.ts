@@ -9,11 +9,6 @@ import type { Request } from 'express';
 import { InvalidWebhookSignatureError } from '../domain/whatsapp.errors.js';
 import { MetaWebhookVerifier } from '../infrastructure/webhook/meta-webhook-verifier.js';
 
-/**
- * Rejects any webhook Meta did not sign, before the payload is read and before
- * any database access. Only after this does the payload's phone number id get
- * to decide the tenant (rule CO-5).
- */
 @Injectable()
 export class WhatsAppSignatureGuard implements CanActivate {
   constructor(private readonly verifier: MetaWebhookVerifier) {}

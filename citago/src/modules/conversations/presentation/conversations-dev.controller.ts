@@ -25,17 +25,6 @@ import {
   SimulateInboundResponseDto,
 } from './conversations.dto.js';
 
-/**
- * A stand-in for the WhatsApp webhook while Meta's approval is pending.
- *
- * It calls **the same use case** the webhook will call, so everything built on
- * top — inbox, pending counter, client linking, the mobile app — is exercised
- * for real. Only the tenant differs: here it comes from the session, since
- * there is no channel to resolve it from.
- *
- * Disabled unless `DEV_TOOLS_ENABLED=true`; then it answers 404 like any
- * route that does not exist.
- */
 @ApiTags('dev')
 @ApiBearerAuth()
 @Controller('conversations')

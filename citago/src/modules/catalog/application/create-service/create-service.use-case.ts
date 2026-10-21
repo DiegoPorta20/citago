@@ -12,7 +12,6 @@ export interface CreateServiceInput {
   readonly name: string;
   readonly description?: string | null;
   readonly durationMinutes: number;
-  /** Decimal string, e.g. `"25.00"`. Never a number. */
   readonly price: string;
 }
 
@@ -30,8 +29,6 @@ export class CreateServiceUseCase {
   ): Promise<Service> {
     const name = input.name.trim();
 
-    // Not a database constraint: an inactive service keeps its name, so
-    // uniqueness only makes sense among the active ones (decision F3).
     if (await this.services.existsActiveWithName(actor.tenantId, name)) {
       throw new DuplicateServiceNameError(name);
     }
@@ -39,7 +36,6 @@ export class CreateServiceUseCase {
     const service = Service.create(
       {
         id: this.ids.generate(),
-        // The tenant comes from the verified session, never from the request.
         tenantId: actor.tenantId,
         name,
         description: input.description,

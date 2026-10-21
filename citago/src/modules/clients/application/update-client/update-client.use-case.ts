@@ -16,9 +16,7 @@ import { ClientPhoneNormalizer } from '../client-phone-normalizer.js';
 export interface UpdateClientInput {
   readonly clientId: string;
   readonly name?: string;
-  /** `null` or `""` clears the phone. */
   readonly phone?: string | null;
-  /** `null` or `""` clears the email. */
   readonly email?: string | null;
   readonly notes?: string | null;
 }
@@ -37,7 +35,6 @@ export class UpdateClientUseCase {
       actor.tenantId,
     );
 
-    // Deleted clients and other tenants' clients are all "not found" here.
     if (!client) {
       throw new ClientNotFoundError();
     }
@@ -47,7 +44,6 @@ export class UpdateClientUseCase {
       input.phone,
     );
 
-    // Only a *new* number needs checking: keeping one's own is not a clash.
     const phoneChanged =
       phone != null && !(client.phone?.equals(phone) ?? false);
 

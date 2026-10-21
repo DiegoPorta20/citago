@@ -35,7 +35,6 @@ export class ConnectWhatsAppRequestDto {
   wabaId?: string;
 }
 
-/** The connection as the business sees it. The token is never included. */
 export class WhatsAppChannelResponseDto {
   @ApiProperty()
   connected: boolean;

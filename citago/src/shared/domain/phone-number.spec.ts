@@ -10,7 +10,6 @@ describe('PhoneNumber', () => {
       ['with dashes', '999-999-999'],
       ['with a national prefix in parentheses', '(999) 999 999'],
     ])('resolves %s to the same E.164 value', (_case, raw) => {
-      // All of these are the same person; anything else duplicates customers.
       expect(PhoneNumber.create(raw, 'PE').value).toBe('+51999999999');
     });
 
@@ -64,7 +63,6 @@ describe('PhoneNumber', () => {
 
   describe('stored numbers', () => {
     it('rebuilds a stored value without re-validating it', () => {
-      // Country phone plans change; a stored customer must stay readable.
       expect(PhoneNumber.fromE164('+51999999999').value).toBe('+51999999999');
     });
 

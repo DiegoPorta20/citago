@@ -28,12 +28,9 @@ import {
 import { AgendaAccess } from './agenda-access.js';
 import { BookingRules } from './booking-rules.js';
 
-/** Two months: enough for any calendar view, small enough to stay cheap. */
 const MAX_AGENDA_DAYS = 62;
-/** Availability is offered every 15 minutes from the start of each shift. */
 const SLOT_STEP_MINUTES = 15;
 
-/** An appointment with the names a screen needs, resolved in bulk. */
 export interface AppointmentView {
   readonly appointment: Appointment;
   readonly client: {
@@ -48,12 +45,6 @@ export interface AppointmentView {
   } | null;
 }
 
-/**
- * Attaches client, service and staff names to a batch of appointments.
- *
- * Three queries for the whole page, whatever its size — never one per row —
- * and each through the owning module's repository, never its tables.
- */
 @Injectable()
 export class AppointmentViewAssembler {
   constructor(
@@ -150,13 +141,6 @@ export interface ListAgendaInput extends PageRequest {
   readonly status?: AppointmentStatus;
 }
 
-/**
- * The agenda: appointments overlapping a time range.
- *
- * STAFF users see only their own agenda, whatever filter they send
- * (docs/permissions.md). A STAFF account not linked to a staff member sees an
- * empty agenda rather than an error.
- */
 @Injectable()
 export class ListAgendaUseCase {
   constructor(
@@ -185,7 +169,6 @@ export class ListAgendaUseCase {
     const staffMemberId =
       scope.kind === 'own' ? scope.staffMemberId : input.staffMemberId;
 
-    // A STAFF user asking for someone else's agenda simply gets their own.
     if (
       scope.kind === 'own' &&
       input.staffMemberId !== undefined &&
@@ -219,13 +202,6 @@ export interface AvailabilityResult {
   readonly slots: readonly (FreeSlot & { readonly localTime: string })[];
 }
 
-/**
- * Free start times for a service with a staff member on a local date.
- *
- * Advisory: the slot is only guaranteed at booking time, under the agenda
- * lock. Two people looking at the same free slot is normal; only one of them
- * gets it.
- */
 @Injectable()
 export class GetAvailabilityUseCase {
   constructor(
@@ -241,7 +217,6 @@ export class GetAvailabilityUseCase {
     input: {
       readonly staffMemberId: string;
       readonly serviceId: string;
-      /** Local date, `YYYY-MM-DD`, in the business time zone. */
       readonly date: string;
     },
   ): Promise<AvailabilityResult> {

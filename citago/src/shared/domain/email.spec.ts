@@ -8,7 +8,6 @@ describe('Email', () => {
   });
 
   it('treats addresses differing only in case as the same', () => {
-    // This is what stops `Ana@demo.local` from becoming a second account.
     expect(
       Email.create('ANA@demo.local').equals(Email.create('ana@demo.local')),
     ).toBe(true);

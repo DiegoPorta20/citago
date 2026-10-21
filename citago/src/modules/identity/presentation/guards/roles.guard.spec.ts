@@ -77,8 +77,6 @@ describe('RolesGuard', () => {
   });
 
   it('rejects when there is no session on the request', () => {
-    // Belt and braces: the auth guard runs first, but a misconfigured
-    // @Public endpoint with @Roles must not fall through as authorized.
     const { guard, context } = contextFor([UserRole.Owner], undefined);
 
     expect(() => guard.canActivate(context)).toThrow(InsufficientRoleError);

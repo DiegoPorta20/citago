@@ -12,7 +12,6 @@ export interface ClientSnapshot {
   readonly id: string;
   readonly tenantId: string;
   readonly name: string;
-  /** E.164, or null for a walk-in nobody asked a number from. */
   readonly phoneE164: string | null;
   readonly email: string | null;
   readonly notes: string | null;
@@ -37,20 +36,6 @@ export interface UpdateClientInput {
   readonly notes?: string | null;
 }
 
-/**
- * The end customer of a business.
- *
- * The phone is **optional**: a walk-in can be registered with a name alone. It
- * is also how WhatsApp identifies the person, so when present it is unique
- * within the tenant (rule CL-2) and always stored in E.164.
- *
- * Clients are never hard-deleted (rule CL-3): appointments and sales must keep
- * pointing at a real person.
- *
- * `totalVisits` and `totalSpent` are deliberately **not** fields here: they are
- * computed from appointments and sales (rule CL-5), because denormalized
- * counters drift the first time a sale is voided.
- */
 export class Client {
   private constructor(
     readonly id: string,
@@ -120,7 +105,6 @@ export class Client {
     return this._deletedAt !== null;
   }
 
-  /** Applies only the fields provided; `null` clears an optional one. */
   update(changes: UpdateClientInput, now: Date): void {
     if (changes.name !== undefined) {
       this._name = assertName(changes.name);
@@ -138,11 +122,6 @@ export class Client {
     this._updatedAt = now;
   }
 
-  /**
-   * Soft delete: the row stays so its appointments and sales keep their
-   * customer. The phone stays too, which is why re-registering it offers to
-   * restore this client instead of creating a duplicate.
-   */
   softDelete(now: Date): void {
     if (this.isDeleted) {
       throw new ClientAlreadyDeletedError();

@@ -29,7 +29,6 @@ import {
   WhatsAppChannelResponseDto,
 } from './whatsapp-channel.dto.js';
 
-/** Setting up the business's WhatsApp number: OWNER or ADMIN (docs/permissions.md). */
 @ApiTags('whatsapp')
 @ApiBearerAuth()
 @Roles(UserRole.Owner, UserRole.Admin)

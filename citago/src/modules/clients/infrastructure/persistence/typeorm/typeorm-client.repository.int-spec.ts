@@ -77,7 +77,6 @@ describe('TypeOrmClientRepository (integration)', () => {
     });
 
     it('translates the race of two simultaneous creations into a 409, not a 500', async () => {
-      // Both requests passed the use case check before either one committed.
       const results = await Promise.allSettled([
         clients.save(newClient(tenantA, 'Juan 1', PHONE)),
         clients.save(newClient(tenantA, 'Juan 2', PHONE)),
@@ -86,7 +85,6 @@ describe('TypeOrmClientRepository (integration)', () => {
       const rejected = results.filter((result) => result.status === 'rejected');
 
       expect(rejected).toHaveLength(1);
-      // TypeScript infers the filter as a type guard, so rejected[0] is narrowed.
       expect(rejected[0].reason).toBeInstanceOf(
         ClientPhoneAlreadyRegisteredError,
       );
@@ -115,7 +113,6 @@ describe('TypeOrmClientRepository (integration)', () => {
       deleted.softDelete(NOW);
       await clients.save(deleted);
 
-      // Still found by phone, so the use case can offer to restore it.
       const found = await clients.findByPhone(tenantA, PHONE);
       expect(found?.id).toBe(deleted.id);
       expect(found?.isDeleted).toBe(true);

@@ -294,7 +294,6 @@ describe('Clients (e2e)', () => {
       const { tenantA, tenantB } = await createTwoTenants(app);
       await createClient(tenantA, { name: 'Juan', phone: '999999999' });
 
-      // A 409 here would leak tenant A's customer list to tenant B.
       await createClient(tenantB, { name: 'Pedro', phone: '999999999' }).expect(
         201,
       );

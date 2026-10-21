@@ -9,12 +9,6 @@ import {
 
 import { AppointmentOrmEntity } from './appointment.orm-entity.js';
 
-/**
- * Who moved an appointment, when, and why (decision F5).
- *
- * Append-only. It answers "who cancelled my appointment?" and feeds the
- * cancellation and no-show metrics without adding a column per status.
- */
 @Entity('appointment_status_history')
 @Index('ix_appointment_history_appointment', [
   'tenantId',
@@ -31,7 +25,6 @@ export class AppointmentStatusHistoryOrmEntity {
   @Column({ name: 'appointment_id', type: 'char', length: 36 })
   appointmentId: string;
 
-  /** NULL for the creation entry. */
   @Column({ name: 'from_status', type: 'varchar', length: 20, nullable: true })
   fromStatus: string | null;
 

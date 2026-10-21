@@ -24,13 +24,6 @@ export interface UserSnapshot {
   readonly updatedAt: Date;
 }
 
-/**
- * A person who can sign in.
- *
- * Platform-wide, not owned by a tenant: access to a business is a membership.
- * The entity only ever holds the password **hash** — the plain value stops at
- * the use case that hashed it.
- */
 export class User {
   private constructor(
     readonly id: string,

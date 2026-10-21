@@ -39,16 +39,6 @@ import { CreateClientRequestDto } from './dto/create-client.request.dto.js';
 import { ListClientsQueryDto } from './dto/list-clients.query.dto.js';
 import { UpdateClientRequestDto } from './dto/update-client.request.dto.js';
 
-/**
- * Customers of the business.
- *
- * Every member may register and edit clients — the barber at the chair is the
- * one who meets them. Deleting and restoring is OWNER or ADMIN
- * (see docs/permissions.md).
- *
- * `DELETE` is a **soft** delete: the client disappears from lists but keeps
- * their appointments and sales (rule CL-3).
- */
 @ApiTags('clients')
 @ApiBearerAuth()
 @Controller('clients')

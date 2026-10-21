@@ -35,13 +35,6 @@ export interface CreateTenantInput {
   readonly email?: string | null;
 }
 
-/**
- * A business on the platform: the tenant every other record belongs to.
- *
- * `businessType` is data only. No behaviour here branches on it, and none
- * elsewhere may either: a vertical that needs its own rules gets its own
- * module.
- */
 export class Tenant {
   private constructor(
     readonly id: string,
@@ -75,7 +68,6 @@ export class Tenant {
     );
   }
 
-  /** Rehydrates a tenant already stored; the invariants held when it was created. */
   static restore(snapshot: TenantSnapshot): Tenant {
     return new Tenant(
       snapshot.id,
@@ -163,7 +155,6 @@ export class Tenant {
     this._updatedAt = now;
   }
 
-  /** A tenant is never deleted; access is cut off instead. */
   suspend(now: Date): void {
     this._status = TenantStatus.Suspended;
     this._updatedAt = now;
@@ -243,8 +234,6 @@ function assertCurrency(currency: string): string {
 
 function assertTimezone(timezone: string): string {
   try {
-    // Validated against the runtime's own IANA database: an unknown zone would
-    // silently break every agenda and daily total.
     new Intl.DateTimeFormat('en-US', { timeZone: timezone });
   } catch {
     throw new InvalidTenantDataError(

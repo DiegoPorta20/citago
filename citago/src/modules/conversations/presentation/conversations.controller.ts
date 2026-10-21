@@ -50,17 +50,9 @@ import {
 
 interface CursorMeta {
   readonly hasMore: boolean;
-  /** Pass as `before` to load the next, older page. */
   readonly nextBefore: string | null;
 }
 
-/**
- * The inbox.
- *
- * Every member reads and handles conversations — the barber at the chair
- * answers too. Archiving and assigning are management: OWNER or ADMIN
- * (docs/permissions.md).
- */
 @ApiTags('conversations')
 @ApiBearerAuth()
 @Controller('conversations')
@@ -136,8 +128,6 @@ export class ConversationsController {
       MessageResponseDto.fromDomain(message),
     );
 
-    // Same { items, meta } shape as a Page, so the response interceptor turns
-    // it into { data, meta } like every other collection.
     return {
       items,
       meta: {

@@ -6,21 +6,12 @@ import { AppModule } from '../../src/app.module.js';
 import { setupApp } from '../../src/app.setup.js';
 import type { EnvironmentVariables } from '../../src/config/environment.js';
 
-/**
- * Boots the real application for end-to-end tests with the same global
- * pipeline as production (prefix, validation, hardening, filters), reading the
- * same configuration, so every e2e test exercises the actual HTTP contract.
- *
- * `.env.test` raises the rate limits: a test suite makes far more requests per
- * minute than a person, and throttling is verified by its own test instead.
- */
 export async function createTestApp(): Promise<NestExpressApplication> {
   const moduleRef = await Test.createTestingModule({
     imports: [AppModule],
   }).compile();
 
   const app = moduleRef.createNestApplication<NestExpressApplication>({
-    // Same as main.ts: webhook signatures are computed over the raw body.
     rawBody: true,
   });
   const config =

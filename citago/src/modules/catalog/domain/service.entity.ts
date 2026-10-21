@@ -4,7 +4,6 @@ import { ServiceStatus } from './service-status.js';
 
 const MAX_NAME_LENGTH = 120;
 const MAX_DESCRIPTION_LENGTH = 500;
-/** Twelve hours: anything longer is a data-entry mistake, not a haircut. */
 const MAX_DURATION_MINUTES = 720;
 
 export interface ServiceSnapshot {
@@ -13,7 +12,6 @@ export interface ServiceSnapshot {
   readonly name: string;
   readonly description: string | null;
   readonly durationMinutes: number;
-  /** Decimal string, exactly as stored in DECIMAL(12,2). */
   readonly price: string;
   readonly status: ServiceStatus;
   readonly createdAt: Date;
@@ -36,16 +34,6 @@ export interface UpdateServiceInput {
   readonly price?: Money;
 }
 
-/**
- * Something the business sells and schedules: a haircut, a beard trim.
- *
- * Two of its fields drive the agenda and the money, so they are validated here
- * and not only at the HTTP boundary:
- * - `durationMinutes` decides when an appointment ends and therefore what
- *   overlaps with what.
- * - `price` is copied onto every appointment as a snapshot, so a price change
- *   never rewrites history.
- */
 export class Service {
   private constructor(
     readonly id: string,
@@ -115,7 +103,6 @@ export class Service {
     return this._status === ServiceStatus.Active;
   }
 
-  /** Applies only the fields provided; the rest keep their value. */
   update(changes: UpdateServiceInput, now: Date): void {
     if (changes.name !== undefined) {
       this._name = assertName(changes.name);
@@ -133,10 +120,6 @@ export class Service {
     this._updatedAt = now;
   }
 
-  /**
-   * Both transitions are idempotent: activating an active service is a no-op,
-   * so a retried request is harmless.
-   */
   activate(now: Date): void {
     if (this._status === ServiceStatus.Active) {
       return;
@@ -146,11 +129,6 @@ export class Service {
     this._updatedAt = now;
   }
 
-  /**
-   * Takes the service out of the catalogue without touching history: past
-   * appointments keep pointing at it (rule CA-3), new ones cannot use it
-   * (rule CA-4).
-   */
   deactivate(now: Date): void {
     if (this._status === ServiceStatus.Inactive) {
       return;

@@ -13,14 +13,10 @@ import {
 import type { WhatsAppChannel } from '../domain/whatsapp-channel.entity.js';
 import { WhatsAppChannelRepository } from '../domain/whatsapp-channel.repository.js';
 
-/** One customer message, already translated from Meta's payload. */
 export interface WhatsAppInboundMessage {
-  /** The business number that received it. Decides the tenant (rule CO-5). */
   readonly phoneNumberId: string;
-  /** The sender's WhatsApp id: their number, digits only. */
   readonly from: string;
   readonly contactName: string | null;
-  /** Meta's `wamid...`: the idempotency key (rule CO-2). */
   readonly messageId: string;
   readonly sentAt: Date;
   readonly type: MessageType;
@@ -32,21 +28,9 @@ export interface WhatsAppInboundMessage {
 export interface WebhookOutcome {
   readonly recorded: number;
   readonly duplicates: number;
-  /** For a number no business has connected, or content that is not valid. */
   readonly ignored: number;
 }
 
-/**
- * Hands the messages of a **signature-verified** webhook to Conversations.
- *
- * - The tenant is the business that connected the receiving number. The
- *   payload is trusted for that only because Meta signed it.
- * - A number nobody has connected (e.g. disconnected a minute ago) is skipped,
- *   not failed: failing would make Meta retry it for days.
- * - Invalid content is skipped for the same reason. Any other error (the
- *   database is down) propagates, Meta retries the whole delivery, and
- *   idempotency discards what was already stored.
- */
 @Injectable()
 export class ProcessWhatsAppWebhookUseCase {
   private readonly logger = new Logger(ProcessWhatsAppWebhookUseCase.name);
@@ -121,17 +105,8 @@ export class ProcessWhatsAppWebhookUseCase {
   }
 }
 
-/** WhatsApp still reports Mexican mobiles with the legacy "1" after the country code. */
 const LEGACY_MEXICAN_MOBILE = /^521(\d{10})$/;
 
-/**
- * WhatsApp ids are the full international number without "+". Normalizing
- * through `PhoneNumber` makes them match clients typed by hand; if the phone
- * metadata does not know the number, the plain "+digits" is still E.164.
- *
- * Known gap: Argentine mobiles arrive with the "9" (549...), while a number
- * typed without it normalizes to 54...; those need a manual link (CO-6).
- */
 export function toE164(waId: string): string {
   const digits = waId.replace(LEGACY_MEXICAN_MOBILE, '52$1');
 

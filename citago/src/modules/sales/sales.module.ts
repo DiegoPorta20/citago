@@ -19,14 +19,6 @@ import { TypeOrmSaleRepository } from './infrastructure/persistence/typeorm/type
 import { TypeOrmSalesReportQuery } from './infrastructure/persistence/typeorm/typeorm-sales-report.query.js';
 import { SalesController } from './presentation/sales.controller.js';
 
-/**
- * The till: what the business charged, and for what.
- *
- * Depends on appointments (what is being charged), catalogue (prices), clients,
- * staff and tenants (the currency), always through their exported contracts.
- * The dashboard reads it through `SalesReportQuery`, a separate port that only
- * returns numbers: a report never loads a sale it is not going to change.
- */
 @Module({
   imports: [
     TenantsModule,

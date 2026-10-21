@@ -8,10 +8,6 @@ import {
   ValidateIf,
 } from 'class-validator';
 
-/**
- * Partial update. An **empty string** clears an optional field (phone, email,
- * notes); omitting it leaves it untouched.
- */
 export class UpdateClientRequestDto {
   @ApiPropertyOptional({ example: 'Juan Pérez', maxLength: 120 })
   @IsOptional()

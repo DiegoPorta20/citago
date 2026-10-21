@@ -21,7 +21,6 @@ export interface SaleSnapshot {
   readonly clientId: string | null;
   readonly staffMemberId: string | null;
   readonly status: SaleStatus;
-  /** ISO-4217 code, frozen when the sale was recorded (rule SA-6). */
   readonly currency: string;
   readonly subtotal: string;
   readonly discount: string;
@@ -47,7 +46,6 @@ export interface RegisterSaleInput {
   readonly currency: string;
   readonly lines: readonly SaleLine[];
   readonly discount?: Money;
-  /** Given when the client pays on the spot; absent leaves the sale PENDING. */
   readonly paymentMethod?: PaymentMethod | null;
   readonly createdByUserId: string | null;
 }
@@ -55,22 +53,9 @@ export interface RegisterSaleInput {
 export interface SaleTransitionContext {
   readonly actorUserId: string | null;
   readonly reason?: string | null;
-  /** Required when charging a pending sale. */
   readonly paymentMethod?: PaymentMethod | null;
 }
 
-/**
- * Money the business took, or is owed, for work already done.
- *
- * The amounts are **derived, never assigned**: the subtotal is the sum of the
- * lines and the total is `subtotal - discount` (rule SA-2), so a client cannot
- * send a total that disagrees with what was charged. They are stored anyway, as
- * a snapshot: a report must not have to re-derive history.
- *
- * The lines are fixed at registration. Nothing about a sale is editable
- * afterwards (rule SA-4) — only its status moves, and only towards paid,
- * cancelled or refunded.
- */
 export class Sale {
   private constructor(
     readonly id: string,
@@ -181,7 +166,6 @@ export class Sale {
     return subtotalOf(this.lines);
   }
 
-  /** What the client owes or paid: subtotal minus discount (rule SA-2). */
   get total(): Money {
     return this.subtotal.subtract(this.discount);
   }
@@ -190,12 +174,6 @@ export class Sale {
     return ALLOWED_TRANSITIONS[this._status].includes(target);
   }
 
-  /**
-   * Charges, cancels or refunds the sale.
-   *
-   * Voiding always asks for a reason and remembers who decided it: a sale that
-   * disappears from the day takings must be able to explain itself.
-   */
   transitionTo(
     target: SaleStatus,
     context: SaleTransitionContext,

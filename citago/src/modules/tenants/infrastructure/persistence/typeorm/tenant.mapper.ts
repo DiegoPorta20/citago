@@ -1,12 +1,6 @@
 import { Tenant } from '../../../domain/tenant.entity.js';
 import { TenantOrmEntity } from './entities/tenant.orm-entity.js';
 
-/**
- * Translates between the persistence row and the domain entity.
- *
- * This is the only place allowed to know both shapes, which is what keeps
- * TypeORM decorators out of the domain.
- */
 export const TenantMapper = {
   toDomain(row: TenantOrmEntity): Tenant {
     return Tenant.restore({

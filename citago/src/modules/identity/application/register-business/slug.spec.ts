@@ -14,7 +14,6 @@ describe('slugify', () => {
   });
 
   it('falls back to a usable handle when nothing survives', () => {
-    // A name made only of symbols or a non-latin script would collapse to ''.
     expect(slugify('***')).toBe('negocio');
     expect(slugify('理髪店')).toBe('negocio');
   });

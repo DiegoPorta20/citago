@@ -25,7 +25,6 @@ import { StaffAvailabilityPolicy } from './staff-availability.policy.js';
 const S = AppointmentStatus;
 const utc = (iso: string) => new Date(iso);
 const BOOKED_AT = utc('2026-09-10T12:00:00Z');
-// Thursday 2026-09-17, 10:00–10:30 in Lima (UTC-5).
 const START = utc('2026-09-17T15:00:00Z');
 const END = utc('2026-09-17T15:30:00Z');
 const AFTER_START = utc('2026-09-17T16:00:00Z');
@@ -56,7 +55,6 @@ function book(
   );
 }
 
-/** Walks an appointment to `status` along a legal path. */
 function bookIn(status: AppointmentStatus): Appointment {
   const appointment = book();
   const path: Record<AppointmentStatus, AppointmentStatus[]> = {
@@ -286,7 +284,6 @@ describe('AppointmentOverlapPolicy (rule AP-3)', () => {
 
 describe('StaffAvailabilityPolicy', () => {
   const lima = new BusinessCalendar('America/Lima');
-  // Thursday (4): 09:00–13:00 and 15:00–20:00, a lunch break in between.
   const schedule = WeeklySchedule.fromInput([
     { weekday: 4, startsAt: '09:00', endsAt: '13:00' },
     { weekday: 4, startsAt: '15:00', endsAt: '20:00' },
@@ -327,7 +324,6 @@ describe('StaffAvailabilityPolicy', () => {
     });
 
     it('rejects a day off', () => {
-      // Friday has no range at all.
       expect(() =>
         StaffAvailabilityPolicy.assertAvailable(
           TimeRange.of(
@@ -373,7 +369,6 @@ describe('StaffAvailabilityPolicy', () => {
     });
 
     it('evaluates the schedule in the business time zone, not UTC', () => {
-      // 19:30 in Lima is already Friday in UTC. It is still Thursday's shift.
       expect(() =>
         StaffAvailabilityPolicy.assertAvailable(range('19:30', '20:00'), {
           calendar: lima,
@@ -401,7 +396,6 @@ describe('StaffAvailabilityPolicy', () => {
         timeOff: [],
       });
 
-      // 09:00–13:00 → 8 slots; 15:00–20:00 → 10 slots.
       expect(slots).toHaveLength(18);
       expect(slots[0].startAt).toEqual(local('09:00'));
       expect(slots.at(-1)?.startAt).toEqual(local('19:30'));

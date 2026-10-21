@@ -16,7 +16,6 @@ import {
 import { StaffRepository } from '../../staff/domain/staff.repository.js';
 import { DashboardPeriod, type PeriodInput } from './dashboard-period.js';
 
-/** Enough to see what sells without turning the dashboard into a report. */
 const TOP_SERVICES = 5;
 
 export interface AppointmentCounters {
@@ -52,18 +51,6 @@ export interface BusinessDashboard {
   readonly staff: readonly StaffPerformance[];
 }
 
-/**
- * How the business did over a period: money, agenda, new clients, what sold and
- * who did the work.
- *
- * Nothing is stored for this. Every number is an aggregate computed on demand
- * over the tables that already exist (decision of the MVP: no metrics table
- * until a query is actually too slow to run), through each module's own report
- * port — the dashboard reads no table it does not own, which is none of them.
- *
- * The five queries are independent, so they run in parallel: the endpoint costs
- * one round trip, not five.
- */
 @Injectable()
 export class GetBusinessDashboardUseCase {
   constructor(
@@ -120,8 +107,6 @@ export class GetBusinessDashboardUseCase {
       appointments: countersOf(statuses),
       clients: { created: newClients },
       topServices,
-      // Every staff member appears, including the ones with a quiet week: a
-      // dashboard that hides zeros hides the thing worth looking at.
       staff: staffMembers
         .map((member) => ({
           staffMemberId: member.id,
@@ -136,7 +121,6 @@ export class GetBusinessDashboardUseCase {
   }
 }
 
-/** Shared by both dashboards: the same counters, over a different scope. */
 export function countersOf(
   statuses: readonly StatusCount[],
 ): AppointmentCounters {

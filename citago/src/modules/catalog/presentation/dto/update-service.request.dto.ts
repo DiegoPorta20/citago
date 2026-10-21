@@ -13,12 +13,6 @@ import {
 import { MONEY_PATTERN } from '../../../../shared/presentation/dto/money-pattern.js';
 import { MAX_SERVICE_DURATION_MINUTES } from './create-service.request.dto.js';
 
-/**
- * Partial update: only the fields present are applied.
- *
- * Changing the price or the duration never rewrites existing appointments —
- * each one keeps its own snapshot.
- */
 export class UpdateServiceRequestDto {
   @ApiPropertyOptional({ example: 'Corte de cabello', maxLength: 120 })
   @IsOptional()

@@ -7,7 +7,6 @@ import { WhatsAppSignatureGuard } from './presentation/whatsapp-signature.guard.
 import { WhatsAppWebhookController } from './presentation/whatsapp-webhook.controller.js';
 import { WhatsAppModule } from './whatsapp.module.js';
 
-/** Meta → CitaGo: verified webhooks become inbound conversation messages. */
 @Module({
   imports: [WhatsAppModule, ConversationsModule],
   controllers: [WhatsAppWebhookController],

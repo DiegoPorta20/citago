@@ -12,9 +12,7 @@ import { TenantOrmEntity } from '../../../../../tenants/infrastructure/persisten
 import { StaffMemberStatus } from '../../../../domain/staff-member-status.js';
 
 @Entity('staff_members')
-/** Target of the composite foreign keys from schedules, time off and appointments. */
 @Unique('uq_staff_members_tenant_id', ['tenantId', 'id'])
-/** One staff member per account per business. NULLs (no account) never collide. */
 @Unique('uq_staff_members_tenant_user', ['tenantId', 'userId'])
 export class StaffMemberOrmEntity {
   @PrimaryColumn({ name: 'id', type: 'char', length: 36 })
@@ -53,10 +51,6 @@ export class StaffMemberOrmEntity {
   })
   tenant?: TenantOrmEntity;
 
-  /**
-   * Composite key into `memberships(tenant_id, user_id)`: the database itself
-   * refuses to link an account that does not belong to this business.
-   */
   @ManyToOne(() => MembershipOrmEntity, {
     onDelete: 'RESTRICT',
     onUpdate: 'RESTRICT',

@@ -18,15 +18,8 @@ import {
 import { Message } from '../domain/message.entity.js';
 
 export interface InboundMessageInput {
-  /**
-   * The tenant this message belongs to, **resolved by the channel adapter**
-   * from a verified source (for WhatsApp: the receiving phone number, after
-   * checking the webhook signature). There is no user session on this path —
-   * it is one of the documented exceptions to "the tenant comes from the JWT".
-   */
   readonly tenantId: string;
   readonly channel: ConversationChannel;
-  /** Already normalized by the adapter: E.164 for WhatsApp. */
   readonly contactIdentifier: string;
   readonly contactName?: string | null;
   readonly externalMessageId: string;
@@ -45,21 +38,6 @@ export type InboundResult =
     }
   | { readonly outcome: 'duplicate' };
 
-/**
- * Stores a message a client sent through any channel.
- *
- * Channel-agnostic on purpose: the WhatsApp adapter, a future Instagram one and
- * the development simulator all end here, so the rules exist once.
- *
- * - **Idempotent** (rule CO-2): the same `externalMessageId` delivered twice is
- *   stored once. Detection is the unique key, not a lookup, so two copies of a
- *   webhook arriving at the same instant are also safe.
- * - **One thread per contact** (decision F11), created on the first message.
- * - **Links the client** when the number already belongs to one; otherwise the
- *   conversation stays unlinked until someone links it (rule CO-6). An
- *   unknown number never creates a client on its own: spam and wrong numbers
- *   would fill the client list.
- */
 @Injectable()
 export class RecordInboundMessageUseCase {
   constructor(
@@ -92,7 +70,6 @@ export class RecordInboundMessageUseCase {
       });
 
       if (!(await this.messages.insertIfNew(message))) {
-        // Already processed: a retry from the channel. Nothing changes.
         return { outcome: 'duplicate' } as const;
       }
 
@@ -116,7 +93,6 @@ export class RecordInboundMessageUseCase {
     });
   }
 
-  /** The existing thread, locked; or a new one. */
   private async threadFor(
     input: InboundMessageInput,
     now: Date,
@@ -149,7 +125,6 @@ export class RecordInboundMessageUseCase {
       return created;
     }
 
-    // Another message from the same contact created the thread a moment ago.
     const winner = await this.conversations.findByContact(
       input.tenantId,
       input.channel,
@@ -164,11 +139,6 @@ export class RecordInboundMessageUseCase {
     return winner;
   }
 
-  /**
-   * On WhatsApp the contact identifier is a phone number, which is how clients
-   * are identified too. Deleted clients are not linked: they are gone from the
-   * business's point of view until someone restores them.
-   */
   private async findClientId(
     tenantId: string,
     input: InboundMessageInput,

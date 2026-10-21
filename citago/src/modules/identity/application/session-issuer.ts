@@ -18,21 +18,11 @@ export interface IssueSessionInput {
   readonly userId: string;
   readonly tenantId: string;
   readonly membershipId: string;
-  /**
-   * Existing rotation family, when refreshing. Omitted on a fresh sign-in,
-   * which starts a new family.
-   */
   readonly familyId?: string;
 }
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
-/**
- * Creates the token pair for a session and stores the refresh side.
- *
- * Shared by sign-up, sign-in and refresh so the three cannot drift apart:
- * one place decides what a session is.
- */
 @Injectable()
 export class SessionIssuer {
   constructor(

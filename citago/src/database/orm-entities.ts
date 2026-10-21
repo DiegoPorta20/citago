@@ -16,16 +16,6 @@ import { SaleOrmEntity } from '../modules/sales/infrastructure/persistence/typeo
 import { SaleLineOrmEntity } from '../modules/sales/infrastructure/persistence/typeorm/entities/sale-line.orm-entity.js';
 import { WhatsAppChannelOrmEntity } from '../modules/whatsapp/infrastructure/persistence/typeorm/entities/whatsapp-channel.orm-entity.js';
 
-/**
- * Every persistence entity, registered explicitly.
- *
- * Globs were the obvious alternative, but TypeORM resolves them with dynamic
- * `import()` at runtime, which races with Jest's ESM teardown and silently
- * leaves entity metadata missing. Listing them costs one line per entity and
- * makes the set of tables obvious.
- *
- * **Add new `*.orm-entity.ts` classes here.**
- */
 export const ORM_ENTITIES = [
   TenantOrmEntity,
   BusinessHoursOrmEntity,

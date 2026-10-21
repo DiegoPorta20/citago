@@ -1,20 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
-/**
- * Phase 6a — staff members, their weekly schedule and their time off.
- *
- * First real use of the composite tenant keys from ADR 0004:
- *
- * - `staff_members (tenant_id, user_id) → memberships (tenant_id, user_id)`:
- *   the database refuses to link an account that is not a member of this
- *   business. A NULL `user_id` (a barber without an account) is not checked.
- * - `staff_schedules` and `staff_time_off` point at
- *   `staff_members (tenant_id, id)`, so a schedule can never belong to another
- *   tenant's barber. Both CASCADE: they are part of the staff aggregate.
- *
- * Schedules are `TIME` in the business's wall clock (rule TZ-3); time off is
- * `DATETIME(3)` in UTC like every other instant.
- */
 export class AddStaff1789704448728 implements MigrationInterface {
   name = 'AddStaff1789704448728';
 

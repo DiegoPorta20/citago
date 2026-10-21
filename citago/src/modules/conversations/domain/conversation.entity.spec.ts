@@ -114,8 +114,6 @@ describe('Conversation', () => {
     });
 
     it('is not re-opened by an old message that arrives late', () => {
-      // WhatsApp does not guarantee delivery order: an inbound sent at 10:00
-      // may reach us after our 10:05 answer. It must not mark the thread pending.
       const conversation = start();
       conversation.registerMessage(outbound('10:05'), at('10:05'));
 

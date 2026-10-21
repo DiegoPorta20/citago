@@ -6,7 +6,6 @@ import { PaymentMethod } from '../../sales/domain/payment-method.js';
 import type { BusinessDashboard } from '../application/get-business-dashboard.use-case.js';
 import type { OwnDashboard } from '../application/get-own-dashboard.use-case.js';
 
-/** `YYYY-MM-DD`, a day on the business's own calendar. */
 const LOCAL_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 export class DashboardPeriodQueryDto {

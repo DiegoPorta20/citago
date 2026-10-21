@@ -11,15 +11,6 @@ export interface MembershipSnapshot {
   readonly updatedAt: Date;
 }
 
-/**
- * Grants a user access to one tenant, with a role.
- *
- * The authenticated session is bound to a membership, so revoking it removes
- * access to that business without touching the person's account.
- *
- * The rule "a tenant always keeps at least one active OWNER" spans several
- * memberships, so it is enforced by the use case that can count them, not here.
- */
 export class Membership {
   private constructor(
     readonly id: string,

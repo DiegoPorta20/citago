@@ -17,9 +17,7 @@ export interface AvailabilityContext {
 export interface FreeSlotsInput extends AvailabilityContext {
   readonly localDate: string;
   readonly durationMinutes: number;
-  /** Appointments that occupy the staff member's time that day. */
   readonly busy: readonly TimeRange[];
-  /** Slots starting before this instant are not offered (the past). */
   readonly notBefore: Date;
   readonly stepMinutes: number;
 }
@@ -29,20 +27,7 @@ export interface FreeSlot {
   readonly endAt: Date;
 }
 
-/**
- * Whether a staff member is available, according to their weekly schedule and
- * their time off, evaluated in the business's wall clock.
- *
- * The weekly schedule is local time ("09:00–13:00") and is turned into
- * instants for the specific date, so daylight-saving changes are handled by
- * the calendar, not by this code.
- */
 export const StaffAvailabilityPolicy = {
-  /**
-   * An appointment starts and ends on the same local day. Applies always,
-   * even when an OWNER books outside working hours: a haircut from 23:30 to
-   * 00:15 is a data-entry error and would make "the agenda of a day" ambiguous.
-   */
   assertWithinOneDay(range: TimeRange, calendar: BusinessCalendar): void {
     const lastInstant = new Date(range.end.getTime() - 1);
 
@@ -53,7 +38,6 @@ export const StaffAvailabilityPolicy = {
     }
   },
 
-  /** Throws unless the whole range fits one working range and no time off. */
   assertAvailable(range: TimeRange, context: AvailabilityContext): void {
     StaffAvailabilityPolicy.assertWithinOneDay(range, context.calendar);
 
@@ -72,14 +56,6 @@ export const StaffAvailabilityPolicy = {
     }
   },
 
-  /**
-   * Every start time on a local date where a service of `durationMinutes`
-   * fits: inside a working range, outside time off, not overlapping a busy
-   * appointment, and not in the past.
-   *
-   * Candidates are aligned to `stepMinutes` from the start of each working
-   * range, so a shift starting 09:00 offers 09:00, 09:15, 09:30…
-   */
   freeSlots(input: FreeSlotsInput): FreeSlot[] {
     const durationMs = input.durationMinutes * 60_000;
     const stepMs = input.stepMinutes * 60_000;

@@ -23,12 +23,6 @@ function isPage(value: unknown): value is Page<unknown> {
   );
 }
 
-/**
- * Wraps every successful response in `{ data, meta }`.
- *
- * A `Page` returned by a use case is unwrapped into `data: items` plus its
- * pagination `meta`, so controllers never assemble the envelope by hand.
- */
 @Injectable()
 export class ResponseEnvelopeInterceptor<T> implements NestInterceptor<
   T,
@@ -40,7 +34,6 @@ export class ResponseEnvelopeInterceptor<T> implements NestInterceptor<
   ): Observable<ResponseEnvelope<unknown> | undefined> {
     return next.handle().pipe(
       map((value) => {
-        // 204 No Content and similar: nothing to wrap.
         if (value === undefined) {
           return undefined;
         }

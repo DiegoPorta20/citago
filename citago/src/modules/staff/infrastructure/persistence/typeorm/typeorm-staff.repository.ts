@@ -68,8 +68,6 @@ export class TypeOrmStaffRepository extends StaffRepository {
   async save(member: StaffMember): Promise<void> {
     const snapshot = member.toSnapshot();
 
-    // The member and its schedule are one aggregate: replacing the ranges must
-    // never leave a half-written week behind.
     await this.inTransaction(async (manager) => {
       const row = new StaffMemberOrmEntity();
       row.id = snapshot.id;
@@ -119,7 +117,6 @@ export class TypeOrmStaffRepository extends StaffRepository {
     staffMemberId: string,
     range: TimeRange,
   ): Promise<StaffTimeOff[]> {
-    // Half-open overlap: starts before the range ends, ends after it starts.
     const rows = await this.timeOff().find({
       where: {
         tenantId,
@@ -148,7 +145,6 @@ export class TypeOrmStaffRepository extends StaffRepository {
   }
 
   async deleteTimeOff(id: string, tenantId: string): Promise<void> {
-    // Scoped delete: an id from another tenant deletes nothing.
     await this.timeOff().delete({ id, tenantId });
   }
 
@@ -168,7 +164,6 @@ export class TypeOrmStaffRepository extends StaffRepository {
       : this.context.manager.transaction(work);
   }
 
-  /** Loads the schedules of all given members in one query: no N+1. */
   private async hydrate(rows: StaffMemberOrmEntity[]): Promise<StaffMember[]> {
     if (rows.length === 0) {
       return [];

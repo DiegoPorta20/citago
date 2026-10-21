@@ -21,7 +21,6 @@ import { Message } from '../../../domain/message.entity.js';
 import { ConversationOrmEntity } from './entities/conversation.orm-entity.js';
 import { MessageOrmEntity } from './entities/message.orm-entity.js';
 
-/** MySQL reports a unique-key violation with this code and the key name. */
 function isDuplicateOn(error: unknown, keyName: string): boolean {
   if (!(error instanceof QueryFailedError)) {
     return false;
@@ -176,9 +175,6 @@ export class TypeOrmMessageRepository extends MessageRepository {
 
       return true;
     } catch (error) {
-      // A retried webhook: the channel id is already stored. In MySQL a failed
-      // statement does not abort the surrounding transaction, so the caller
-      // simply reports a duplicate.
       if (isDuplicateOn(error, 'uq_messages_external_id')) {
         return false;
       }
@@ -206,8 +202,6 @@ export class TypeOrmMessageRepository extends MessageRepository {
         conversationId,
       });
 
-      // An unknown cursor (or one from another conversation) yields nothing,
-      // rather than silently restarting from the newest message.
       if (!cursor) {
         return { items: [], hasMore: false };
       }
@@ -218,7 +212,6 @@ export class TypeOrmMessageRepository extends MessageRepository {
       );
     }
 
-    // One extra row tells whether there is another page, without a COUNT.
     const rows = await query
       .orderBy('message.sent_at', 'DESC')
       .addOrderBy('message.id', 'DESC')

@@ -143,7 +143,6 @@ describe('Identity repositories (integration)', () => {
       const user = await createUser('a@barberia.pe');
       const membership = await createMembership(tenantA.id, user.id);
 
-      // This is the IDOR attempt: a valid id used from the wrong tenant.
       await expect(
         memberships.findByIdForTenant(membership.id, tenantB.id),
       ).resolves.toBeNull();
@@ -294,7 +293,6 @@ describe('Identity repositories (integration)', () => {
       expect(
         (await refreshTokens.findByHash('d'.repeat(64)))?.revokedAt,
       ).toEqual(NOW);
-      // A token of another family is untouched.
       expect(
         (await refreshTokens.findByHash('e'.repeat(64)))?.revokedAt,
       ).toBeNull();
@@ -376,7 +374,6 @@ describe('Identity repositories (integration)', () => {
         }),
       ).rejects.toThrow('business rule rejected this');
 
-      // This is what makes sign-up safe: no orphan account, no orphan tenant.
       await expect(users.existsByEmail(Email.create(email))).resolves.toBe(
         false,
       );
@@ -399,8 +396,6 @@ describe('Identity repositories (integration)', () => {
         }),
       ).rejects.toThrow('outer failure');
 
-      // The inner work rolled back with the outer one: it was never committed
-      // independently.
       await expect(
         users.existsByEmail(Email.create('nested@barberia.pe')),
       ).resolves.toBe(false);

@@ -22,15 +22,6 @@ import { TypeOrmStaffAgendaLock } from './infrastructure/persistence/typeorm/typ
 import { TypeOrmStaffRepository } from './infrastructure/persistence/typeorm/typeorm-staff.repository.js';
 import { StaffController } from './presentation/staff.controller.js';
 
-/**
- * Staff members, their weekly schedule and time off.
- *
- * Imports `IdentityModule` for one check: a linked account must be a member of
- * the business. Exports the repository and the agenda lock, so appointments can
- * check schedules and serialize bookings without touching this module's tables.
- * `StaffScope` travels with them: every module that limits a STAFF user to their
- * own work resolves that link here, once.
- */
 @Module({
   imports: [IdentityModule],
   controllers: [StaffController],

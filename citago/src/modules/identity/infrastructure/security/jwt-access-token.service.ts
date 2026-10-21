@@ -14,13 +14,6 @@ interface RawClaims {
   mid?: unknown;
 }
 
-/**
- * Access tokens as signed JWTs (HS256).
- *
- * Symmetric signing is the right fit while a single service both issues and
- * verifies them; asymmetric keys only pay off once a separate service has to
- * verify without being able to issue.
- */
 @Injectable()
 export class JwtAccessTokenService extends AccessTokenService {
   private readonly logger = new Logger(JwtAccessTokenService.name);
@@ -59,8 +52,6 @@ export class JwtAccessTokenService extends AccessTokenService {
 
       return { sub: payload.sub, tid: payload.tid, mid: payload.mid };
     } catch {
-      // Expired, tampered or malformed: all the same to the caller. The token
-      // is never logged.
       this.logger.debug('Rejected an access token');
       return null;
     }

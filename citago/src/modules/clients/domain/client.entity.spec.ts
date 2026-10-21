@@ -26,7 +26,6 @@ describe('Client', () => {
     });
 
     it('allows a client without phone, email or notes', () => {
-      // A walk-in can be registered with a name alone.
       const client = Client.create(
         { id: 'client-2', tenantId: 'tenant-1', name: 'Sin teléfono' },
         NOW,
@@ -85,7 +84,6 @@ describe('Client', () => {
 
       expect(client.isDeleted).toBe(true);
       expect(client.deletedAt).toEqual(LATER);
-      // Keeping the phone is what lets a re-registration offer a restore.
       expect(client.phone?.value).toBe('+51999999999');
     });
 

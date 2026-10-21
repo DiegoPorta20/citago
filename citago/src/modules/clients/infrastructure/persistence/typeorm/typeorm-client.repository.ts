@@ -25,7 +25,6 @@ import {
 import { ClientPhoneAlreadyRegisteredError } from '../../../domain/errors/clients.errors.js';
 import { ClientOrmEntity } from './entities/client.orm-entity.js';
 
-/** Minimum digits before a search term is also matched against phones. */
 const MIN_PHONE_DIGITS = 3;
 
 @Injectable()
@@ -69,7 +68,6 @@ export class TypeOrmClientRepository extends ClientRepository {
     tenantId: string,
     phone: PhoneNumber,
   ): Promise<Client | null> {
-    // Deliberately includes deleted clients: they still own their number.
     const row = await this.repository.findOneBy({
       tenantId,
       phoneE164: phone.value,
@@ -105,15 +103,11 @@ export class TypeOrmClientRepository extends ClientRepository {
       const digits = filters.query.replace(/\D/g, '');
 
       if (digits.length >= MIN_PHONE_DIGITS) {
-        // "999 999" should find +51999999999. Phones are matched by digits
-        // anywhere; at the size of one business's client list that scan is
-        // cheap, and it is bounded by tenant_id.
         query.andWhere(
           '(client.name LIKE :namePrefix OR client.phone_e164 LIKE :phoneDigits)',
           { namePrefix: `${filters.query}%`, phoneDigits: `%${digits}%` },
         );
       } else {
-        // Prefix match keeps the (tenant_id, name) index usable.
         query.andWhere('client.name LIKE :namePrefix', {
           namePrefix: `${filters.query}%`,
         });
@@ -151,9 +145,6 @@ export class TypeOrmClientRepository extends ClientRepository {
     try {
       await this.repository.save(row);
     } catch (error) {
-      // The use case already checked, but two simultaneous requests can both
-      // pass that check. The unique key settles it; translate the driver error
-      // so the caller gets a 409, never a 500 with SQL in it.
       if (isDuplicatePhone(error)) {
         throw new ClientPhoneAlreadyRegisteredError();
       }

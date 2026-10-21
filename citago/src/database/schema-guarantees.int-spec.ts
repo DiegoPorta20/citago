@@ -14,10 +14,6 @@ import { BusinessType } from '../modules/tenants/domain/business-type.js';
 import { TenantStatus } from '../modules/tenants/domain/tenant-status.js';
 import { TenantOrmEntity } from '../modules/tenants/infrastructure/persistence/typeorm/entities/tenant.orm-entity.js';
 
-/**
- * Guarantees the database itself must provide, independently of application
- * code. These are the promises the rest of the architecture is built on.
- */
 describe('Schema guarantees (integration)', () => {
   let dataSource: DataSource;
 
@@ -90,8 +86,6 @@ describe('Schema guarantees (integration)', () => {
 
   describe('migrations', () => {
     it('applies from an empty database and leaves no pending changes', async () => {
-      // `runMigrations` already ran in createTestDataSource; if the entities
-      // and the migration disagreed, this would report work to do.
       await expect(dataSource.showMigrations()).resolves.toBe(false);
     });
 
@@ -164,7 +158,6 @@ describe('Schema guarantees (integration)', () => {
       const userId = await insertUser('kept@demo.local');
       await insertMembership(tenantId, userId);
 
-      // ON DELETE RESTRICT: history is never destroyed by a stray delete.
       await expect(
         dataSource.query('DELETE FROM `tenants` WHERE `id` = ?', [tenantId]),
       ).rejects.toThrow(/foreign key constraint fails/i);
@@ -226,7 +219,6 @@ describe('Schema guarantees (integration)', () => {
         .getRepository(UserOrmEntity)
         .findOneByOrFail({ id });
 
-      // Fails loudly if the driver ever drifts to local time.
       expect(stored.createdAt.toISOString()).toBe(instant.toISOString());
 
       const raw = await queryRows<{ value: string }>(
@@ -240,9 +232,6 @@ describe('Schema guarantees (integration)', () => {
   });
 
   describe('composite tenant foreign keys (ADR 0004, layer 4)', () => {
-    // Validated on disposable tables: the real pair of tables arrives with
-    // clients and appointments. What is being proven here is the MySQL
-    // guarantee the strategy depends on.
     beforeEach(async () => {
       await dataSource.query('DROP TABLE IF EXISTS `spike_children`');
       await dataSource.query('DROP TABLE IF EXISTS `spike_parents`');
@@ -300,8 +289,6 @@ describe('Schema guarantees (integration)', () => {
         [parentOfA, tenantA],
       );
 
-      // This is the bug the fourth layer exists for: application code passing
-      // a valid id from the wrong tenant. The database refuses it.
       await expect(
         dataSource.query(
           'INSERT INTO spike_children (id, tenant_id, parent_id) VALUES (?, ?, ?)',

@@ -13,23 +13,10 @@ import { SalesAccess } from './sales-access.js';
 export interface TransitionSaleInput {
   readonly saleId: string;
   readonly target: SaleStatus;
-  /** Required when cancelling or refunding (rule SA-4). */
   readonly reason?: string | null;
-  /** Required when charging a pending sale. */
   readonly paymentMethod?: PaymentMethod | null;
 }
 
-/**
- * Charges, cancels or refunds a sale.
- *
- * One use case rather than three: they are the same business action — "settle
- * this sale" — and what differs between them lives in the domain's state
- * machine. The HTTP layer still exposes one explicit endpoint per action, and
- * restricts cancelling and refunding to OWNER and ADMIN.
- *
- * Nothing else about a sale can be changed: there is no update use case, on
- * purpose (rule SA-4).
- */
 @Injectable()
 export class TransitionSaleUseCase {
   constructor(

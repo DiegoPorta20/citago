@@ -12,10 +12,6 @@ import {
 
 const LIMA = 'America/Lima';
 
-/**
- * A local date in Lima, `weeksAhead` weeks from now, on the given ISO weekday.
- * Computed at runtime so the suite never books "in the past" as time goes by.
- */
 export function futureLocalDate(
   weekday: WeekdayNumbers,
   weeksAhead = 2,
@@ -26,14 +22,12 @@ export function futureLocalDate(
   return target.toISODate() as string;
 }
 
-/** A Lima wall-clock time on a local date, as a UTC ISO string. */
 export function limaInstant(localDate: string, time: string): string {
   return DateTime.fromISO(`${localDate}T${time}`, { zone: LIMA })
     .toUTC()
     .toISO() as string;
 }
 
-/** Monday to Saturday, 09:00–13:00 and 15:00–20:00: a lunch break in between. */
 export const STANDARD_WEEK = [1, 2, 3, 4, 5, 6].flatMap((weekday) => [
   { weekday, startsAt: '09:00', endsAt: '13:00' },
   { weekday, startsAt: '15:00', endsAt: '20:00' },
@@ -44,11 +38,9 @@ export interface Agenda {
   readonly staffMemberId: string;
   readonly serviceId: string;
   readonly clientId: string;
-  /** A Monday two weeks from now. */
   readonly monday: string;
 }
 
-/** A business with one barber on the standard week, a 30-minute service and a client. */
 export async function createAgenda(
   app: NestExpressApplication,
   owner?: RegisteredBusiness,
@@ -89,13 +81,6 @@ export async function createAgenda(
   };
 }
 
-/**
- * A STAFF account inside the owner's business, linked to a new staff member.
- *
- * Everything goes through the real API — the owner grants access, the person
- * signs in, the owner links them to a barber — so the fixture walks the same
- * path a business would.
- */
 export async function addStaffUser(
   app: NestExpressApplication,
   owner: RegisteredBusiness,

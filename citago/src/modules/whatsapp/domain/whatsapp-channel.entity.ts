@@ -1,6 +1,5 @@
 import { InvalidWhatsAppChannelDataError } from './whatsapp.errors.js';
 
-/** Meta ids are numeric strings. */
 const META_ID = /^\d{1,32}$/;
 const MAX_DISPLAY_LENGTH = 32;
 const MAX_NAME_LENGTH = 255;
@@ -8,13 +7,10 @@ const MAX_NAME_LENGTH = 255;
 export interface WhatsAppChannelSnapshot {
   readonly id: string;
   readonly tenantId: string;
-  /** Meta's id for the business number. Routes every inbound webhook (rule CO-5). */
   readonly phoneNumberId: string;
   readonly wabaId: string | null;
-  /** As Meta shows it, e.g. "+51 999 999 999". Display only. */
   readonly displayPhoneNumber: string;
   readonly verifiedName: string | null;
-  /** Encrypted with the platform key; never plaintext, never returned by the API. */
   readonly encryptedAccessToken: Buffer;
   readonly connectedAt: Date;
   readonly createdAt: Date;
@@ -29,13 +25,6 @@ export interface WhatsAppConnection {
   readonly encryptedAccessToken: Buffer;
 }
 
-/**
- * The WhatsApp Business number a business has connected: one per business in
- * the MVP, and a number belongs to one business only.
- *
- * Lives in the WhatsApp module on purpose. Conversations and clients never see
- * it: to them a WhatsApp message is just a message from a phone number.
- */
 export class WhatsAppChannel {
   private constructor(private state: WhatsAppChannelSnapshot) {}
 
@@ -60,15 +49,10 @@ export class WhatsAppChannel {
     return new WhatsAppChannel(snapshot);
   }
 
-  /**
-   * What the access token ciphertext is bound to. A ciphertext copied to
-   * another business or another number fails to decrypt.
-   */
   static tokenContext(tenantId: string, phoneNumberId: string): string {
     return `whatsapp:${tenantId}:${phoneNumberId}`;
   }
 
-  /** Connecting again (another number, a new token) replaces the connection. */
   reconnect(connection: WhatsAppConnection, now: Date): void {
     this.state = {
       ...this.state,

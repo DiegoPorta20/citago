@@ -13,10 +13,6 @@ import {
 } from '../../../shared/domain/weekly-schedule.js';
 import { StaffUserLinkValidator } from './staff-user-link.validator.js';
 
-/**
- * Loads a staff member of the caller's tenant or fails with a 404.
- * Another tenant's id resolves to nothing, exactly like an unknown one.
- */
 async function loadStaffMember(
   staff: StaffRepository,
   actor: AuthContext,
@@ -77,7 +73,6 @@ export class UpdateStaffMemberUseCase {
     input: {
       readonly staffMemberId: string;
       readonly displayName?: string;
-      /** `null` unlinks the account. */
       readonly userId?: string | null;
     },
   ): Promise<StaffMember> {
@@ -149,14 +144,6 @@ export class ReplaceStaffScheduleUseCase {
     private readonly clock: Clock,
   ) {}
 
-  /**
-   * Replaces the whole weekly schedule. A full replacement is simpler and
-   * safer than patching ranges one by one: the client always sends the week
-   * as it should look, and validation sees all of it at once.
-   *
-   * Existing appointments are not touched: a schedule change applies to new
-   * bookings.
-   */
   async execute(
     actor: AuthContext,
     input: {

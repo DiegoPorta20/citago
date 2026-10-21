@@ -44,18 +44,6 @@ import {
   VoidSaleRequestDto,
 } from './sales.dto.js';
 
-/**
- * The till.
- *
- * There is **no PATCH and no DELETE**: a sale is never edited or removed
- * (rule SA-4). A mistake is cancelled if it was never charged, or refunded if
- * it was, always with a reason and an author — and both are OWNER or ADMIN
- * decisions (docs/permissions.md).
- *
- * Recording and reading are open to every member, but a STAFF user only ever
- * sees and records their own work; that depends on *which* sale, so it is
- * enforced in the use cases rather than here.
- */
 @ApiTags('sales')
 @ApiBearerAuth()
 @Controller('sales')

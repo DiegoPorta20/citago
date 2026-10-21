@@ -11,16 +11,6 @@ import { TenantOrmEntity } from '../../../../../tenants/infrastructure/persisten
 import { MembershipOrmEntity } from './membership.orm-entity.js';
 import { UserOrmEntity } from './user.orm-entity.js';
 
-/**
- * A refresh token in storage.
- *
- * Only the SHA-256 hash is persisted, so a database dump does not hand out
- * sessions. Tokens rotate on every use: reusing a rotated token means the
- * whole family is revoked (theft detection).
- *
- * This is infrastructure, not domain: it exists because sessions must be
- * revocable, which is not a business concept.
- */
 @Entity('refresh_tokens')
 export class RefreshTokenOrmEntity {
   @PrimaryColumn({ name: 'id', type: 'char', length: 36 })
@@ -30,18 +20,10 @@ export class RefreshTokenOrmEntity {
   @Column({ name: 'user_id', type: 'char', length: 36 })
   userId: string;
 
-  /**
-   * The tenant this session belongs to.
-   *
-   * Denormalized from the membership so the refresh flow can look the
-   * membership up **with its tenant**, keeping every membership read
-   * tenant-scoped (see docs/adr/0004-tenant-isolation.md).
-   */
   @Index('ix_refresh_tokens_tenant')
   @Column({ name: 'tenant_id', type: 'char', length: 36 })
   tenantId: string;
 
-  /** The session is bound to one membership, so it is bound to one access grant. */
   @Column({ name: 'membership_id', type: 'char', length: 36 })
   membershipId: string;
 
@@ -49,7 +31,6 @@ export class RefreshTokenOrmEntity {
   @Column({ name: 'token_hash', type: 'char', length: 64 })
   tokenHash: string;
 
-  /** Rotation chain: revoking a family kills every descendant at once. */
   @Index('ix_refresh_tokens_family')
   @Column({ name: 'family_id', type: 'char', length: 36 })
   familyId: string;

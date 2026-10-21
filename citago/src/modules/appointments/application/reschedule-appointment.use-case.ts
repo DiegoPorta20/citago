@@ -14,18 +14,10 @@ export interface RescheduleAppointmentInput {
   readonly appointmentId: string;
   readonly startAt?: Date;
   readonly staffMemberId?: string;
-  /** `null` or empty clears the notes. */
   readonly notes?: string | null;
   readonly allowOutsideSchedule?: boolean;
 }
 
-/**
- * Moves an appointment to another time and/or staff member, or edits its notes.
- *
- * Duration and price travel with it unchanged: they were agreed at booking.
- * Changing the service is not a reschedule — cancel and book again, so the
- * history shows what was actually agreed each time.
- */
 @Injectable()
 export class RescheduleAppointmentUseCase {
   constructor(
@@ -56,15 +48,12 @@ export class RescheduleAppointmentUseCase {
         input.startAt !== undefined || input.staffMemberId !== undefined;
 
       if (moves) {
-        // Both agendas are touched when moving between barbers; the lock
-        // takes them in a fixed order so two opposite moves cannot deadlock.
         await this.agendaLock.acquire(actor.tenantId, [
           current.staffMemberId,
           input.staffMemberId ?? current.staffMemberId,
         ]);
       }
 
-      // Re-read under the lock: what we checked must be what we change.
       const appointment = moves
         ? await this.load(actor, input.appointmentId)
         : current;

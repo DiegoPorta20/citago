@@ -26,6 +26,11 @@ docker compose up -d          # MySQL en 3306 (dev) y 3307 (tests)
 pnpm start:dev
 ```
 
+> **¿Ya tienes MySQL instalado en el equipo?** Ocupa el 3306 y el contenedor de
+> desarrollo no podrá arrancar (`ports are not available`). Pon `DB_PORT=3308`
+> en `.env`: el compose lee esa variable para publicar el puerto. El de tests
+> (3307) no se ve afectado.
+
 - API: `http://localhost:3000/api/v1`
 - Health: `http://localhost:3000/api/v1/health`
 - Swagger: `http://localhost:3000/api/docs` (desactivable con `SWAGGER_ENABLED=false`)

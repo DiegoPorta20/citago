@@ -15,13 +15,7 @@ import {
 import { ConversationOrmEntity } from './conversation.orm-entity.js';
 
 @Entity('messages')
-/**
- * Idempotency key (rule CO-2). **Global**, not per tenant: the channel's id is
- * already unique worldwide, and duplicate detection must not depend on having
- * resolved the tenant correctly. NULL for messages without a channel id.
- */
 @Index('uq_messages_external_id', ['externalMessageId'], { unique: true })
-/** Chat history, newest first, with a stable tie-break for keyset pagination. */
 @Index('ix_messages_conversation_sent', [
   'tenantId',
   'conversationId',
@@ -52,7 +46,6 @@ export class MessageOrmEntity {
   @Column({ name: 'type', type: 'enum', enum: MessageType })
   type: MessageType;
 
-  /** TEXT: a WhatsApp message can be up to 4096 characters. */
   @Column({ name: 'body', type: 'text', nullable: true })
   body: string | null;
 
@@ -81,7 +74,6 @@ export class MessageOrmEntity {
   @Column({ name: 'author_user_id', type: 'char', length: 36, nullable: true })
   authorUserId: string | null;
 
-  /** CASCADE: messages are part of the conversation aggregate. */
   @ManyToOne(() => ConversationOrmEntity, {
     onDelete: 'CASCADE',
     onUpdate: 'RESTRICT',

@@ -9,16 +9,6 @@ import { ServiceRepository } from './domain/service.repository.js';
 import { TypeOrmServiceRepository } from './infrastructure/persistence/typeorm/typeorm-service.repository.js';
 import { ServicesController } from './presentation/services.controller.js';
 
-/**
- * The catalogue of what the business sells and schedules.
- *
- * Named `catalog` rather than `services`: in NestJS "service" already means a
- * provider, and `ServicesService` would be a confusing name for something that
- * models a haircut.
- *
- * Exports the repository contract so `appointments` can validate a service
- * without touching this module's table.
- */
 @Module({
   controllers: [ServicesController],
   providers: [

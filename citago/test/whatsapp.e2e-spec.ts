@@ -17,7 +17,6 @@ import { createTestApp } from './support/create-test-app.js';
 import { FakeGraphApi, VALID_TOKEN } from './support/fake-graph-api.js';
 import { queryRows, truncateAll } from './support/test-data-source.js';
 
-/** Must match WHATSAPP_GRAPH_API_URL and WHATSAPP_APP_SECRET in .env.test. */
 const GRAPH_PORT = 3399;
 const APP_SECRET = 'test-app-secret';
 const VERIFY_TOKEN = 'test-verify-token';
@@ -27,7 +26,6 @@ const NUMBER_B = '106540352242999';
 
 let messageSequence = 0;
 
-/** A Meta webhook with one text message per entry of `messages`. */
 function metaWebhook(
   phoneNumberId: string,
   messages: { from?: string; id?: string; body?: string; name?: string }[],

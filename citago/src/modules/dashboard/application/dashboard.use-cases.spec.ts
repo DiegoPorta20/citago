@@ -34,7 +34,6 @@ import { GetBusinessDashboardUseCase } from './get-business-dashboard.use-case.j
 import { GetOwnDashboardUseCase } from './get-own-dashboard.use-case.js';
 
 const TENANT_ID = 'tenant-1';
-/** 2026-09-21 20:00 UTC is still 15:00 of the 21st in Lima (UTC-5). */
 const NOW = new Date('2026-09-21T20:00:00.000Z');
 
 const auth = (role: UserRole, userId = 'user-1'): AuthContext => ({
@@ -150,7 +149,6 @@ describe('Dashboard', () => {
 
       expect(resolved.from).toBe('2026-09-21');
       expect(resolved.to).toBe('2026-09-21');
-      // Lima is UTC-5: the local day starts at 05:00 UTC and lasts 24 hours.
       expect(resolved.range.start.toISOString()).toBe(
         '2026-09-21T05:00:00.000Z',
       );

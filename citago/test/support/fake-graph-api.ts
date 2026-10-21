@@ -17,19 +17,9 @@ export interface RecordedRequest {
 
 export interface ForcedFailure {
   readonly status: number;
-  /** Meta error code; omitted for a bare HTTP failure. */
   readonly code?: number;
 }
 
-/**
- * A stand-in for Meta's Graph API, served over real HTTP so the actual adapter
- * (fetch, headers, JSON, error mapping) is what gets tested.
- *
- * - `GET /{version}/{phoneNumberId}` answers for {@link VALID_TOKEN} only;
- *   any other token gets Meta's "invalid token" error (190).
- * - `POST /{version}/{phoneNumberId}/messages` returns a fresh `wamid`.
- * - `failNext` makes the next request fail the way Meta would.
- */
 export class FakeGraphApi {
   readonly requests: RecordedRequest[] = [];
   private server: Server | null = null;

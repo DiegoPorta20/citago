@@ -19,24 +19,12 @@ export interface BookAppointmentInput {
   readonly staffMemberId: string;
   readonly startAt: Date;
   readonly notes?: string | null;
-  /** Defaults to PENDING; the business can book an already agreed CONFIRMED one. */
   readonly initialStatus?:
     AppointmentStatus.Pending | AppointmentStatus.Confirmed;
-  /** OWNER/ADMIN only: outside working hours, during time off, or in the past. */
   readonly allowOutsideSchedule?: boolean;
   readonly source?: AppointmentSource;
 }
 
-/**
- * Books an appointment.
- *
- * The sequence matters (rule AP-5):
- * 1. open a transaction and **lock the staff member's agenda**;
- * 2. only then read their appointments and check for overlaps;
- * 3. insert, commit, release.
- * A second request for the same time waits at step 1, then sees this booking at
- * step 2 and is rejected. Without the lock both would pass step 2.
- */
 @Injectable()
 export class BookAppointmentUseCase {
   constructor(
@@ -74,8 +62,6 @@ export class BookAppointmentUseCase {
       );
       await this.rules.bookableClient(actor.tenantId, input.clientId);
 
-      // The duration comes from the service **now** and is frozen into the
-      // appointment (rule AP-1), like the price (rule AP-2).
       const range = TimeRange.of(
         input.startAt,
         new Date(input.startAt.getTime() + service.durationMinutes * 60_000),

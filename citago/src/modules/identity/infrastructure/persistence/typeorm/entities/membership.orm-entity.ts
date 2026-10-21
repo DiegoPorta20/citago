@@ -13,12 +13,6 @@ import { MembershipStatus } from '../../../../domain/membership-status.js';
 import { UserRole } from '../../../../../../shared/domain/user-role.js';
 import { UserOrmEntity } from './user.orm-entity.js';
 
-/**
- * Grants a user access to a tenant, with a role.
- *
- * This is the object the authenticated session is bound to: revoking a
- * membership removes access to one business without touching the account.
- */
 @Entity('memberships')
 @Unique('uq_memberships_tenant_user', ['tenantId', 'userId'])
 export class MembershipOrmEntity {
@@ -28,7 +22,6 @@ export class MembershipOrmEntity {
   @Column({ name: 'tenant_id', type: 'char', length: 36 })
   tenantId: string;
 
-  /** Indexed on its own: login looks up every membership of a user. */
   @Index('ix_memberships_user')
   @Column({ name: 'user_id', type: 'char', length: 36 })
   userId: string;

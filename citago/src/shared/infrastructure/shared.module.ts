@@ -10,12 +10,6 @@ import { TypeOrmTransactionRunner } from './persistence/typeorm-transaction-runn
 import { SystemClock } from './system-clock.js';
 import { UuidV7IdGenerator } from './uuid-v7-id-generator.js';
 
-/**
- * Cross-cutting infrastructure every module may depend on.
- *
- * Global on purpose: these are single, stateless implementations of ports that
- * would otherwise have to be re-imported by every feature module.
- */
 @Global()
 @Module({
   providers: [

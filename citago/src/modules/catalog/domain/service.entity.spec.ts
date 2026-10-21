@@ -63,7 +63,6 @@ describe('Service', () => {
     );
 
     it('rejects an absurd duration', () => {
-      // More than twelve hours is a typo, not a haircut.
       expect(() =>
         Service.create({ ...validInput, durationMinutes: 721 }, NOW),
       ).toThrow(InvalidServiceDataError);
@@ -112,7 +111,6 @@ describe('Service', () => {
       expect(() => service.update({ durationMinutes: 0 }, LATER)).toThrow(
         InvalidServiceDataError,
       );
-      // The rejected change left nothing behind.
       expect(service.durationMinutes).toBe(30);
       expect(service.updatedAt).toEqual(NOW);
     });
@@ -144,7 +142,6 @@ describe('Service', () => {
       service.activate(LATER);
 
       expect(service.isActive).toBe(true);
-      // No spurious touch of updatedAt when nothing changed.
       expect(service.updatedAt).toEqual(NOW);
     });
   });

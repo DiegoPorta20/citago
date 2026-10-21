@@ -8,11 +8,6 @@ import {
   type PageRequest,
 } from '../../domain/pagination.js';
 
-/**
- * Shared pagination input for every collection endpoint.
- *
- * `limit` is capped server-side: a client asking for 10000 rows must not get them.
- */
 export class PaginationQueryDto implements PageRequest {
   @ApiPropertyOptional({ minimum: 1, default: 1 })
   @IsOptional()

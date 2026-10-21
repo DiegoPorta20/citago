@@ -66,8 +66,32 @@ filas puede tocar. La matriz está en [permissions.md](../permissions.md).
 - Los endpoints de auth tienen su propio límite de peticiones, más estricto que
   el global.
 
+### 8. Cambio de negocio (`POST /auth/switch-tenant`)
+
+Una persona puede tener varias membresías activas (regla ID-8). El login entra
+a la membresía activa más antigua; para moverse a otro negocio sin volver a
+introducir la contraseña:
+
+- `GET /auth/tenants` (autenticado) lista las membresías activas del usuario
+  cuyo negocio está disponible, marcando con `current` la del token actual. El
+  nombre del negocio se lee por `TenantRepository` —el contrato que expone el
+  módulo de tenants—, nunca contra su tabla (ADR 0001).
+- `POST /auth/switch-tenant` (autenticado) recibe `{ tenantId, refreshToken }`,
+  comprueba que el refresh presentado pertenece al llamante y que este tiene una
+  membresía **activa** en ese negocio, y entonces emite una **sesión nueva**
+  (par access + refresh, misma forma que login/refresh) iniciando una **familia
+  de rotación nueva**, y **revoca toda la familia del refresh presentado**: la
+  sesión del negocio anterior ya no se puede refrescar. Una membresía
+  inexistente, revocada o con el negocio suspendido responden igual
+  (`NOT_A_MEMBER`, 404), de modo que el cambio no delata qué negocios existen
+  (ADR 0004). Un refresh de otro usuario responde `INVALID_REFRESH_TOKEN` (401)
+  y no se toca.
+- Cambiar al negocio en el que ya se está es válido e idempotente: emite una
+  sesión nueva y descarta la anterior.
+
+Ambos endpoints son privados (no `@Public()`) y comparten el límite de
+peticiones de `/auth`.
+
 ## Pendiente
 
 - Recuperación de contraseña (necesita proveedor de email, decisión B9).
-- Cambio de negocio (`POST /auth/switch-tenant`) cuando exista el selector: el
-  modelo ya lo soporta. Hoy el login entra a la membresía activa más antigua.

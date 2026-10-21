@@ -10,17 +10,6 @@ import { GetBusinessDashboardUseCase } from './application/get-business-dashboar
 import { GetOwnDashboardUseCase } from './application/get-own-dashboard.use-case.js';
 import { DashboardController } from './presentation/dashboard.controller.js';
 
-/**
- * The numbers of the business.
- *
- * The one module with **no domain**: it owns no entity, no table and no rule.
- * It reads what the other modules already guarantee, through their report
- * ports, and puts it on one screen. If it ever grows a rule of its own, that
- * rule belongs to whoever owns the data, not here.
- *
- * Nothing depends on it, so it sits at the edge of the graph and can be removed
- * without touching anything else.
- */
 @Module({
   imports: [
     TenantsModule,

@@ -70,6 +70,8 @@ token de inyección de NestJS.
 | POST | `/api/v1/auth/refresh` | Público |
 | POST | `/api/v1/auth/logout` | Público |
 | GET | `/api/v1/auth/me` | Autenticado |
+| GET | `/api/v1/auth/tenants` (negocios a los que puede cambiar) | Autenticado |
+| POST | `/api/v1/auth/switch-tenant` (cambiar de negocio) | Autenticado |
 | GET · POST | `/api/v1/users` (accesos del negocio, dar acceso) | OWNER, ADMIN |
 | PATCH | `/api/v1/users/:id` (cambiar rol) | OWNER, ADMIN (ADMIN solo sobre STAFF) |
 | POST | `/api/v1/users/:id/revoke` · `/restore` | OWNER, ADMIN (ADMIN solo sobre STAFF) |

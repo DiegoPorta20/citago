@@ -20,17 +20,6 @@ import {
 } from '../../../../shared/presentation/decorators/current-auth.decorator.js';
 import { IS_PUBLIC_KEY } from '../../../../shared/presentation/decorators/public.decorator.js';
 
-/**
- * Turns a bearer token into an `AuthContext`, or rejects the request.
- *
- * Registered globally, so every endpoint is private unless marked `@Public()`.
- *
- * The token is only half the check. The membership is loaded from the database
- * on **every** request to confirm the access still exists, and to read the
- * current role — which is why revoking access or changing a role takes effect
- * immediately instead of when the token expires. That costs one primary-key
- * lookup per request, plus one for the tenant.
- */
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
@@ -68,9 +57,6 @@ export class JwtAuthGuard implements CanActivate {
       claims.tid,
     );
 
-    // The membership must still exist, still be active, and still belong to
-    // the user the token names. A token whose membership was moved or revoked
-    // is worthless.
     if (
       !membership ||
       !membership.isActive ||

@@ -2,7 +2,6 @@ import { TimeRange } from '../../../shared/domain/time-range.js';
 import { InvalidTimeOffError } from './staff.errors.js';
 
 const MAX_REASON_LENGTH = 255;
-/** A year: longer than that is not time off, it is leaving the business. */
 const MAX_DURATION_DAYS = 366;
 
 export interface StaffTimeOffSnapshot {
@@ -15,13 +14,6 @@ export interface StaffTimeOffSnapshot {
   readonly createdAt: Date;
 }
 
-/**
- * A period when a staff member does not take bookings, on top of their weekly
- * schedule: holidays, a sick day, an afternoon off.
- *
- * Stored as UTC instants, not local dates: "Monday afternoon" and "the whole
- * week" are both just ranges, and the app decides how to present them.
- */
 export class StaffTimeOff {
   private constructor(
     readonly id: string,

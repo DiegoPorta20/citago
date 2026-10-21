@@ -1,4 +1,3 @@
-// In ESM mode Jest does not inject globals; import the ones we use.
 import { jest } from '@jest/globals';
 import {
   type ArgumentsHost,

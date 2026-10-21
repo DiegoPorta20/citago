@@ -16,21 +16,10 @@ class TenantNotAvailableError extends DomainError {
   }
 }
 
-/**
- * Turns what a person typed into a canonical `PhoneNumber`, using the
- * **tenant's country** as the default region.
- *
- * Shared by create and update so the two can never normalize differently —
- * which is exactly how duplicate customers are born.
- */
 @Injectable()
 export class ClientPhoneNormalizer {
   constructor(private readonly tenants: TenantRepository) {}
 
-  /**
-   * `undefined` means "not provided" (leave as is); `null` or an empty string
-   * means "clear it".
-   */
   async normalize(
     tenantId: string,
     raw: string | null | undefined,

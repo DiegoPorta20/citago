@@ -13,13 +13,6 @@ import { GraphWhatsAppCloudApi } from './infrastructure/cloud-api/graph-whatsapp
 import { TypeOrmWhatsAppChannelRepository } from './infrastructure/persistence/typeorm/typeorm-whatsapp-channel.repository.js';
 import { WhatsAppChannelController } from './presentation/whatsapp-channel.controller.js';
 
-/**
- * The WhatsApp adapter: the business's connected number, Meta's Cloud API,
- * and the outbound side of Conversations (`ChannelMessenger`).
- *
- * Inbound webhooks live in `WhatsAppWebhookModule`, which depends on
- * Conversations; keeping them apart avoids a module cycle.
- */
 @Module({
   controllers: [WhatsAppChannelController],
   providers: [
