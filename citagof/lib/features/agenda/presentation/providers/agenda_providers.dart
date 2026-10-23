@@ -46,6 +46,12 @@ class SelectedDayController extends Notifier<String> {
     state = clock.addDays(state, 1);
   }
 
+  /// Same weekday, one week earlier/later: what the week strip arrows do.
+  void previousWeek() =>
+      state = ref.read(businessClockProvider).addDays(state, -7);
+
+  void nextWeek() => state = ref.read(businessClockProvider).addDays(state, 7);
+
   void today() {
     state = ref.read(businessClockProvider).today();
   }

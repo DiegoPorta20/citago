@@ -2,8 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/app_status_colors.dart';
+import '../../../../core/theme/app_tokens.dart';
+import '../../../../core/time/business_clock.dart';
 import '../../../../core/utils/money_format.dart';
+import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/error_view.dart';
+import '../../../../core/widgets/info_card.dart';
+import '../../../../core/widgets/section_header.dart';
+import '../../../../core/widgets/status_pill.dart';
+import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../domain/entities/business.dart';
 import '../business_routes.dart';
 import '../providers/business_providers.dart';
@@ -37,54 +45,64 @@ class BusinessPage extends ConsumerWidget {
           onRefresh: () async => ref.invalidate(businessProvider),
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.page,
+              AppSpacing.s,
+              AppSpacing.page,
+              AppSpacing.xxxl,
+            ),
             children: [
-              _SectionHeader(
+              SectionHeader(
                 title: 'Configuración',
-                action: TextButton.icon(
-                  onPressed: () => context.push(BusinessRoutes.editSettings),
-                  icon: const Icon(Icons.edit_outlined),
-                  label: const Text('Editar'),
-                ),
+                actionLabel: 'Editar',
+                onAction: () => context.push(BusinessRoutes.editSettings),
               ),
-              _InfoRow(
-                icon: Icons.storefront_outlined,
-                label: 'Nombre',
-                value: data.name,
+              const SizedBox(height: AppSpacing.s),
+              InfoCard(
+                children: [
+                  InfoRow(
+                    icon: Icons.storefront_outlined,
+                    label: 'Nombre',
+                    value: _valueOrEmpty(data.name),
+                    emphasize: true,
+                  ),
+                  InfoRow(
+                    icon: Icons.public_rounded,
+                    label: 'País',
+                    value: _valueOrEmpty(data.country),
+                  ),
+                  InfoRow(
+                    icon: Icons.schedule_rounded,
+                    label: 'Zona horaria',
+                    value: _valueOrEmpty(data.timezone),
+                  ),
+                  InfoRow(
+                    icon: Icons.payments_outlined,
+                    label: 'Moneda',
+                    value:
+                        '${data.currency} (${_currencyExample(data.currency)})',
+                    note: 'No se puede cambiar',
+                  ),
+                  InfoRow(
+                    icon: Icons.phone_outlined,
+                    label: 'Teléfono',
+                    value: _valueOrEmpty(data.phone),
+                  ),
+                  InfoRow(
+                    icon: Icons.email_outlined,
+                    label: 'Correo',
+                    value: _valueOrEmpty(data.email),
+                  ),
+                ],
               ),
-              _InfoRow(icon: Icons.public, label: 'País', value: data.country),
-              _InfoRow(
-                icon: Icons.schedule,
-                label: 'Zona horaria',
-                value: data.timezone,
-              ),
-              _InfoRow(
-                icon: Icons.payments_outlined,
-                label: 'Moneda',
-                value: '${data.currency} (${_currencyExample(data.currency)})',
-                subtitle: 'No se puede cambiar',
-              ),
-              _InfoRow(
-                icon: Icons.phone_outlined,
-                label: 'Teléfono',
-                value: data.phone,
-              ),
-              _InfoRow(
-                icon: Icons.email_outlined,
-                label: 'Correo',
-                value: data.email,
-              ),
-              const Divider(),
-              _SectionHeader(
+              const SizedBox(height: AppSpacing.xxl),
+              SectionHeader(
                 title: 'Horario de atención',
-                action: TextButton.icon(
-                  onPressed: () => context.push(BusinessRoutes.editHours),
-                  icon: const Icon(Icons.edit_outlined),
-                  label: const Text('Editar'),
-                ),
+                actionLabel: 'Editar',
+                onAction: () => context.push(BusinessRoutes.editHours),
               ),
+              const SizedBox(height: AppSpacing.s),
               _HoursView(hours: data.hours),
-              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -92,97 +110,94 @@ class BusinessPage extends ConsumerWidget {
     );
   }
 
+  static String _valueOrEmpty(String? value) =>
+      value == null || value.isEmpty ? 'Sin datos' : value;
+
   static String _currencyExample(String currency) => formatMoney('0', currency);
 }
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, required this.action});
+class _HoursView extends ConsumerWidget {
+  const _HoursView({required this.hours});
 
-  final String title;
-  final Widget action;
+  final List<ScheduleRange> hours;
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final today = BusinessClock.weekdayOf(
+      ref.watch(businessClockProvider).today(),
+    );
+
+    return AppCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.l,
+        vertical: AppSpacing.xs,
+      ),
+      child: Column(
         children: [
-          Text(title, style: Theme.of(context).textTheme.titleMedium),
-          action,
+          for (var weekday = 1; weekday <= 7; weekday++) ...[
+            if (weekday > 1) const Divider(),
+            _DayRow(
+              label: _weekdayLabels[weekday - 1],
+              isToday: weekday == today,
+              ranges: hours.where((r) => r.weekday == weekday).toList()
+                ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes)),
+            ),
+          ],
         ],
       ),
     );
   }
 }
 
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.subtitle,
-  });
-
-  final IconData icon;
-  final String label;
-  final String? value;
-  final String? subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    final shown = value == null || value!.isEmpty ? 'Sin datos' : value!;
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(label),
-      subtitle: Text(subtitle == null ? shown : '$shown\n$subtitle'),
-      isThreeLine: subtitle != null,
-    );
-  }
-}
-
-class _HoursView extends StatelessWidget {
-  const _HoursView({required this.hours});
-
-  final List<ScheduleRange> hours;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        for (var weekday = 1; weekday <= 7; weekday++)
-          _DayRow(
-            label: _weekdayLabels[weekday - 1],
-            ranges: hours.where((r) => r.weekday == weekday).toList()
-              ..sort((a, b) => a.startMinutes.compareTo(b.startMinutes)),
-          ),
-      ],
-    );
-  }
-}
-
 class _DayRow extends StatelessWidget {
-  const _DayRow({required this.label, required this.ranges});
+  const _DayRow({
+    required this.label,
+    required this.ranges,
+    required this.isToday,
+  });
 
   final String label;
   final List<ScheduleRange> ranges;
+  final bool isToday;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final closed = ranges.isEmpty;
-    return ListTile(
-      minTileHeight: 48,
-      dense: true,
-      title: Text(label),
-      trailing: Text(
-        closed
-            ? 'Cerrado'
-            : ranges.map((r) => '${r.startsAt}–${r.endsAt}').join(', '),
-        style: TextStyle(
-          color: closed
-              ? Theme.of(context).colorScheme.outline
-              : Theme.of(context).colorScheme.onSurface,
-        ),
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Row(
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: isToday ? scheme.primary : null,
+            ),
+          ),
+          if (isToday) ...[
+            const SizedBox(width: AppSpacing.s),
+            const StatusPill(
+              label: 'Hoy',
+              tone: StatusTone.accent,
+              showDot: false,
+            ),
+          ],
+          const SizedBox(width: AppSpacing.m),
+          Expanded(
+            child: Text(
+              closed
+                  ? 'Cerrado'
+                  : ranges.map((r) => '${r.startsAt}–${r.endsAt}').join(', '),
+              textAlign: TextAlign.end,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: closed ? scheme.onSurfaceVariant : scheme.onSurface,
+                fontFeatures: AppText.tabular,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

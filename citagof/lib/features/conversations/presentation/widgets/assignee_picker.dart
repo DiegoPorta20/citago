@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/widgets/initials_avatar.dart';
 import '../../../team/domain/entities/team_member.dart';
 import '../../../team/presentation/providers/team_providers.dart';
 import '../../../team/presentation/widgets/role_label.dart';
@@ -100,10 +101,13 @@ class _List extends StatelessWidget {
               for (final member in list)
                 ListTile(
                   minTileHeight: 56,
-                  leading: CircleAvatar(child: Text(member.initials)),
+                  leading: InitialsAvatar(name: member.name, radius: 20),
                   title: Text(member.name),
                   subtitle: Text(roleLabel(member.role)),
                   selected: currentUserId == member.userId,
+                  trailing: currentUserId == member.userId
+                      ? const Icon(Icons.check_circle_rounded)
+                      : null,
                   onTap: () =>
                       Navigator.pop(context, AssigneeChoice(member.userId)),
                 ),

@@ -3,6 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/route_paths.dart';
+import '../../../../core/theme/app_status_colors.dart';
+import '../../../../core/theme/app_tokens.dart';
+import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/initials_avatar.dart';
+import '../../../../core/widgets/section_header.dart';
 import '../../../authentication/domain/entities/auth_session.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
 
@@ -19,76 +24,161 @@ class MorePage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Más')),
       body: ListView(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.page,
+          AppSpacing.s,
+          AppSpacing.page,
+          AppSpacing.xxxl,
+        ),
         children: [
-          if (session != null)
-            ListTile(
-              leading: const CircleAvatar(child: Icon(Icons.person)),
-              title: Text(session.user.name),
-              subtitle: Text(
-                '${session.user.email}\n${session.tenant.name} · ${_roleLabel(session.role)}',
+          if (session != null) ...[
+            _ProfileCard(session: session),
+            const SizedBox(height: AppSpacing.xxl),
+          ],
+          const SectionHeader(title: 'Operación'),
+          const SizedBox(height: AppSpacing.s),
+          const _MenuGroup(
+            items: [
+              _MenuItem(
+                icon: Icons.receipt_long_rounded,
+                title: 'Ventas',
+                path: AppRoutes.sales,
               ),
-              isThreeLine: true,
-            ),
-          const Divider(),
-          const _MenuTile(
-            icon: Icons.receipt_long_outlined,
-            title: 'Ventas',
-            path: AppRoutes.sales,
+            ],
           ),
-          if (manages) ...const [
-            _MenuTile(
-              icon: Icons.content_cut,
-              title: 'Servicios',
-              path: AppRoutes.services,
-            ),
-            _MenuTile(
-              icon: Icons.badge_outlined,
-              title: 'Profesionales',
-              path: AppRoutes.staff,
-            ),
-            _MenuTile(
-              icon: Icons.groups_outlined,
-              title: 'Equipo y accesos',
-              path: AppRoutes.team,
-            ),
-            _MenuTile(
-              icon: Icons.storefront_outlined,
-              title: 'Mi negocio',
-              path: AppRoutes.business,
-            ),
-            _MenuTile(
-              icon: Icons.chat_outlined,
-              title: 'WhatsApp',
-              path: AppRoutes.whatsapp,
+          if (manages) ...[
+            const SizedBox(height: AppSpacing.xxl),
+            const SectionHeader(title: 'Administración'),
+            const SizedBox(height: AppSpacing.s),
+            const _MenuGroup(
+              items: [
+                _MenuItem(
+                  icon: Icons.content_cut_rounded,
+                  title: 'Servicios',
+                  path: AppRoutes.services,
+                ),
+                _MenuItem(
+                  icon: Icons.badge_outlined,
+                  title: 'Profesionales',
+                  path: AppRoutes.staff,
+                ),
+                _MenuItem(
+                  icon: Icons.groups_outlined,
+                  title: 'Equipo y accesos',
+                  path: AppRoutes.team,
+                ),
+                _MenuItem(
+                  icon: Icons.storefront_outlined,
+                  title: 'Mi negocio',
+                  path: AppRoutes.business,
+                ),
+                _MenuItem(
+                  icon: Icons.chat_outlined,
+                  title: 'WhatsApp',
+                  path: AppRoutes.whatsapp,
+                ),
+              ],
             ),
           ],
-          const Divider(),
-          if (hasSeveralBusinesses)
-            const _MenuTile(
-              icon: Icons.swap_horiz,
-              title: 'Cambiar de negocio',
-              path: AppRoutes.switchTenant,
+          if (hasSeveralBusinesses) ...[
+            const SizedBox(height: AppSpacing.xxl),
+            const SectionHeader(title: 'Cuenta'),
+            const SizedBox(height: AppSpacing.s),
+            const _MenuGroup(
+              items: [
+                _MenuItem(
+                  icon: Icons.swap_horiz_rounded,
+                  title: 'Cambiar de negocio',
+                  path: AppRoutes.switchTenant,
+                ),
+              ],
             ),
-          ListTile(
-            minTileHeight: 56,
-            leading: const Icon(Icons.logout),
-            title: const Text('Cerrar sesión'),
-            onTap: () => ref.read(sessionControllerProvider.notifier).signOut(),
+          ],
+          const SizedBox(height: AppSpacing.xxl),
+          FilledButton.tonalIcon(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppStatusColors.of(context)
+                  .background(StatusTone.danger),
+              foregroundColor: AppStatusColors.of(context)
+                  .foreground(StatusTone.danger),
+            ),
+            onPressed: () =>
+                ref.read(sessionControllerProvider.notifier).signOut(),
+            icon: const Icon(Icons.logout_rounded),
+            label: const Text('Cerrar sesión'),
           ),
         ],
       ),
     );
   }
-
-  String _roleLabel(UserRole role) => switch (role) {
-    UserRole.owner => 'Propietario',
-    UserRole.admin => 'Administrador',
-    UserRole.staff => 'Profesional',
-  };
 }
 
-class _MenuTile extends StatelessWidget {
-  const _MenuTile({
+String _roleLabel(UserRole role) => switch (role) {
+  UserRole.owner => 'Propietario',
+  UserRole.admin => 'Administrador',
+  UserRole.staff => 'Profesional',
+};
+
+class _ProfileCard extends StatelessWidget {
+  const _ProfileCard({required this.session});
+
+  final AuthSession session;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          scheme.primaryContainer.withValues(alpha: 0.7),
+          scheme.surfaceContainerLow,
+        ],
+      ),
+      child: Row(
+        children: [
+          InitialsAvatar(name: session.user.name, radius: 28),
+          const SizedBox(width: AppSpacing.l),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  session.user.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleLarge,
+                ),
+                Text(
+                  session.user.email,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall,
+                ),
+                const SizedBox(height: AppSpacing.s),
+                Text(
+                  '${session.tenant.name} · ${_roleLabel(session.role)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: scheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MenuItem {
+  const _MenuItem({
     required this.icon,
     required this.title,
     required this.path,
@@ -97,15 +187,69 @@ class _MenuTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final String path;
+}
+
+/// Rows inside one card, separated by inset dividers.
+class _MenuGroup extends StatelessWidget {
+  const _MenuGroup({required this.items});
+
+  final List<_MenuItem> items;
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      minTileHeight: 56,
-      leading: Icon(icon),
-      title: Text(title),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () => context.push(path),
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          for (var i = 0; i < items.length; i++) ...[
+            if (i > 0)
+              const Padding(
+                padding: EdgeInsets.only(left: 72),
+                child: Divider(),
+              ),
+            InkWell(
+              onTap: () => context.push(items[i].path),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.l,
+                  vertical: 14,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(AppRadius.chip),
+                      ),
+                      child: Icon(
+                        items[i].icon,
+                        size: 20,
+                        color: scheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.l),
+                    Expanded(
+                      child: Text(
+                        items[i].title,
+                        style: theme.textTheme.titleSmall,
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/app_failure.dart';
+import '../../../../core/theme/app_tokens.dart';
+import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/error_banner.dart';
+import '../../../../core/widgets/icon_badge.dart';
 import '../../domain/entities/whatsapp_channel.dart';
 import '../providers/whatsapp_providers.dart';
 
@@ -79,23 +83,44 @@ class _WhatsAppConnectPageState extends ConsumerState<WhatsAppConnectPage> {
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.page,
+              AppSpacing.s,
+              AppSpacing.page,
+              AppSpacing.xxxl,
+            ),
             children: [
-              Text(
-                'Datos de la aplicación de Meta',
-                style: theme.textTheme.titleSmall,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'En la app de Meta, en WhatsApp > Configuración de la API, '
-                'copia el identificador del número de teléfono. El token '
-                'permanente se genera con un usuario del sistema en el '
-                'Administrador comercial de Meta.',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.outline,
+              AppCard(
+                color: theme.colorScheme.surfaceContainer,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const IconBadge(icon: Icons.info_outline_rounded),
+                    const SizedBox(width: AppSpacing.m),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Datos de la aplicación de Meta',
+                            style: theme.textTheme.titleSmall,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'En la app de Meta, en WhatsApp > Configuración de '
+                            'la API, copia el identificador del número de '
+                            'teléfono. El token permanente se genera con un '
+                            'usuario del sistema en el Administrador comercial '
+                            'de Meta.',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               TextFormField(
                 controller: _phoneNumberId,
                 enabled: !_saving,
@@ -163,18 +188,11 @@ class _WhatsAppConnectPageState extends ConsumerState<WhatsAppConnectPage> {
                 },
               ),
               if (_error != null) ...[
-                const SizedBox(height: 8),
-                Semantics(
-                  liveRegion: true,
-                  child: Text(
-                    _error!,
-                    style: TextStyle(color: theme.colorScheme.error),
-                  ),
-                ),
+                const SizedBox(height: 16),
+                ErrorBanner(_error!),
               ],
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               FilledButton(
-                style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
                 onPressed: _saving ? null : _save,
                 child: _saving
                     ? const SizedBox(

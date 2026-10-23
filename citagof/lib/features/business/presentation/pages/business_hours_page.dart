@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/app_failure.dart';
+import '../../../../core/theme/app_tokens.dart';
+import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/bottom_action_bar.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../domain/entities/business.dart';
 import '../providers/business_providers.dart';
@@ -150,37 +153,26 @@ class _HoursFormState extends ConsumerState<_HoursForm> {
           children: [
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 8),
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.page,
+                  AppSpacing.s,
+                  AppSpacing.page,
+                  AppSpacing.s,
+                ),
                 children: [for (var day = 1; day <= 7; day++) _dayCard(day)],
               ),
             ),
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: Semantics(
-                  liveRegion: true,
-                  child: Text(
-                    _error!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ),
-              ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: _saving ? null : _save,
-                  child: _saving
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2.5),
-                        )
-                      : const Text('Guardar horario'),
-                ),
+            BottomActionBar(
+              error: _error,
+              child: FilledButton(
+                onPressed: _saving ? null : _save,
+                child: _saving
+                    ? const SizedBox(
+                        height: 22,
+                        width: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2.5),
+                      )
+                    : const Text('Guardar horario'),
               ),
             ),
           ],
@@ -192,10 +184,15 @@ class _HoursFormState extends ConsumerState<_HoursForm> {
   Widget _dayCard(int day) {
     final ranges = _byDay[day]!;
     final open = ranges.isNotEmpty;
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Padding(
-        padding: const EdgeInsets.all(8),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: AppCard(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.s,
+          AppSpacing.xs,
+          AppSpacing.s,
+          AppSpacing.s,
+        ),
         child: Column(
           children: [
             SwitchListTile(
@@ -227,7 +224,7 @@ class _HoursFormState extends ConsumerState<_HoursForm> {
                             _EditableRange(startsAt: '09:00', endsAt: '18:00'),
                           ),
                         ),
-                  icon: const Icon(Icons.add),
+                  icon: const Icon(Icons.add_rounded),
                   label: const Text('Agregar franja'),
                 ),
               ),

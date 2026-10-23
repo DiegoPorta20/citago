@@ -3,7 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/app_failure.dart';
+import '../../../../core/theme/app_tokens.dart';
+import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/error_view.dart';
+import '../../../../core/widgets/info_card.dart';
+import '../../../../core/widgets/section_header.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../domain/entities/client.dart';
 import '../clients_routes.dart';
@@ -101,54 +105,76 @@ class _Body extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        AppSpacing.s,
+        AppSpacing.page,
+        AppSpacing.xxxl,
+      ),
       children: [
-        Center(child: ClientAvatar(client: client, radius: 36)),
-        const SizedBox(height: 12),
-        Text(
-          client.name,
-          textAlign: TextAlign.center,
-          style: theme.textTheme.headlineSmall,
+        AppCard(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xl,
+            vertical: AppSpacing.xxl,
+          ),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              scheme.primaryContainer.withValues(alpha: 0.7),
+              scheme.surfaceContainerLow,
+            ],
+          ),
+          child: Column(
+            children: [
+              ClientAvatar(client: client, radius: 40),
+              const SizedBox(height: AppSpacing.m),
+              Text(
+                client.name,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.headlineSmall,
+              ),
+              if (client.phone != null && client.phone!.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  client.phone!,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
-        const SizedBox(height: 24),
-        _InfoRow(
-          icon: Icons.phone_outlined,
-          label: 'Teléfono',
-          value: client.phone,
-        ),
-        _InfoRow(
-          icon: Icons.email_outlined,
-          label: 'Correo',
-          value: client.email,
-        ),
-        _InfoRow(
-          icon: Icons.notes_outlined,
-          label: 'Notas',
-          value: client.notes,
+        const SizedBox(height: AppSpacing.xxl),
+        const SectionHeader(title: 'Contacto'),
+        const SizedBox(height: AppSpacing.m),
+        InfoCard(
+          children: [
+            InfoRow(
+              icon: Icons.phone_outlined,
+              label: 'Teléfono',
+              value: _valueOrEmpty(client.phone),
+            ),
+            InfoRow(
+              icon: Icons.email_outlined,
+              label: 'Correo',
+              value: _valueOrEmpty(client.email),
+            ),
+            InfoRow(
+              icon: Icons.notes_rounded,
+              label: 'Notas',
+              value: _valueOrEmpty(client.notes),
+            ),
+          ],
         ),
       ],
     );
   }
-}
 
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String? value;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(icon),
-      title: Text(label),
-      subtitle: Text(value == null || value!.isEmpty ? 'Sin datos' : value!),
-    );
-  }
+  static String _valueOrEmpty(String? value) =>
+      value == null || value.isEmpty ? 'Sin datos' : value;
 }

@@ -27,6 +27,19 @@ Para probar con datos: levantar el backend, ejecutar `pnpm seed` y entrar con
 flutter analyze && flutter test
 ```
 
+## Diseño
+
+- Tema en `lib/core/theme/`: paleta clara/oscura (carbón cálido + dorado), tipografía
+  **Inter** (empaquetada en `assets/fonts/`, licencia OFL), tokens de espacio/radio
+  (`app_tokens.dart`) y colores semánticos de estado (`AppStatusColors`).
+- Los estados (citas, ventas) se mapean a un `StatusTone`; ninguna pantalla elige
+  colores a mano. Se muestran con `StatusPill`.
+- Componentes compartidos en `lib/core/widgets/`: `AppCard`, `StatusPill`,
+  `SectionHeader`, `EmptyState`, `InitialsAvatar`, `PeriodHeader` y `WeekStrip`.
+- Las semanas van de **lunes a domingo** y los meses son calendario; los cálculos
+  viven en `BusinessClock` (nunca en los widgets). Ventas: Día / Semana / Mes.
+- La app está en español (`es`) incluyendo los selectores de fecha del sistema.
+
 ## Estado
 
 | Sección | Estado |

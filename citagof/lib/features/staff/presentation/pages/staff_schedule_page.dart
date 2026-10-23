@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/app_failure.dart';
+import '../../../../core/theme/app_tokens.dart';
+import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/bottom_action_bar.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../domain/entities/staff_member.dart';
 import '../../domain/weekly_schedule.dart';
@@ -149,7 +152,12 @@ class _EditorState extends ConsumerState<_Editor> {
         children: [
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.page,
+                AppSpacing.s,
+                AppSpacing.page,
+                AppSpacing.s,
+              ),
               children: [
                 for (var i = 0; i < _week.length; i++)
                   _DayCard(
@@ -165,38 +173,17 @@ class _EditorState extends ConsumerState<_Editor> {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (_error != null) ...[
-                  Semantics(
-                    liveRegion: true,
-                    child: Text(
-                      _error!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                ],
-                FilledButton(
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
-                  ),
-                  onPressed: _saving ? null : _save,
-                  child: _saving
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2.5),
-                        )
-                      : const Text('Guardar horario'),
-                ),
-              ],
+          BottomActionBar(
+            error: _error,
+            child: FilledButton(
+              onPressed: _saving ? null : _save,
+              child: _saving
+                  ? const SizedBox(
+                      height: 22,
+                      width: 22,
+                      child: CircularProgressIndicator(strokeWidth: 2.5),
+                    )
+                  : const Text('Guardar horario'),
             ),
           ),
         ],
@@ -237,22 +224,31 @@ class _DayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 8, 12),
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: AppCard(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.l,
+          AppSpacing.s,
+          AppSpacing.s,
+          AppSpacing.m,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Expanded(
-                  child: Text(
-                    name,
-                    style: Theme.of(context).textTheme.titleMedium,
+                Expanded(child: Text(name, style: theme.textTheme.titleMedium)),
+                Text(
+                  day.working ? 'Laborable' : 'Descanso',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: day.working ? scheme.primary : null,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                Text(day.working ? 'Laborable' : 'Descanso'),
                 Switch(
                   value: day.working,
                   onChanged: enabled ? onToggleWorking : null,
@@ -274,7 +270,7 @@ class _DayCard extends StatelessWidget {
                   alignment: Alignment.centerLeft,
                   child: TextButton.icon(
                     onPressed: enabled ? onAddRange : null,
-                    icon: const Icon(Icons.add),
+                    icon: const Icon(Icons.add_rounded),
                     label: const Text('Agregar tramo'),
                   ),
                 ),
@@ -313,9 +309,14 @@ class _RangeRow extends StatelessWidget {
             child: OutlinedButton(
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size.fromHeight(48),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
               ),
               onPressed: enabled ? onPickStart : null,
-              child: Text('Inicio ${range.start}'),
+              child: Text(
+                'Inicio ${range.start}',
+                maxLines: 1,
+                softWrap: false,
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -323,9 +324,10 @@ class _RangeRow extends StatelessWidget {
             child: OutlinedButton(
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size.fromHeight(48),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
               ),
               onPressed: enabled ? onPickEnd : null,
-              child: Text('Fin ${range.end}'),
+              child: Text('Fin ${range.end}', maxLines: 1, softWrap: false),
             ),
           ),
           IconButton(

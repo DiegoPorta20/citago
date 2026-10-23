@@ -12,43 +12,55 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pending = ref.watch(pendingConversationsCountProvider).value ?? 0;
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       body: shell,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: shell.currentIndex,
-        onDestinationSelected: (index) =>
-            shell.goBranch(index, initialLocation: index == shell.currentIndex),
-        destinations: [
-          NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: 'Inicio',
+      bottomNavigationBar: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: scheme.outlineVariant)),
+        ),
+        child: NavigationBar(
+          selectedIndex: shell.currentIndex,
+          onDestinationSelected: (index) => shell.goBranch(
+            index,
+            initialLocation: index == shell.currentIndex,
           ),
-          NavigationDestination(
-            icon: Icon(Icons.calendar_month_outlined),
-            selectedIcon: Icon(Icons.calendar_month),
-            label: 'Agenda',
-          ),
-          NavigationDestination(
-            icon: Badge(
-              isLabelVisible: pending > 0,
-              label: Text('$pending'),
-              child: const Icon(Icons.chat_outlined),
+          destinations: [
+            const NavigationDestination(
+              icon: Icon(Icons.space_dashboard_outlined),
+              selectedIcon: Icon(Icons.space_dashboard_rounded),
+              label: 'Inicio',
             ),
-            selectedIcon: Badge(
-              isLabelVisible: pending > 0,
-              label: Text('$pending'),
-              child: const Icon(Icons.chat),
+            const NavigationDestination(
+              icon: Icon(Icons.calendar_month_outlined),
+              selectedIcon: Icon(Icons.calendar_month_rounded),
+              label: 'Agenda',
             ),
-            label: 'Chats',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.people_outline),
-            selectedIcon: Icon(Icons.people),
-            label: 'Clientes',
-          ),
-          NavigationDestination(icon: Icon(Icons.more_horiz), label: 'Más'),
-        ],
+            NavigationDestination(
+              icon: Badge(
+                isLabelVisible: pending > 0,
+                label: Text('$pending'),
+                child: const Icon(Icons.chat_bubble_outline_rounded),
+              ),
+              selectedIcon: Badge(
+                isLabelVisible: pending > 0,
+                label: Text('$pending'),
+                child: const Icon(Icons.chat_bubble_rounded),
+              ),
+              label: 'Chats',
+            ),
+            const NavigationDestination(
+              icon: Icon(Icons.people_outline_rounded),
+              selectedIcon: Icon(Icons.people_rounded),
+              label: 'Clientes',
+            ),
+            const NavigationDestination(
+              icon: Icon(Icons.more_horiz_rounded),
+              label: 'Más',
+            ),
+          ],
+        ),
       ),
     );
   }

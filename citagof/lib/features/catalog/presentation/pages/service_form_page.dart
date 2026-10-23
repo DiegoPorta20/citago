@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/app_failure.dart';
+import '../../../../core/theme/app_tokens.dart';
+import '../../../../core/widgets/error_banner.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../sales/domain/entities/money.dart';
 import '../../domain/entities/service.dart';
@@ -127,7 +129,12 @@ class _ServiceFormState extends ConsumerState<_ServiceForm> {
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.page,
+              AppSpacing.s,
+              AppSpacing.page,
+              AppSpacing.xxxl,
+            ),
             children: [
               TextFormField(
                 controller: _name,
@@ -183,17 +190,9 @@ class _ServiceFormState extends ConsumerState<_ServiceForm> {
               ),
               if (_error != null) ...[
                 const SizedBox(height: 8),
-                Semantics(
-                  liveRegion: true,
-                  child: Text(
-                    _error!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ),
+                ErrorBanner(_error!),
               ],
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               FilledButton(
                 onPressed: _saving ? null : _save,
                 child: _saving

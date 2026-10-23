@@ -3,7 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/app_failure.dart';
+import '../../../../core/theme/app_status_colors.dart';
+import '../../../../core/theme/app_tokens.dart';
+import '../../../../core/widgets/app_card.dart';
 import '../../../../core/widgets/error_view.dart';
+import '../../../../core/widgets/icon_badge.dart';
+import '../../../../core/widgets/initials_avatar.dart';
+import '../../../../core/widgets/list_card.dart';
+import '../../../../core/widgets/section_header.dart';
 import '../../domain/entities/staff_member.dart';
 import '../../domain/weekly_schedule.dart';
 import '../providers/staff_providers.dart';
@@ -102,50 +109,83 @@ class _BodyState extends ConsumerState<_Body> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final member = widget.member;
+    final colors = AppStatusColors.of(context);
+    final deactivating = member.active;
+
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        AppSpacing.s,
+        AppSpacing.page,
+        AppSpacing.xxxl,
+      ),
       children: [
-        Center(
-          child: CircleAvatar(
-            radius: 36,
-            child: Text(
-              _initials(member.displayName),
-              style: theme.textTheme.titleLarge,
-            ),
+        AppCard(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              scheme.primaryContainer.withValues(alpha: 0.7),
+              scheme.surfaceContainerLow,
+            ],
+          ),
+          child: Row(
+            children: [
+              InitialsAvatar(name: member.displayName, radius: 30),
+              const SizedBox(width: AppSpacing.l),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      member.displayName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: AppSpacing.s),
+                    StatusBadge(active: member.active),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 12),
-        Text(
-          member.displayName,
-          textAlign: TextAlign.center,
-          style: theme.textTheme.headlineSmall,
-        ),
-        const SizedBox(height: 8),
-        Center(child: StatusBadge(active: member.active)),
-        const SizedBox(height: 24),
-        _ScheduleSummary(member: member),
-        const Divider(height: 32),
-        ListTile(
-          minTileHeight: 56,
-          leading: const Icon(Icons.schedule),
-          title: const Text('Horario semanal'),
-          subtitle: const Text('Días laborables y tramos de atención'),
-          trailing: const Icon(Icons.chevron_right),
+        const SizedBox(height: AppSpacing.l),
+        ListCard(
+          leading: const IconBadge(icon: Icons.schedule_rounded),
+          title: 'Horario semanal',
+          subtitle: const ListCardSubtitle(
+            'Días laborables y tramos de atención',
+          ),
           onTap: () => context.push(StaffRoutes.schedule(member.id)),
         ),
-        ListTile(
-          minTileHeight: 56,
-          leading: const Icon(Icons.event_busy_outlined),
-          title: const Text('Ausencias'),
-          subtitle: const Text('Vacaciones y días libres'),
-          trailing: const Icon(Icons.chevron_right),
+        const SizedBox(height: AppSpacing.m),
+        ListCard(
+          leading: const IconBadge(icon: Icons.event_busy_outlined),
+          title: 'Ausencias',
+          subtitle: const ListCardSubtitle('Vacaciones y días libres'),
           onTap: () => context.push(StaffRoutes.timeOff(member.id)),
         ),
-        const Divider(height: 32),
+        const SizedBox(height: AppSpacing.xxl),
+        const SectionHeader(title: 'Horario'),
+        const SizedBox(height: AppSpacing.m),
+        _ScheduleSummary(member: member),
+        const SizedBox(height: AppSpacing.xxl),
         OutlinedButton.icon(
           style: OutlinedButton.styleFrom(
-            minimumSize: const Size.fromHeight(48),
+            minimumSize: const Size.fromHeight(52),
+            foregroundColor: deactivating
+                ? colors.foreground(StatusTone.danger)
+                : scheme.onSurface,
+            side: BorderSide(
+              color: deactivating
+                  ? colors.foreground(StatusTone.danger).withValues(alpha: 0.5)
+                  : scheme.outline,
+            ),
           ),
           onPressed: _busy ? null : _toggleStatus,
           icon: _busy
@@ -154,16 +194,15 @@ class _BodyState extends ConsumerState<_Body> {
                   width: 18,
                   child: CircularProgressIndicator(strokeWidth: 2.5),
                 )
-              : Icon(member.active ? Icons.block : Icons.check_circle_outline),
+              : Icon(
+                  member.active
+                      ? Icons.block_rounded
+                      : Icons.check_circle_outline_rounded,
+                ),
           label: Text(member.active ? 'Desactivar' : 'Reactivar'),
         ),
       ],
     );
-  }
-
-  static String _initials(String name) {
-    final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty);
-    return parts.take(2).map((p) => p[0].toUpperCase()).join();
   }
 }
 
@@ -176,36 +215,64 @@ class _ScheduleSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final week = WeeklySchedule.fromRanges(member.schedule);
-    final working = member.schedule.isNotEmpty;
-    if (!working) {
-      return const Text('Sin horario configurado.');
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    if (member.schedule.isEmpty) {
+      return AppCard(
+        child: Row(
+          children: [
+            Icon(Icons.info_outline_rounded, color: scheme.onSurfaceVariant),
+            const SizedBox(width: AppSpacing.m),
+            const Expanded(child: Text('Sin horario configurado.')),
+          ],
+        ),
+      );
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (final day in week)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  width: 44,
-                  child: Text(
-                    _names[day.weekday - 1],
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+
+    final week = WeeklySchedule.fromRanges(member.schedule);
+    return AppCard(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.l,
+        vertical: AppSpacing.s,
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < week.length; i++) ...[
+            if (i > 0) const Divider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 48,
+                    child: Text(
+                      _names[week[i].weekday - 1],
+                      style: theme.textTheme.titleSmall,
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: Text(_daySummary(day.weekday, member.schedule)),
-                ),
-              ],
+                  Expanded(
+                    child: Text(
+                      _daySummary(week[i].weekday, member.schedule),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: _isRest(week[i].weekday, member.schedule)
+                            ? scheme.onSurfaceVariant
+                            : scheme.onSurface,
+                        fontFeatures: AppText.tabular,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-      ],
+          ],
+        ],
+      ),
     );
   }
+
+  static bool _isRest(int weekday, List<ScheduleRange> schedule) =>
+      !schedule.any((r) => r.weekday == weekday);
 
   static String _daySummary(int weekday, List<ScheduleRange> schedule) {
     final ranges = schedule.where((r) => r.weekday == weekday).toList()

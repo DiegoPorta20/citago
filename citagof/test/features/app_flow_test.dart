@@ -199,6 +199,7 @@ void main() {
     await _signIn(tester);
 
     expect(find.text('Barbería Demo'), findsOneWidget);
+    expect(find.textContaining(', Diego'), findsOneWidget);
     expect(find.text('S/ 820.00'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Corte de cabello'), 200);
     expect(find.text('Corte de cabello'), findsOneWidget);
@@ -241,6 +242,7 @@ void main() {
     await _pumpApp(tester, _FakeAuth(stored: _session(UserRole.owner)));
 
     expect(find.text('3 conversaciones por responder'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Próximas citas'), 200);
     expect(find.text('Próximas citas'), findsOneWidget);
     expect(find.text('Juan Pérez'), findsOneWidget);
   });

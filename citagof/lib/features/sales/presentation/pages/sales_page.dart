@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/app_tokens.dart';
 import '../../../../core/time/business_clock.dart';
 import '../../../../core/utils/money_format.dart';
+import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_view.dart';
+import '../../../../core/widgets/initials_avatar.dart';
+import '../../../../core/widgets/period_header.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../domain/entities/sale.dart';
 import '../providers/sale_providers.dart';
@@ -43,6 +48,8 @@ class _SalesPageState extends ConsumerState<SalesPage> {
     final session = ref.watch(sessionControllerProvider).value;
     final currency = session?.tenant.currency ?? 'PEN';
     final isStaff = session?.role.managesBusiness == false;
+    final period = ref.watch(salesRangeProvider).period;
+    final clock = ref.watch(businessClockProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Ventas')),
@@ -67,20 +74,12 @@ class _SalesPageState extends ConsumerState<SalesPage> {
                   : RefreshIndicator(
                       onRefresh: () =>
                           ref.read(salesListProvider.notifier).refresh(),
-                      child: ListView.builder(
+                      child: _SalesList(
+                        state: state,
+                        currency: currency,
+                        clock: clock,
+                        grouped: period != SalesPeriod.day,
                         controller: _scroll,
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.only(bottom: 24),
-                        itemCount: state.items.length + 1,
-                        itemBuilder: (context, index) {
-                          if (index == state.items.length) {
-                            return _Footer(state: state);
-                          }
-                          return _SaleTile(
-                            sale: state.items[index],
-                            currency: currency,
-                          );
-                        },
                       ),
                     ),
             ),
@@ -91,6 +90,8 @@ class _SalesPageState extends ConsumerState<SalesPage> {
   }
 }
 
+/// Segmented Día / Semana / Mes switch plus the period header, so the
+/// selected range and its position in the calendar are always explicit.
 class _RangeNavigator extends ConsumerWidget {
   const _RangeNavigator();
 
@@ -98,69 +99,85 @@ class _RangeNavigator extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final range = ref.watch(salesRangeProvider);
     final controller = ref.read(salesRangeProvider.notifier);
-    final theme = Theme.of(context);
+    final clock = ref.watch(businessClockProvider);
+    final today = clock.today();
+    final isCurrent = range.contains(today);
 
-    final label = switch (range.period) {
-      SalesPeriod.day => BusinessClock.longDate(range.anchor),
-      SalesPeriod.week => 'Semana del ${BusinessClock.longDate(range.anchor)}',
-      SalesPeriod.month => 'Desde ${BusinessClock.longDate(range.anchor)}',
+    final (title, subtitle) = switch (range.period) {
+      SalesPeriod.day => _dayTitles(clock, range.anchor),
+      SalesPeriod.week => (
+        BusinessClock.weekRangeLabel(range.anchor),
+        isCurrent ? 'Esta semana' : BusinessClock.monthYear(range.firstDay),
+      ),
+      SalesPeriod.month => (
+        BusinessClock.monthYear(range.anchor),
+        isCurrent ? 'Este mes' : null,
+      ),
+    };
+    final (previousTip, nextTip) = switch (range.period) {
+      SalesPeriod.day => ('Día anterior', 'Día siguiente'),
+      SalesPeriod.week => ('Semana anterior', 'Semana siguiente'),
+      SalesPeriod.month => ('Mes anterior', 'Mes siguiente'),
     };
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        AppSpacing.xs,
+        AppSpacing.page,
+        AppSpacing.m,
+      ),
       child: Column(
         children: [
-          Row(
-            children: [
-              IconButton(
-                tooltip: 'Anterior',
-                onPressed: controller.previous,
-                icon: const Icon(Icons.chevron_left),
-              ),
-              Expanded(
-                child: Column(
-                  children: [
-                    Text(
-                      label,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    TextButton(
-                      onPressed: controller.today,
-                      style: TextButton.styleFrom(
-                        minimumSize: const Size(0, 36),
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                      ),
-                      child: const Text('Hoy'),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                tooltip: 'Siguiente',
-                onPressed: controller.next,
-                icon: const Icon(Icons.chevron_right),
-              ),
+          SegmentedButton<SalesPeriod>(
+            expandedInsets: EdgeInsets.zero,
+            showSelectedIcon: false,
+            segments: const [
+              ButtonSegment(value: SalesPeriod.day, label: Text('Día')),
+              ButtonSegment(value: SalesPeriod.week, label: Text('Semana')),
+              ButtonSegment(value: SalesPeriod.month, label: Text('Mes')),
             ],
+            selected: {range.period},
+            onSelectionChanged: (selection) =>
+                controller.setPeriod(selection.first),
           ),
-          Wrap(
-            spacing: 8,
-            children: [
-              for (final period in SalesPeriod.values)
-                ChoiceChip(
-                  label: Text(switch (period) {
-                    SalesPeriod.day => 'Día',
-                    SalesPeriod.week => 'Esta semana',
-                    SalesPeriod.month => 'Este mes',
-                  }),
-                  selected: range.period == period,
-                  onSelected: (_) => controller.setPeriod(period),
-                ),
-            ],
+          const SizedBox(height: AppSpacing.l),
+          PeriodHeader(
+            title: title,
+            subtitle: subtitle,
+            onTitleTap: () => _pickDate(context, controller, range.anchor),
+            onToday: isCurrent ? null : controller.today,
+            onPrevious: controller.previous,
+            onNext: controller.next,
+            previousTooltip: previousTip,
+            nextTooltip: nextTip,
           ),
         ],
       ),
     );
+  }
+
+  /// "Hoy" over "Jueves 22 de octubre"; days further away show just the date.
+  static (String, String?) _dayTitles(BusinessClock clock, String date) {
+    final relative = clock.dayLabel(date);
+    final long = BusinessClock.longDateCapitalized(date);
+    return relative.contains(' ') ? (long, null) : (relative, long);
+  }
+
+  Future<void> _pickDate(
+    BuildContext context,
+    SalesRangeController controller,
+    String current,
+  ) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: BusinessClock.toCalendarDate(current),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      controller.select(BusinessClock.fromCalendarDate(picked));
+    }
   }
 }
 
@@ -172,15 +189,16 @@ class _StatusFilterBar extends ConsumerWidget {
     final selected = ref.watch(salesStatusFilterProvider);
     final controller = ref.read(salesStatusFilterProvider.notifier);
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      child: Row(
+    return SizedBox(
+      height: 48,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
         children: [
           for (final filter in SalesStatusFilter.values)
             Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: FilterChip(
+              padding: const EdgeInsets.only(right: AppSpacing.s),
+              child: ChoiceChip(
                 label: Text(filter.label),
                 selected: selected == filter,
                 onSelected: (_) => controller.select(filter),
@@ -199,10 +217,19 @@ class _StaffNote extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        AppSpacing.xs,
+        AppSpacing.page,
+        AppSpacing.xs,
+      ),
       child: Row(
         children: [
-          Icon(Icons.info_outline, size: 16, color: theme.colorScheme.outline),
+          Icon(
+            Icons.info_outline_rounded,
+            size: 16,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
@@ -225,48 +252,135 @@ class _SummaryStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final state = list.value;
     final count = state?.total ?? 0;
     final paid = state == null ? '0.00' : state.paidTotal;
 
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        AppSpacing.m,
+        AppSpacing.page,
+        AppSpacing.m,
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Ventas', style: theme.textTheme.labelMedium),
-              Text(
-                '$count',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
+      child: AppCard(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.l,
+        ),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            scheme.primaryContainer.withValues(alpha: 0.6),
+            scheme.surfaceContainerLow,
+          ],
+        ),
+        child: Row(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Ventas', style: theme.textTheme.labelMedium),
+                const SizedBox(height: 2),
+                Text(
+                  '$count',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontFeatures: AppText.tabular,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text('Cobrado', style: theme.textTheme.labelMedium),
-              Text(
-                formatMoney(paid, currency),
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
+              ],
+            ),
+            const Spacer(),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text('Cobrado', style: theme.textTheme.labelMedium),
+                const SizedBox(height: 2),
+                Text(
+                  formatMoney(paid, currency),
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    color: scheme.primary,
+                    fontFeatures: AppText.tabular,
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+/// Either a day heading (week/month views) or a sale; plus the load-more
+/// footer as the last row.
+class _SalesList extends StatelessWidget {
+  const _SalesList({
+    required this.state,
+    required this.currency,
+    required this.clock,
+    required this.grouped,
+    required this.controller,
+  });
+
+  final SalesListState state;
+  final String currency;
+  final BusinessClock clock;
+  final bool grouped;
+  final ScrollController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = <Object>[];
+    String? currentDay;
+    for (final sale in state.items) {
+      if (grouped && sale.soldAt != null) {
+        final day = clock.dateOf(sale.soldAt!);
+        if (day != currentDay) {
+          currentDay = day;
+          rows.add(day);
+        }
+      }
+      rows.add(sale);
+    }
+
+    return ListView.builder(
+      controller: controller,
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.only(bottom: AppSpacing.xxxl),
+      itemCount: rows.length + 1,
+      itemBuilder: (context, index) {
+        if (index == rows.length) return _Footer(state: state);
+        final row = rows[index];
+        if (row is String) return _DayHeading(date: row, clock: clock);
+        return _SaleTile(sale: row as Sale, currency: currency);
+      },
+    );
+  }
+}
+
+class _DayHeading extends StatelessWidget {
+  const _DayHeading({required this.date, required this.clock});
+
+  final String date;
+  final BusinessClock clock;
+
+  @override
+  Widget build(BuildContext context) {
+    final relative = clock.dayLabel(date);
+    final label = relative.contains(' ')
+        ? BusinessClock.longDateCapitalized(date)
+        : '$relative · ${BusinessClock.longDateCapitalized(date)}';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        AppSpacing.l,
+        AppSpacing.page,
+        AppSpacing.s,
+      ),
+      child: Text(label, style: Theme.of(context).textTheme.titleSmall),
     );
   }
 }
@@ -279,29 +393,75 @@ class _SaleTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final clock = ref.watch(businessClockProvider);
     final time = sale.soldAt == null ? '' : clock.timeOf(sale.soldAt!);
-    final client = sale.client?.name ?? 'Venta de mostrador';
+    final clientName = sale.client?.name;
 
-    return ListTile(
-      minTileHeight: 64,
-      leading: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [Text(time)],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        0,
+        AppSpacing.page,
+        AppSpacing.m,
       ),
-      title: Text(client),
-      subtitle: SaleStatusBadge(status: sale.status),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            formatMoney(sale.total, currency),
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-        ],
+      child: AppCard(
+        padding: const EdgeInsets.all(14),
+        onTap: () => context.push(SalesRoutes.detail(sale.id)),
+        child: Row(
+          children: [
+            if (clientName != null)
+              InitialsAvatar(name: clientName, radius: 20)
+            else
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: scheme.surfaceContainerHigh,
+                child: Icon(
+                  Icons.storefront_outlined,
+                  size: 20,
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            const SizedBox(width: AppSpacing.m),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    clientName ?? 'Venta de mostrador',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      SaleStatusBadge(status: sale.status),
+                      if (time.isNotEmpty) ...[
+                        const SizedBox(width: AppSpacing.s),
+                        Text(
+                          time,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontFeatures: AppText.tabular,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppSpacing.m),
+            Text(
+              formatMoney(sale.total, currency),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontFeatures: AppText.tabular,
+              ),
+            ),
+          ],
+        ),
       ),
-      onTap: () => context.push(SalesRoutes.detail(sale.id)),
     );
   }
 }
@@ -315,16 +475,16 @@ class _Footer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (state.loadingMore) {
       return const Padding(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.all(AppSpacing.l),
         child: Center(child: CircularProgressIndicator()),
       );
     }
     if (state.loadMoreFailed) {
       return Padding(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(AppSpacing.s),
         child: TextButton.icon(
           onPressed: () => ref.read(salesListProvider.notifier).loadMore(),
-          icon: const Icon(Icons.refresh),
+          icon: const Icon(Icons.refresh_rounded),
           label: const Text('No se pudo cargar más. Reintentar'),
         ),
       );
@@ -343,25 +503,9 @@ class _EmptyState extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         child: ConstrainedBox(
           constraints: BoxConstraints(minHeight: constraints.maxHeight),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.receipt_long_outlined,
-                    size: 56,
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'No hay ventas en este período.',
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
+          child: const EmptyState(
+            icon: Icons.receipt_long_rounded,
+            title: 'No hay ventas en este período.',
           ),
         ),
       ),

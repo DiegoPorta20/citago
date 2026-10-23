@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/app_tokens.dart';
+import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_view.dart';
-import '../../domain/entities/client.dart';
 import '../clients_routes.dart';
 import '../providers/client_providers.dart';
-import '../widgets/client_avatar.dart';
+import '../widgets/client_card.dart';
 
 class ClientsPage extends ConsumerStatefulWidget {
   const ClientsPage({super.key});
@@ -53,19 +54,24 @@ class _ClientsPageState extends ConsumerState<ClientsPage> {
       appBar: AppBar(title: const Text('Clientes')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push(ClientRoutes.create),
-        icon: const Icon(Icons.person_add_alt_1),
+        icon: const Icon(Icons.person_add_alt_1_rounded),
         label: const Text('Nuevo'),
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.page,
+              AppSpacing.xs,
+              AppSpacing.page,
+              AppSpacing.m,
+            ),
             child: TextField(
               onChanged: _onSearchChanged,
               textInputAction: TextInputAction.search,
               decoration: const InputDecoration(
                 hintText: 'Buscar por nombre o teléfono',
-                prefixIcon: Icon(Icons.search),
+                prefixIcon: Icon(Icons.search_rounded),
               ),
             ),
           ),
@@ -87,13 +93,29 @@ class _ClientsPageState extends ConsumerState<ClientsPage> {
                       child: ListView.builder(
                         controller: _scroll,
                         physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.only(bottom: 96),
+                        padding: const EdgeInsets.only(
+                          top: AppSpacing.xs,
+                          bottom: 104,
+                        ),
                         itemCount: state.items.length + 1,
                         itemBuilder: (context, index) {
                           if (index == state.items.length) {
                             return _Footer(state: state);
                           }
-                          return _ClientTile(client: state.items[index]);
+                          final client = state.items[index];
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              AppSpacing.page,
+                              0,
+                              AppSpacing.page,
+                              AppSpacing.m,
+                            ),
+                            child: ClientCard(
+                              client: client,
+                              onTap: () =>
+                                  context.push(ClientRoutes.detail(client.id)),
+                            ),
+                          );
                         },
                       ),
                     ),
@@ -101,24 +123,6 @@ class _ClientsPageState extends ConsumerState<ClientsPage> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ClientTile extends StatelessWidget {
-  const _ClientTile({required this.client});
-
-  final Client client;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      minTileHeight: 64,
-      leading: ClientAvatar(client: client),
-      title: Text(client.name),
-      subtitle: client.phone == null ? null : Text(client.phone!),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: () => context.push(ClientRoutes.detail(client.id)),
     );
   }
 }
@@ -157,27 +161,11 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              searching ? Icons.search_off : Icons.people_outline,
-              size: 56,
-              color: Theme.of(context).colorScheme.outline,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              searching
-                  ? 'No encontramos clientes con esa búsqueda.'
-                  : 'Aún no hay clientes. Registra el primero con "Nuevo".',
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
+    return EmptyState(
+      icon: searching ? Icons.search_off_rounded : Icons.people_outline_rounded,
+      title: searching
+          ? 'No encontramos clientes con esa búsqueda.'
+          : 'Aún no hay clientes. Registra el primero con "Nuevo".',
     );
   }
 }

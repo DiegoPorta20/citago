@@ -2,8 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/app_failure.dart';
+import '../../../../core/theme/app_tokens.dart';
 import '../../../../core/time/business_clock.dart';
+import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/widgets/error_banner.dart';
 import '../../../../core/widgets/error_view.dart';
+import '../../../../core/widgets/icon_badge.dart';
+import '../../../../core/widgets/list_card.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../domain/entities/staff_member.dart';
 import '../providers/staff_providers.dart';
@@ -26,7 +32,7 @@ class StaffTimeOffPage extends ConsumerWidget {
       appBar: AppBar(title: const Text('Ausencias')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _add(context, ref, query),
-        icon: const Icon(Icons.add),
+        icon: const Icon(Icons.add_rounded),
         label: const Text('Agregar'),
       ),
       body: Column(
@@ -137,24 +143,37 @@ class _Ap19Note extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      width: double.infinity,
-      color: scheme.surfaceContainerHighest,
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        children: [
-          Icon(Icons.info_outline, size: 20, color: scheme.onSurfaceVariant),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'Agregar una ausencia solo bloquea reservas nuevas. Las citas ya '
-              'agendadas en ese periodo no se cancelan: coordínalas con cada '
-              'cliente.',
-              style: TextStyle(color: scheme.onSurfaceVariant),
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        AppSpacing.xs,
+        AppSpacing.page,
+        AppSpacing.s,
+      ),
+      child: AppCard(
+        color: scheme.surfaceContainer,
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.info_outline_rounded,
+              size: 20,
+              color: scheme.onSurfaceVariant,
             ),
-          ),
-        ],
+            const SizedBox(width: AppSpacing.m),
+            Expanded(
+              child: Text(
+                'Agregar una ausencia solo bloquea reservas nuevas. Las citas ya '
+                'agendadas en ese periodo no se cancelan: coordínalas con cada '
+                'cliente.',
+                style: theme.textTheme.bodySmall,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -191,33 +210,39 @@ class _TimeOffList extends StatelessWidget {
     past.sort((a, b) => b.startsAt.compareTo(a.startsAt));
 
     return ListView(
-      padding: const EdgeInsets.only(bottom: 96),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        AppSpacing.s,
+        AppSpacing.page,
+        104,
+      ),
       children: [
-        if (upcoming.isNotEmpty) const _SectionHeader('Próximas'),
+        if (upcoming.isNotEmpty) const _Heading('Próximas'),
         for (final item in upcoming)
           _TimeOffTile(item: item, clock: clock, onDelete: onDelete),
-        if (past.isNotEmpty) const _SectionHeader('Pasadas'),
+        if (past.isNotEmpty) const _Heading('Pasadas'),
         for (final item in past)
-          _TimeOffTile(item: item, clock: clock, onDelete: onDelete),
+          _TimeOffTile(
+            item: item,
+            clock: clock,
+            onDelete: onDelete,
+            past: true,
+          ),
       ],
     );
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader(this.title);
+class _Heading extends StatelessWidget {
+  const _Heading(this.title);
 
   final String title;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.labelLarge
-            ?.copyWith(fontWeight: FontWeight.w700),
-      ),
+      padding: const EdgeInsets.only(top: AppSpacing.s, bottom: AppSpacing.m),
+      child: Text(title, style: Theme.of(context).textTheme.titleSmall),
     );
   }
 }
@@ -227,11 +252,13 @@ class _TimeOffTile extends StatelessWidget {
     required this.item,
     required this.clock,
     required this.onDelete,
+    this.past = false,
   });
 
   final TimeOff item;
   final BusinessClock clock;
   final ValueChanged<TimeOff> onDelete;
+  final bool past;
 
   @override
   Widget build(BuildContext context) {
@@ -240,21 +267,25 @@ class _TimeOffTile extends StatelessWidget {
       item.endsAt.subtract(const Duration(minutes: 1)),
     );
     final label = firstDay == lastDay
-        ? BusinessClock.longDate(firstDay)
-        : '${BusinessClock.longDate(firstDay)} — '
-              '${BusinessClock.longDate(lastDay)}';
-    return ListTile(
-      minTileHeight: 64,
-      leading: const Icon(Icons.event_busy_outlined),
-      title: Text(label),
-      subtitle: (item.reason == null || item.reason!.isEmpty)
-          ? null
-          : Text(item.reason!),
-      trailing: IconButton(
-        tooltip: 'Quitar',
-        constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-        icon: const Icon(Icons.delete_outline),
-        onPressed: () => onDelete(item),
+        ? BusinessClock.longDateCapitalized(firstDay)
+        : '${BusinessClock.shortDate(firstDay)} – '
+              '${BusinessClock.shortDate(lastDay)}';
+    final hasReason = item.reason != null && item.reason!.isNotEmpty;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.m),
+      child: ListCard(
+        leading: const IconBadge(icon: Icons.event_busy_outlined),
+        title: label,
+        subtitle: hasReason ? ListCardSubtitle(item.reason!) : null,
+        dimmed: past,
+        padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
+        trailing: IconButton(
+          tooltip: 'Quitar',
+          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+          icon: const Icon(Icons.delete_outline_rounded),
+          onPressed: () => onDelete(item),
+        ),
       ),
     );
   }
@@ -265,23 +296,10 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: [
-        const SizedBox(height: 80),
-        Icon(
-          Icons.event_available_outlined,
-          size: 56,
-          color: Theme.of(context).colorScheme.outline,
-        ),
-        const SizedBox(height: 12),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24),
-          child: Text(
-            'Sin ausencias registradas. Agrega una con "Agregar".',
-            textAlign: TextAlign.center,
-          ),
-        ),
-      ],
+    return const EmptyState(
+      icon: Icons.event_available_rounded,
+      title: 'Sin ausencias registradas.',
+      message: 'Agrega una con "Agregar".',
     );
   }
 }
@@ -380,11 +398,10 @@ class _AddTimeOffDialogState extends State<_AddTimeOffDialog> {
               maxLength: 255,
               decoration: const InputDecoration(labelText: 'Motivo (opcional)'),
             ),
-            if (_error != null)
-              Text(
-                _error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
+            if (_error != null) ...[
+              const SizedBox(height: AppSpacing.s),
+              ErrorBanner(_error!),
+            ],
           ],
         ),
       ),

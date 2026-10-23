@@ -120,6 +120,8 @@ Future<void> _openBusiness(
   await tester.pumpAndSettle();
   await tester.tap(find.text('Más'));
   await tester.pumpAndSettle();
+  await tester.ensureVisible(find.text('Mi negocio'));
+  await tester.pumpAndSettle();
   await tester.tap(find.text('Mi negocio'));
   await tester.pumpAndSettle();
 }

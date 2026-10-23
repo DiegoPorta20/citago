@@ -3,9 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/app_failure.dart';
-import '../../../../core/widgets/error_view.dart';
-import '../../../authentication/presentation/providers/auth_providers.dart';
+import '../../../../core/theme/app_status_colors.dart';
+import '../../../../core/theme/app_tokens.dart';
 import '../../../../core/time/business_clock.dart';
+import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/error_view.dart';
+import '../../../../core/widgets/info_card.dart';
+import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../domain/entities/whatsapp_channel.dart';
 import '../providers/whatsapp_providers.dart';
 import '../whatsapp_routes.dart';
@@ -28,28 +32,40 @@ class WhatsAppChannelPage extends ConsumerWidget {
         data: (data) => RefreshIndicator(
           onRefresh: () async => ref.invalidate(whatsAppChannelProvider),
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.page,
+              AppSpacing.s,
+              AppSpacing.page,
+              AppSpacing.xxxl,
+            ),
             physics: const AlwaysScrollableScrollPhysics(),
             children: [
-              if (data.connected)
-                _ConnectedCard(channel: data)
-              else
-                const _DisconnectedCard(),
-              const SizedBox(height: 16),
+              _StatusCard(connected: data.connected),
+              if (data.connected) ...[
+                const SizedBox(height: AppSpacing.l),
+                _ConnectionDetails(channel: data),
+              ],
+              const SizedBox(height: AppSpacing.xxl),
               FilledButton.icon(
-                style: FilledButton.styleFrom(minimumSize: const Size(0, 48)),
                 onPressed: () => context.push(WhatsAppRoutes.connect),
-                icon: const Icon(Icons.link),
+                icon: const Icon(Icons.link_rounded),
                 label: Text(data.connected ? 'Reconectar' : 'Conectar'),
               ),
               if (data.connected) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.m),
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(0, 48),
+                    minimumSize: const Size.fromHeight(52),
+                    foregroundColor: AppStatusColors.of(context)
+                        .foreground(StatusTone.danger),
+                    side: BorderSide(
+                      color: AppStatusColors.of(context)
+                          .foreground(StatusTone.danger)
+                          .withValues(alpha: 0.5),
+                    ),
                   ),
                   onPressed: () => _confirmDisconnect(context, ref),
-                  icon: const Icon(Icons.link_off),
+                  icon: const Icon(Icons.link_off_rounded),
                   label: const Text('Desconectar'),
                 ),
               ],
@@ -99,108 +115,109 @@ class WhatsAppChannelPage extends ConsumerWidget {
   }
 }
 
-class _ConnectedCard extends ConsumerWidget {
-  const _ConnectedCard({required this.channel});
+/// Big status card: green and reassuring when connected, neutral otherwise.
+class _StatusCard extends StatelessWidget {
+  const _StatusCard({required this.connected});
+
+  final bool connected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = AppStatusColors.of(context);
+    final tone = connected ? StatusTone.success : StatusTone.neutral;
+    final color = colors.foreground(tone);
+
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      borderColor: connected ? color.withValues(alpha: 0.4) : null,
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          colors.background(tone).withValues(alpha: 0.28),
+          theme.colorScheme.surfaceContainerLow,
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: colors.background(tone),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              connected ? Icons.check_rounded : Icons.link_off_rounded,
+              size: 28,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.l),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  connected ? 'Conectado' : 'Sin conectar',
+                  style: theme.textTheme.titleLarge,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  connected
+                      ? 'Recibes y respondes mensajes de tus clientes desde '
+                            'la bandeja de conversaciones.'
+                      : 'Conecta el número de WhatsApp del negocio para '
+                            'recibir y responder los mensajes de tus clientes '
+                            'desde aquí.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ConnectionDetails extends ConsumerWidget {
+  const _ConnectionDetails({required this.channel});
 
   final WhatsAppChannel channel;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     final clock = ref.watch(businessClockProvider);
     final connectedAt = channel.connectedAt;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.check_circle, color: theme.colorScheme.primary),
-                const SizedBox(width: 8),
-                Text('Conectado', style: theme.textTheme.titleMedium),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _Line(
-              label: 'Número',
-              value: channel.displayPhoneNumber ?? 'Sin dato',
-            ),
-            if ((channel.verifiedName ?? '').isNotEmpty)
-              _Line(label: 'Nombre', value: channel.verifiedName!),
-            if (connectedAt != null)
-              _Line(
-                label: 'Conectado el',
-                value:
-                    '${BusinessClock.longDate(clock.dateOf(connectedAt))}, '
-                    '${clock.timeOf(connectedAt)}',
-              ),
-          ],
+    return InfoCard(
+      children: [
+        InfoRow(
+          icon: Icons.phone_iphone_rounded,
+          label: 'Número',
+          value: channel.displayPhoneNumber ?? 'Sin dato',
+          emphasize: true,
         ),
-      ),
-    );
-  }
-}
-
-class _DisconnectedCard extends StatelessWidget {
-  const _DisconnectedCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.link_off, color: theme.colorScheme.outline),
-                const SizedBox(width: 8),
-                Text('Sin conectar', style: theme.textTheme.titleMedium),
-              ],
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Conecta el número de WhatsApp del negocio para recibir y '
-              'responder los mensajes de tus clientes desde aquí.',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Line extends StatelessWidget {
-  const _Line({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 110,
-            child: Text(
-              label,
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: theme.colorScheme.outline,
-              ),
-            ),
+        if ((channel.verifiedName ?? '').isNotEmpty)
+          InfoRow(
+            icon: Icons.verified_outlined,
+            label: 'Nombre',
+            value: channel.verifiedName!,
           ),
-          Expanded(child: Text(value)),
-        ],
-      ),
+        if (connectedAt != null)
+          InfoRow(
+            icon: Icons.event_available_outlined,
+            label: 'Conectado el',
+            value:
+                '${BusinessClock.longDateCapitalized(clock.dateOf(connectedAt))}, '
+                '${clock.timeOf(connectedAt)}',
+          ),
+      ],
     );
   }
 }

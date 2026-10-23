@@ -207,6 +207,74 @@ void main() {
     });
   });
 
+  group('sales periods follow the calendar', () {
+    testWidgets('Semana requests Monday to Sunday of the current week', (
+      tester,
+    ) async {
+      final repo = _FakeSales([_sale(id: 's1')]);
+      await tester.pumpWidget(_app(const SalesPage(), repo));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Semana'));
+      await tester.pumpAndSettle();
+
+      // Tuesday 20 Oct 2026 → Mon 19 Oct .. Sun 25 Oct, Lima = UTC-5.
+      expect(repo.lastFrom, DateTime.utc(2026, 10, 19, 5));
+      expect(repo.lastTo, DateTime.utc(2026, 10, 26, 5));
+      expect(find.text('19 – 25 oct'), findsOneWidget);
+      expect(find.text('Esta semana'), findsOneWidget);
+    });
+
+    testWidgets('Mes requests the whole calendar month and steps by month', (
+      tester,
+    ) async {
+      final repo = _FakeSales([_sale(id: 's1')]);
+      await tester.pumpWidget(_app(const SalesPage(), repo));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Mes'));
+      await tester.pumpAndSettle();
+
+      expect(repo.lastFrom, DateTime.utc(2026, 10, 1, 5));
+      expect(repo.lastTo, DateTime.utc(2026, 11, 1, 5));
+      expect(find.text('Octubre 2026'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Mes siguiente'));
+      await tester.pumpAndSettle();
+
+      expect(repo.lastFrom, DateTime.utc(2026, 11, 1, 5));
+      expect(repo.lastTo, DateTime.utc(2026, 12, 1, 5));
+      expect(find.text('Noviembre 2026'), findsOneWidget);
+      expect(find.widgetWithText(FilledButton, 'Hoy'), findsOneWidget);
+    });
+
+    testWidgets('week arrows move exactly seven days', (tester) async {
+      final repo = _FakeSales([_sale(id: 's1')]);
+      await tester.pumpWidget(_app(const SalesPage(), repo));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Semana'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Semana anterior'));
+      await tester.pumpAndSettle();
+
+      expect(repo.lastFrom, DateTime.utc(2026, 10, 12, 5));
+      expect(repo.lastTo, DateTime.utc(2026, 10, 19, 5));
+      expect(find.text('12 – 18 oct'), findsOneWidget);
+    });
+
+    testWidgets('the day view labels today and the date separately', (
+      tester,
+    ) async {
+      final repo = _FakeSales([_sale(id: 's1')]);
+      await tester.pumpWidget(_app(const SalesPage(), repo));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Hoy'), findsOneWidget);
+      expect(find.text('Martes 20 de octubre'), findsOneWidget);
+    });
+  });
+
   group('sale detail', () {
     testWidgets('shows the line snapshots and totals', (tester) async {
       final repo = _FakeSales([])

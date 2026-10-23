@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/app_tokens.dart';
+import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../domain/entities/client.dart';
 import '../providers/client_providers.dart';
-import '../widgets/client_avatar.dart';
+import '../widgets/client_card.dart';
 
 Future<Client?> pickClient(BuildContext context) {
   return Navigator.of(
@@ -47,13 +49,18 @@ class _ClientPickerPageState extends ConsumerState<ClientPickerPage> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.page,
+              AppSpacing.xs,
+              AppSpacing.page,
+              AppSpacing.m,
+            ),
             child: TextField(
               autofocus: true,
               onChanged: _onChanged,
               decoration: const InputDecoration(
                 hintText: 'Buscar por nombre o teléfono',
-                prefixIcon: Icon(Icons.search),
+                prefixIcon: Icon(Icons.search_rounded),
               ),
             ),
           ),
@@ -66,19 +73,26 @@ class _ClientPickerPageState extends ConsumerState<ClientPickerPage> {
                 onRetry: () => ref.invalidate(clientSearchProvider(_query)),
               ),
               data: (page) => page.isEmpty
-                  ? const Center(child: Text('Sin resultados'))
+                  ? const EmptyState(
+                      icon: Icons.search_off_rounded,
+                      title: 'Sin resultados',
+                    )
                   : ListView.builder(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
                       itemCount: page.items.length,
                       itemBuilder: (context, index) {
                         final client = page.items[index];
-                        return ListTile(
-                          minTileHeight: 64,
-                          leading: ClientAvatar(client: client),
-                          title: Text(client.name),
-                          subtitle: client.phone == null
-                              ? null
-                              : Text(client.phone!),
-                          onTap: () => Navigator.of(context).pop(client),
+                        return Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.page,
+                            0,
+                            AppSpacing.page,
+                            AppSpacing.m,
+                          ),
+                          child: ClientCard(
+                            client: client,
+                            onTap: () => Navigator.of(context).pop(client),
+                          ),
                         );
                       },
                     ),

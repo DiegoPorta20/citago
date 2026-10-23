@@ -327,6 +327,55 @@ void main() {
     expect(repo.lastTransitionReason, 'Cliente se retiró');
   });
 
+  testWidgets('the week strip shows Monday to Sunday and selects a day', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      const AgendaPage(),
+      appointments: FakeAppointmentRepository(),
+    );
+
+    for (final day in ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM']) {
+      expect(find.text(day), findsOneWidget);
+    }
+    expect(find.text('Octubre 2026'), findsOneWidget);
+    expect(find.text('Hoy · Martes 20 de octubre'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Hoy'), findsNothing);
+
+    await tester.tap(find.text('22'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Jueves 22 de octubre'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Hoy'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Hoy'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Hoy · Martes 20 de octubre'), findsOneWidget);
+  });
+
+  testWidgets('the next-week arrow keeps the weekday and crosses months', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      const AgendaPage(),
+      appointments: FakeAppointmentRepository(),
+    );
+
+    await tester.tap(find.byTooltip('Semana siguiente'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Semana siguiente'));
+    await tester.pumpAndSettle();
+
+    // Tuesday 20 Oct + 14 days = Tuesday 3 Nov; its week is 2–8 Nov.
+    expect(find.text('Noviembre 2026'), findsOneWidget);
+    expect(find.text('Martes 3 de noviembre'), findsOneWidget);
+    expect(find.text('2'), findsOneWidget);
+    expect(find.text('8'), findsOneWidget);
+  });
+
   testWidgets('creating an appointment sends the slot UTC startAt', (
     tester,
   ) async {

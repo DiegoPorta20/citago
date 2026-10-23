@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/providers.dart';
+import '../../../../core/time/business_clock.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../data/repositories/sale_repository_impl.dart';
 import '../../domain/entities/money.dart';
@@ -33,11 +34,29 @@ final refundSaleUseCaseProvider = Provider(
 
 enum SalesPeriod { day, week, month }
 
+/// A period of the business calendar around [anchor]. Weeks run Monday to
+/// Sunday and months are calendar months, so "Semana" and "Mes" always match
+/// what the owner sees on a wall calendar.
 class SalesRange {
   const SalesRange({required this.anchor, required this.period});
 
   final String anchor;
   final SalesPeriod period;
+
+  String get firstDay => switch (period) {
+    SalesPeriod.day => anchor,
+    SalesPeriod.week => BusinessClock.startOfWeek(anchor),
+    SalesPeriod.month => BusinessClock.startOfMonth(anchor),
+  };
+
+  String get lastDay => switch (period) {
+    SalesPeriod.day => anchor,
+    SalesPeriod.week => BusinessClock.endOfWeek(anchor),
+    SalesPeriod.month => BusinessClock.endOfMonth(anchor),
+  };
+
+  bool contains(String date) =>
+      date.compareTo(firstDay) >= 0 && date.compareTo(lastDay) <= 0;
 
   SalesRange copyWith({String? anchor, SalesPeriod? period}) =>
       SalesRange(anchor: anchor ?? this.anchor, period: period ?? this.period);
@@ -55,18 +74,19 @@ class SalesRangeController extends Notifier<SalesRange> {
 
   void _shift(int direction) {
     final clock = ref.read(businessClockProvider);
-    final step = switch (state.period) {
-      SalesPeriod.day => 1,
-      SalesPeriod.week => 7,
-      SalesPeriod.month => 30,
-    };
     state = state.copyWith(
-      anchor: clock.addDays(state.anchor, step * direction),
+      anchor: switch (state.period) {
+        SalesPeriod.day => clock.addDays(state.anchor, direction),
+        SalesPeriod.week => clock.addDays(state.anchor, 7 * direction),
+        SalesPeriod.month => BusinessClock.addMonths(state.anchor, direction),
+      },
     );
   }
 
   void today() =>
       state = state.copyWith(anchor: ref.read(businessClockProvider).today());
+
+  void select(String date) => state = state.copyWith(anchor: date);
 
   void setPeriod(SalesPeriod period) => state = state.copyWith(period: period);
 }
@@ -90,14 +110,10 @@ final salesStatusFilterProvider =
 ({DateTime from, DateTime to}) salesWindow(Ref ref) {
   final clock = ref.watch(businessClockProvider);
   final range = ref.watch(salesRangeProvider);
-  final from = clock.dayRangeUtc(range.anchor).from;
-  final lastDay = switch (range.period) {
-    SalesPeriod.day => range.anchor,
-    SalesPeriod.week => clock.addDays(range.anchor, 6),
-    SalesPeriod.month => clock.addDays(range.anchor, 29),
-  };
-  final to = clock.dayRangeUtc(lastDay).to;
-  return (from: from, to: to);
+  return (
+    from: clock.dayRangeUtc(range.firstDay).from,
+    to: clock.dayRangeUtc(range.lastDay).to,
+  );
 }
 
 class SalesListState {

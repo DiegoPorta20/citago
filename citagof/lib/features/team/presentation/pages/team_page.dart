@@ -3,7 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/app_failure.dart';
+import '../../../../core/theme/app_status_colors.dart';
+import '../../../../core/theme/app_tokens.dart';
+import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_view.dart';
+import '../../../../core/widgets/initials_avatar.dart';
+import '../../../../core/widgets/list_card.dart';
+import '../../../../core/widgets/status_pill.dart';
 import '../../../authentication/domain/entities/auth_session.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../domain/entities/team_member.dart';
@@ -23,7 +29,7 @@ class TeamPage extends ConsumerWidget {
       appBar: AppBar(title: const Text('Equipo')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push(TeamRoutes.create),
-        icon: const Icon(Icons.person_add_alt_1),
+        icon: const Icon(Icons.person_add_alt_1_rounded),
         label: const Text('Dar acceso'),
       ),
       body: team.when(
@@ -37,10 +43,17 @@ class TeamPage extends ConsumerWidget {
             : RefreshIndicator(
                 onRefresh: () async => ref.invalidate(teamListProvider),
                 child: ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 96),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.page,
+                    AppSpacing.s,
+                    AppSpacing.page,
+                    104,
+                  ),
                   itemCount: members.length,
-                  itemBuilder: (context, index) =>
-                      _MemberTile(member: members[index]),
+                  itemBuilder: (context, index) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.m),
+                    child: _MemberTile(member: members[index]),
+                  ),
                 ),
               ),
       ),
@@ -55,7 +68,6 @@ class _MemberTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     final session = ref.watch(sessionControllerProvider).value;
     final actor = session?.role ?? UserRole.staff;
     final actorUserId = session?.user.id ?? '';
@@ -70,56 +82,39 @@ class _MemberTile extends ConsumerWidget {
 
     final revoked = !member.isActive;
 
-    return ListTile(
-      minTileHeight: 72,
-      leading: CircleAvatar(
-        backgroundColor: revoked
-            ? theme.colorScheme.surfaceContainerHighest
-            : theme.colorScheme.primaryContainer,
-        child: Text(member.initials),
-      ),
-      title: Row(
-        children: [
-          Flexible(
-            child: Text(
-              member.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          if (isSelf)
-            Padding(
-              padding: const EdgeInsets.only(left: 6),
-              child: Text(
-                '(tú)',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.outline,
-                ),
-              ),
-            ),
-        ],
-      ),
+    return ListCard(
+      leading: InitialsAvatar(name: member.name),
+      title: member.name,
+      dimmed: revoked,
+      padding: const EdgeInsets.fromLTRB(14, 12, 4, 12),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(member.email, maxLines: 1, overflow: TextOverflow.ellipsis),
-          const SizedBox(height: 2),
-          Row(
+          ListCardSubtitle(member.email),
+          const SizedBox(height: AppSpacing.s),
+          Wrap(
+            spacing: AppSpacing.s,
+            runSpacing: AppSpacing.xs,
             children: [
-              _Badge(text: roleLabel(member.role)),
-              const SizedBox(width: 6),
-              if (revoked)
-                _Badge(
-                  text: 'Revocado',
-                  color: theme.colorScheme.errorContainer,
-                  textColor: theme.colorScheme.onErrorContainer,
-                )
-              else
-                _Badge(
-                  text: 'Activo',
-                  color: theme.colorScheme.secondaryContainer,
-                  textColor: theme.colorScheme.onSecondaryContainer,
+              if (isSelf)
+                const StatusPill(
+                  label: 'Tú',
+                  tone: StatusTone.teal,
+                  showDot: false,
                 ),
+              StatusPill(
+                label: roleLabel(member.role),
+                tone: switch (member.role) {
+                  UserRole.owner => StatusTone.accent,
+                  UserRole.admin => StatusTone.info,
+                  UserRole.staff => StatusTone.neutral,
+                },
+                showDot: false,
+              ),
+              if (revoked)
+                const StatusPill(label: 'Revocado', tone: StatusTone.danger)
+              else
+                const StatusPill(label: 'Activo', tone: StatusTone.success),
             ],
           ),
         ],
@@ -275,56 +270,15 @@ class _MemberMenu extends ConsumerWidget {
   }
 }
 
-class _Badge extends StatelessWidget {
-  const _Badge({required this.text, this.color, this.textColor});
-
-  final String text;
-  final Color? color;
-  final Color? textColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: color ?? theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        text,
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: textColor ?? theme.colorScheme.onSurfaceVariant,
-        ),
-      ),
-    );
-  }
-}
-
 class _EmptyState extends StatelessWidget {
   const _EmptyState();
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.groups_outlined,
-              size: 56,
-              color: Theme.of(context).colorScheme.outline,
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Aún no hay nadie más. Da acceso con "Dar acceso".',
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
+    return const EmptyState(
+      icon: Icons.groups_outlined,
+      title: 'Aún no hay nadie más.',
+      message: 'Da acceso con "Dar acceso".',
     );
   }
 }

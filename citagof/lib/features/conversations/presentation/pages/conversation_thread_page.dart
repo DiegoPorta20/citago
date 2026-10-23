@@ -3,7 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/app_failure.dart';
+import '../../../../core/theme/app_tokens.dart';
+import '../../../../core/time/business_clock.dart';
+import '../../../../core/widgets/app_card.dart';
+import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_view.dart';
+import '../../../../core/widgets/initials_avatar.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../../clients/presentation/clients_routes.dart';
 import '../../../clients/presentation/pages/client_picker_page.dart';
@@ -313,33 +318,70 @@ class _ClientBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final client = conversation.client;
 
-    if (client == null) {
-      return Material(
-        color: theme.colorScheme.surfaceContainerHighest,
-        child: ListTile(
-          minTileHeight: 56,
-          leading: const Icon(Icons.person_off_outlined),
-          title: Text(conversation.contactIdentifier),
-          subtitle: const Text('Sin vincular'),
-          trailing: TextButton(
-            onPressed: onLink,
-            child: const Text('Vincular'),
-          ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        AppSpacing.xs,
+        AppSpacing.page,
+        AppSpacing.s,
+      ),
+      child: AppCard(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        onTap: client == null
+            ? null
+            : () => context.push(ClientRoutes.detail(client.id)),
+        child: Row(
+          children: [
+            if (client == null)
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: scheme.surfaceContainerHigh,
+                child: Icon(
+                  Icons.person_off_outlined,
+                  size: 20,
+                  color: scheme.onSurfaceVariant,
+                ),
+              )
+            else
+              InitialsAvatar(name: client.name, radius: 20),
+            const SizedBox(width: AppSpacing.m),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    client?.name ?? conversation.contactIdentifier,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleSmall,
+                  ),
+                  Text(
+                    client == null
+                        ? 'Sin vincular'
+                        : conversation.contactIdentifier,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            if (client == null)
+              FilledButton.tonal(
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(0, 40),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.l),
+                ),
+                onPressed: onLink,
+                child: const Text('Vincular'),
+              )
+            else
+              Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+          ],
         ),
-      );
-    }
-
-    return Material(
-      color: theme.colorScheme.surfaceContainerHighest,
-      child: ListTile(
-        minTileHeight: 56,
-        leading: const Icon(Icons.person_outline),
-        title: Text(client.name),
-        subtitle: Text(conversation.contactIdentifier),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () => context.push(ClientRoutes.detail(client.id)),
       ),
     );
   }
@@ -356,16 +398,26 @@ class _AssigneeBanner extends ConsumerWidget {
     final fromDto = conversation.assignedUserName;
     final resolved = fromDto ?? _resolveName(ref, conversation.assignedUserId);
 
-    return Material(
-      color: theme.colorScheme.surfaceContainerHigh,
-      child: ListTile(
-        minTileHeight: 48,
-        dense: true,
-        leading: const Icon(Icons.assignment_ind_outlined, size: 20),
-        title: Text(
-          resolved == null ? 'Asignada' : 'Asignada a $resolved',
-          style: theme.textTheme.bodyMedium,
-        ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.page,
+        0,
+        AppSpacing.page,
+        AppSpacing.s,
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.assignment_ind_outlined,
+            size: 16,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: AppSpacing.s),
+          Text(
+            resolved == null ? 'Asignada' : 'Asignada a $resolved',
+            style: theme.textTheme.bodySmall,
+          ),
+        ],
       ),
     );
   }
@@ -395,20 +447,71 @@ class _MessageList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (state.messages.isEmpty) {
-      return const Center(child: Text('Aún no hay mensajes.'));
+      return const EmptyState(
+        icon: Icons.chat_bubble_outline_rounded,
+        title: 'Aún no hay mensajes.',
+      );
     }
 
+    final clock = ref.watch(businessClockProvider);
     final messages = state.messages;
+
+    // Day separators: a heading whenever the business-zone date changes.
+    final rows = <Object>[];
+    String? currentDay;
+    for (final message in messages) {
+      final day = clock.dateOf(message.sentAt);
+      if (day != currentDay) {
+        currentDay = day;
+        rows.add(day);
+      }
+      rows.add(message);
+    }
+
     return ListView.builder(
       controller: scroll,
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: messages.length + 1,
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.s),
+      itemCount: rows.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
           return _OlderHeader(conversationId: conversationId, state: state);
         }
-        return MessageBubble(message: messages[index - 1]);
+        final row = rows[index - 1];
+        if (row is String) return _DaySeparator(date: row, clock: clock);
+        return MessageBubble(message: row as Message);
       },
+    );
+  }
+}
+
+class _DaySeparator extends StatelessWidget {
+  const _DaySeparator({required this.date, required this.clock});
+
+  final String date;
+  final BusinessClock clock;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final relative = clock.dayLabel(date);
+    final label = relative.contains(' ')
+        ? BusinessClock.longDateCapitalized(date)
+        : relative;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.m),
+      child: Center(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(AppRadius.pill),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            child: Text(label, style: theme.textTheme.labelMedium),
+          ),
+        ),
+      ),
     );
   }
 }

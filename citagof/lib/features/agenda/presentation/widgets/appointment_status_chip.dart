@@ -1,6 +1,20 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_status_colors.dart';
+import '../../../../core/widgets/status_pill.dart';
 import '../../domain/entities/appointment_status.dart';
+
+/// Semantic tone of each appointment state. Shared by the status pill, the
+/// timeline accent bar and the history dots so they always agree.
+StatusTone appointmentTone(AppointmentStatus status) => switch (status) {
+  AppointmentStatus.pending => StatusTone.warning,
+  AppointmentStatus.confirmed => StatusTone.info,
+  AppointmentStatus.arrived => StatusTone.teal,
+  AppointmentStatus.inProgress => StatusTone.accent,
+  AppointmentStatus.completed => StatusTone.success,
+  AppointmentStatus.cancelled => StatusTone.danger,
+  AppointmentStatus.noShow => StatusTone.neutral,
+};
 
 class AppointmentStatusChip extends StatelessWidget {
   const AppointmentStatusChip({super.key, required this.status});
@@ -8,50 +22,6 @@ class AppointmentStatusChip extends StatelessWidget {
   final AppointmentStatus status;
 
   @override
-  Widget build(BuildContext context) {
-    final (background, foreground) = _colors(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        status.label,
-        style: TextStyle(
-          color: foreground,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-
-  (Color, Color) _colors(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return switch (status) {
-      AppointmentStatus.pending => (
-        Colors.amber.shade100,
-        Colors.amber.shade900,
-      ),
-      AppointmentStatus.confirmed => (
-        Colors.blue.shade100,
-        Colors.blue.shade900,
-      ),
-      AppointmentStatus.arrived => (Colors.teal.shade100, Colors.teal.shade900),
-      AppointmentStatus.inProgress => (
-        Colors.indigo.shade100,
-        Colors.indigo.shade900,
-      ),
-      AppointmentStatus.completed => (
-        Colors.green.shade100,
-        Colors.green.shade900,
-      ),
-      AppointmentStatus.cancelled => (
-        scheme.errorContainer,
-        scheme.onErrorContainer,
-      ),
-      AppointmentStatus.noShow => (Colors.grey.shade300, Colors.grey.shade800),
-    };
-  }
+  Widget build(BuildContext context) =>
+      StatusPill(label: status.label, tone: appointmentTone(status));
 }

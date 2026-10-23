@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/app_tokens.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../domain/entities/message.dart';
 
@@ -12,19 +13,28 @@ class MessageBubble extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final clock = ref.watch(businessClockProvider);
     final outbound = message.direction.isOutbound;
 
     final bubbleColor = outbound
-        ? theme.colorScheme.primaryContainer
-        : theme.colorScheme.surfaceContainerHighest;
-    final textColor = outbound
-        ? theme.colorScheme.onPrimaryContainer
-        : theme.colorScheme.onSurface;
+        ? scheme.primaryContainer
+        : scheme.surfaceContainerHigh;
+    final textColor = outbound ? scheme.onPrimaryContainer : scheme.onSurface;
 
     final text = message.type.isText
         ? (message.body ?? '')
         : _placeholderFor(message.type);
+
+    // The corner next to the sender is squarer, like a chat "tail".
+    const big = Radius.circular(18);
+    const small = Radius.circular(4);
+    final radius = BorderRadius.only(
+      topLeft: big,
+      topRight: big,
+      bottomLeft: outbound ? big : small,
+      bottomRight: outbound ? small : big,
+    );
 
     return Align(
       alignment: outbound ? Alignment.centerRight : Alignment.centerLeft,
@@ -32,29 +42,39 @@ class MessageBubble extends ConsumerWidget {
         constraints: BoxConstraints(
           maxWidth: MediaQuery.sizeOf(context).width * 0.78,
         ),
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+        margin: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.page,
+          vertical: 3,
+        ),
+        padding: const EdgeInsets.fromLTRB(14, 9, 14, 7),
         decoration: BoxDecoration(
           color: bubbleColor,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: radius,
+          border: outbound
+              ? Border.all(color: scheme.primary.withValues(alpha: 0.25))
+              : null,
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(
-              text,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: textColor,
-                fontStyle: message.type.isText
-                    ? FontStyle.normal
-                    : FontStyle.italic,
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                text,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: textColor,
+                  fontStyle: message.type.isText
+                      ? FontStyle.normal
+                      : FontStyle.italic,
+                ),
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 3),
             Text(
               clock.timeOf(message.sentAt),
               style: theme.textTheme.labelSmall?.copyWith(
-                color: textColor.withValues(alpha: 0.7),
+                color: textColor.withValues(alpha: 0.65),
+                fontFeatures: AppText.tabular,
               ),
             ),
           ],

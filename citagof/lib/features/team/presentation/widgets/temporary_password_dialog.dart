@@ -36,16 +36,20 @@ class _TemporaryPasswordDialog extends StatelessWidget {
           const SizedBox(height: 16),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(8),
+              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: theme.colorScheme.primary.withValues(alpha: 0.4),
+              ),
             ),
             child: SelectableText(
               password,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontFamily: 'monospace',
-                letterSpacing: 1,
+                letterSpacing: 1.5,
+                color: theme.colorScheme.onPrimaryContainer,
               ),
             ),
           ),
@@ -61,7 +65,7 @@ class _TemporaryPasswordDialog extends StatelessWidget {
                   const SnackBar(content: Text('Contraseña copiada')),
                 );
               },
-              icon: const Icon(Icons.copy),
+              icon: const Icon(Icons.copy_rounded),
               label: const Text('Copiar'),
             ),
           ),

@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/errors/app_failure.dart';
+import '../../../../core/theme/app_status_colors.dart';
+import '../../../../core/theme/app_tokens.dart';
+import '../../../../core/widgets/error_banner.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../authentication/domain/entities/business_registration.dart';
 import '../../domain/entities/business.dart';
@@ -113,7 +116,12 @@ class _SettingsFormState extends ConsumerState<_SettingsForm> {
         child: Form(
           key: _formKey,
           child: ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.page,
+              AppSpacing.s,
+              AppSpacing.page,
+              AppSpacing.xxxl,
+            ),
             children: [
               TextFormField(
                 controller: _name,
@@ -149,24 +157,11 @@ class _SettingsFormState extends ConsumerState<_SettingsForm> {
                       },
               ),
               if (_timezoneChanged) ...[
-                const SizedBox(height: 8),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.warning_amber_rounded,
-                      size: 20,
-                      color: Theme.of(context).colorScheme.tertiary,
-                    ),
-                    const SizedBox(width: 8),
-                    const Expanded(
-                      child: Text(
-                        'Cambiar la zona horaria recalcula la agenda y los '
-                        'totales del día. Los instantes guardados no se '
-                        'reescriben.',
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 12),
+                const _NoticeBanner(
+                  'Cambiar la zona horaria recalcula la agenda y los '
+                  'totales del día. Los instantes guardados no se '
+                  'reescriben.',
                 ),
               ],
               const SizedBox(height: 16),
@@ -200,17 +195,9 @@ class _SettingsFormState extends ConsumerState<_SettingsForm> {
               ),
               if (_error != null) ...[
                 const SizedBox(height: 8),
-                Semantics(
-                  liveRegion: true,
-                  child: Text(
-                    _error!,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ),
+                ErrorBanner(_error!),
               ],
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               FilledButton(
                 onPressed: _saving ? null : _save,
                 child: _saving
@@ -224,6 +211,37 @@ class _SettingsFormState extends ConsumerState<_SettingsForm> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Warning notice (amber) for non-error but important information.
+class _NoticeBanner extends StatelessWidget {
+  const _NoticeBanner(this.message);
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = AppStatusColors.of(context);
+    final color = colors.foreground(StatusTone.warning);
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.m),
+      decoration: BoxDecoration(
+        color: colors.background(StatusTone.warning),
+        borderRadius: AppRadius.controlBorder,
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.warning_amber_rounded, size: 20, color: color),
+          const SizedBox(width: AppSpacing.s),
+          Expanded(child: Text(message, style: theme.textTheme.bodySmall)),
+        ],
       ),
     );
   }

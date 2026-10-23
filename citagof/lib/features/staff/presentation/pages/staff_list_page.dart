@@ -2,7 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/app_status_colors.dart';
+import '../../../../core/theme/app_tokens.dart';
+import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_view.dart';
+import '../../../../core/widgets/initials_avatar.dart';
+import '../../../../core/widgets/list_card.dart';
+import '../../../../core/widgets/status_pill.dart';
 import '../../domain/entities/staff_member.dart';
 import '../providers/staff_providers.dart';
 import '../staff_routes.dart';
@@ -18,7 +24,7 @@ class StaffListPage extends ConsumerWidget {
       appBar: AppBar(title: const Text('Profesionales')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push(StaffRoutes.create),
-        icon: const Icon(Icons.person_add_alt_1),
+        icon: const Icon(Icons.person_add_alt_1_rounded),
         label: const Text('Nuevo'),
       ),
       body: staff.when(
@@ -28,14 +34,25 @@ class StaffListPage extends ConsumerWidget {
           onRetry: () => ref.invalidate(staffListProvider),
         ),
         data: (members) => members.isEmpty
-            ? const _EmptyState()
+            ? const EmptyState(
+                icon: Icons.badge_outlined,
+                title: 'Aún no hay profesionales.',
+                message: 'Agrega el primero con "Nuevo".',
+              )
             : RefreshIndicator(
                 onRefresh: () async => ref.invalidate(staffListProvider),
                 child: ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 96),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.page,
+                    AppSpacing.s,
+                    AppSpacing.page,
+                    104,
+                  ),
                   itemCount: members.length,
-                  itemBuilder: (context, index) =>
-                      _StaffTile(member: members[index]),
+                  itemBuilder: (context, index) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.m),
+                    child: _StaffTile(member: members[index]),
+                  ),
                 ),
               ),
       ),
@@ -50,73 +67,28 @@ class _StaffTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      minTileHeight: 64,
-      leading: CircleAvatar(child: Text(_initials(member.displayName))),
-      title: Text(member.displayName),
-      subtitle: StatusBadge(active: member.active),
-      trailing: const Icon(Icons.chevron_right),
+    return ListCard(
+      leading: InitialsAvatar(name: member.displayName),
+      title: member.displayName,
+      subtitle: Align(
+        alignment: Alignment.centerLeft,
+        child: StatusBadge(active: member.active),
+      ),
+      dimmed: !member.active,
       onTap: () => context.push(StaffRoutes.detail(member.id)),
     );
   }
-
-  static String _initials(String name) {
-    final parts = name.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty);
-    return parts.take(2).map((p) => p[0].toUpperCase()).join();
-  }
 }
 
+/// "Activo" / "Inactivo" pill, shared by the list and the detail page.
 class StatusBadge extends StatelessWidget {
   const StatusBadge({super.key, required this.active});
 
   final bool active;
 
   @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final color = active ? scheme.primary : scheme.outline;
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(top: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          active ? 'Activo' : 'Inactivo',
-          style: TextStyle(color: color, fontWeight: FontWeight.w600),
-        ),
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.badge_outlined,
-              size: 56,
-              color: Theme.of(context).colorScheme.outline,
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Aún no hay profesionales. Agrega el primero con "Nuevo".',
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => StatusPill(
+    label: active ? 'Activo' : 'Inactivo',
+    tone: active ? StatusTone.success : StatusTone.neutral,
+  );
 }

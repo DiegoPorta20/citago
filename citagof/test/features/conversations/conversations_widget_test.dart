@@ -257,7 +257,7 @@ void main() {
       );
 
       await tester.enterText(find.byType(TextField), 'Buenas, sí hay turno');
-      await tester.tap(find.byIcon(Icons.send));
+      await tester.tap(find.byIcon(Icons.send_rounded));
       await tester.pumpAndSettle();
 
       expect(repo.calls, contains('reply:Buenas, sí hay turno'));
@@ -284,7 +284,7 @@ void main() {
       );
 
       await tester.enterText(find.byType(TextField), 'Reintentar esto');
-      await tester.tap(find.byIcon(Icons.send));
+      await tester.tap(find.byIcon(Icons.send_rounded));
       await tester.pumpAndSettle();
 
       expect(find.widgetWithText(TextField, 'Reintentar esto'), findsOneWidget);
