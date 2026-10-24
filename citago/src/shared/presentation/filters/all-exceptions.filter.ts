@@ -20,6 +20,7 @@ const CATEGORY_STATUS: Record<DomainErrorCategory, HttpStatus> = {
   [DomainErrorCategory.BusinessRule]: HttpStatus.UNPROCESSABLE_ENTITY,
   [DomainErrorCategory.Forbidden]: HttpStatus.FORBIDDEN,
   [DomainErrorCategory.Unauthorized]: HttpStatus.UNAUTHORIZED,
+  [DomainErrorCategory.PaymentRequired]: HttpStatus.PAYMENT_REQUIRED,
   [DomainErrorCategory.ExternalService]: HttpStatus.BAD_GATEWAY,
 };
 

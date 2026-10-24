@@ -4,6 +4,8 @@ import 'package:citagof/features/authentication/domain/entities/auth_session.dar
 import 'package:citagof/features/authentication/domain/entities/business_registration.dart';
 import 'package:citagof/features/authentication/domain/repositories/auth_repository.dart';
 import 'package:citagof/features/authentication/presentation/providers/auth_providers.dart';
+import 'package:citagof/features/billing/domain/entities/subscription.dart';
+import 'package:citagof/features/billing/presentation/providers/billing_providers.dart';
 import 'package:citagof/features/dashboard/domain/entities/dashboard.dart';
 import 'package:citagof/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:citagof/features/dashboard/presentation/providers/dashboard_providers.dart';
@@ -122,13 +124,37 @@ class _FakeDashboard implements DashboardRepository {
   );
 }
 
-Future<void> _pumpApp(WidgetTester tester, _FakeAuth auth) async {
+const _proPlan = Plan(
+  code: PlanCode.pro,
+  name: 'Profesional',
+  monthlyPrice: '79.00',
+  currency: 'PEN',
+  maxStaff: 5,
+);
+
+Subscription _subscription({required bool expired, int daysLeft = 5}) =>
+    Subscription(
+      plan: _proPlan,
+      state: expired ? SubscriptionState.expired : SubscriptionState.trialing,
+      trialEndsAt: DateTime.utc(2026, 10, 29, 17),
+      daysLeft: expired ? 0 : daysLeft,
+    );
+
+Future<void> _pumpApp(
+  WidgetTester tester,
+  _FakeAuth auth, {
+  Subscription? subscription,
+}) async {
   await tester.pumpWidget(
     ProviderScope(
       retry: (_, _) => null,
       overrides: [
         authRepositoryProvider.overrideWithValue(auth),
         dashboardRepositoryProvider.overrideWithValue(_FakeDashboard()),
+        subscriptionProvider.overrideWith(
+          (ref) async => subscription ?? _subscription(expired: false),
+        ),
+        plansProvider.overrideWith((ref) async => [_proPlan]),
         pendingConversationsCountProvider.overrideWith((ref) async => 3),
         upcomingAppointmentsProvider.overrideWith(
           (ref) async => [
@@ -241,6 +267,12 @@ void main() {
   ) async {
     await _pumpApp(tester, _FakeAuth(stored: _session(UserRole.owner)));
 
+    // The list is lazy: how much fits on screen depends on the viewport (and
+    // on the trial banner above the navigation bar), so scroll to it.
+    await tester.scrollUntilVisible(
+      find.text('3 conversaciones por responder'),
+      200,
+    );
     expect(find.text('3 conversaciones por responder'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Próximas citas'), 200);
     expect(find.text('Próximas citas'), findsOneWidget);
@@ -351,5 +383,71 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Cambiar de negocio'), findsNothing);
+  });
+
+  group('free trial banner', () {
+    testWidgets('counts the trial days down above the navigation bar', (
+      tester,
+    ) async {
+      await _pumpApp(tester, _FakeAuth(stored: _session(UserRole.owner)));
+
+      expect(find.text('Prueba gratis: te quedan 5 días'), findsOneWidget);
+      expect(find.text('Ver planes'), findsOneWidget);
+    });
+
+    testWidgets('says "te queda 1 día" on the last day', (tester) async {
+      await _pumpApp(
+        tester,
+        _FakeAuth(stored: _session(UserRole.owner)),
+        subscription: _subscription(expired: false, daysLeft: 1),
+      );
+
+      expect(find.text('Prueba gratis: te queda 1 día'), findsOneWidget);
+    });
+
+    testWidgets('turns into a read-only notice once the trial ended', (
+      tester,
+    ) async {
+      await _pumpApp(
+        tester,
+        _FakeAuth(stored: _session(UserRole.owner)),
+        subscription: _subscription(expired: true),
+      );
+
+      expect(
+        find.text('Tu prueba gratis terminó: solo puedes ver tus datos'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('tapping it opens the plans screen', (tester) async {
+      await _pumpApp(
+        tester,
+        _FakeAuth(stored: _session(UserRole.owner)),
+        subscription: _subscription(expired: true),
+      );
+
+      await tester.tap(find.text('Ver planes'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Plan y suscripción'), findsOneWidget);
+      expect(find.text('Tu prueba gratis terminó'), findsOneWidget);
+      expect(find.text('Profesional'), findsOneWidget);
+    });
+
+    testWidgets('the owner also reaches the plans from the More menu', (
+      tester,
+    ) async {
+      await _pumpApp(tester, _FakeAuth(stored: _session(UserRole.owner)));
+
+      await tester.tap(find.text('Más'));
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView).last, const Offset(0, -400));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Plan y suscripción'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Prueba gratis'), findsOneWidget);
+    });
   });
 }

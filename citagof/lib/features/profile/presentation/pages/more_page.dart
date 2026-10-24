@@ -77,6 +77,11 @@ class MorePage extends ConsumerWidget {
                   title: 'WhatsApp',
                   path: AppRoutes.whatsapp,
                 ),
+                _MenuItem(
+                  icon: Icons.workspace_premium_outlined,
+                  title: 'Plan y suscripción',
+                  path: AppRoutes.billing,
+                ),
               ],
             ),
           ],

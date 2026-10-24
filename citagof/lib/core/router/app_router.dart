@@ -8,6 +8,7 @@ import '../../features/authentication/presentation/pages/register_page.dart';
 import '../../features/authentication/presentation/pages/switch_tenant_page.dart';
 import '../../features/authentication/presentation/pages/splash_page.dart';
 import '../../features/authentication/presentation/providers/auth_providers.dart';
+import '../../features/billing/presentation/billing_routes.dart';
 import '../../features/business/presentation/business_routes.dart';
 import '../../features/catalog/presentation/catalog_routes.dart';
 import '../../features/clients/presentation/clients_routes.dart';
@@ -91,6 +92,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               ...teamRoutes,
               ...businessRoutes,
               ...whatsappRoutes,
+              ...billingRoutes,
               ...salesRoutes,
               GoRoute(
                 path: AppRoutes.switchTenant,

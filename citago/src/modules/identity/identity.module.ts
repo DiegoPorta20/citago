@@ -5,6 +5,8 @@ import { JwtModule } from '@nestjs/jwt';
 
 import type { EnvironmentVariables } from '../../config/environment.js';
 import { TenantsModule } from '../tenants/tenants.module.js';
+import { BillingModule } from '../billing/billing.module.js';
+import { SubscriptionGuard } from '../billing/presentation/subscription.guard.js';
 import { GetCurrentSessionUseCase } from './application/get-current-session/get-current-session.use-case.js';
 import { ListMyTenantsUseCase } from './application/list-my-tenants/list-my-tenants.use-case.js';
 import { LoginUseCase } from './application/login/login.use-case.js';
@@ -41,6 +43,7 @@ import { RolesGuard } from './presentation/guards/roles.guard.js';
 @Module({
   imports: [
     TenantsModule,
+    BillingModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -79,6 +82,8 @@ import { RolesGuard } from './presentation/guards/roles.guard.js';
 
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RolesGuard },
+    // Order matters: it reads the auth context the JWT guard sets.
+    { provide: APP_GUARD, useClass: SubscriptionGuard },
   ],
   exports: [UserRepository, MembershipRepository],
 })

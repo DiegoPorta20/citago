@@ -11,6 +11,8 @@ import {
   InMemoryUserRepository,
   SequentialIdGenerator,
 } from '../../../../../test/support/fakes/identity.fakes.js';
+import { InMemorySubscriptionRepository } from '../../../../../test/support/fakes/billing.fakes.js';
+import { SubscriptionState } from '../../../billing/domain/subscription.entity.js';
 import { Email } from '../../../../shared/domain/email.js';
 import { UserRole } from '../../../../shared/domain/user-role.js';
 import { Tenant } from '../../../tenants/domain/tenant.entity.js';
@@ -36,6 +38,7 @@ describe('RegisterBusinessUseCase', () => {
   let tenants: InMemoryTenantRepository;
   let users: InMemoryUserRepository;
   let memberships: InMemoryMembershipRepository;
+  let subscriptions: InMemorySubscriptionRepository;
   let refreshTokens: InMemoryRefreshTokenRepository;
   let transaction: ImmediateTransactionRunner;
   let useCase: RegisterBusinessUseCase;
@@ -44,6 +47,7 @@ describe('RegisterBusinessUseCase', () => {
     tenants = new InMemoryTenantRepository();
     users = new InMemoryUserRepository();
     memberships = new InMemoryMembershipRepository();
+    subscriptions = new InMemorySubscriptionRepository();
     refreshTokens = new InMemoryRefreshTokenRepository();
     transaction = new ImmediateTransactionRunner();
 
@@ -54,6 +58,7 @@ describe('RegisterBusinessUseCase', () => {
       tenants,
       users,
       memberships,
+      subscriptions,
       new FakePasswordHasher(),
       new SessionIssuer(
         new FakeAccessTokenService(),
@@ -86,6 +91,17 @@ describe('RegisterBusinessUseCase', () => {
     expect(membership?.role).toBe(UserRole.Owner);
     expect(membership?.status).toBe(MembershipStatus.Active);
     expect(result.role).toBe(UserRole.Owner);
+  });
+
+  it('starts a 7-day free trial on the Pro plan (rule BI-1)', async () => {
+    const result = await useCase.execute(validInput);
+    const subscription = await subscriptions.findByTenant(result.tenantId);
+
+    expect(subscription?.planCode).toBe('PRO');
+    expect(subscription?.trialEndsAt.toISOString()).toBe(
+      '2026-09-24T12:00:00.000Z',
+    );
+    expect(subscription?.stateAt(NOW)).toBe(SubscriptionState.Trialing);
   });
 
   it('starts every tenant with exactly one active OWNER (rule ID-1)', async () => {

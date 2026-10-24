@@ -17,6 +17,7 @@ export async function createTestDataSource(): Promise<DataSource> {
 }
 
 const TABLES_IN_DELETION_ORDER = [
+  'subscriptions',
   'whatsapp_channels',
   'messages',
   'conversations',

@@ -5,8 +5,8 @@ un negocio, no "OWNER" en abstracto. El rol se lee de la membresía en cada
 request, así que revocar un acceso o cambiar un rol tiene efecto inmediato.
 
 > Implementada para autenticación, accesos de usuario, servicios, clientes,
-> profesionales, citas, ventas, conversaciones, el canal de WhatsApp y el
-> dashboard.
+> profesionales, citas, ventas, conversaciones, el canal de WhatsApp, el
+> dashboard y la suscripción.
 > Los puntos abiertos al final siguen pendientes de confirmación.
 
 ## Roles
@@ -78,6 +78,9 @@ repositorio y la base de datos ([ADR 0004](./adr/0004-tenant-isolation.md)).
 | **Dashboard** | | | |
 | Ver ingresos y métricas del negocio | ✅ | ✅ | ❌ |
 | Ver sus propias métricas (atenciones del día) | ✅ | ✅ | ✅ |
+| **Suscripción** | | | |
+| Ver el plan y los días que quedan de la prueba | ✅ | ✅ | ✅ |
+| Elegir el plan | ✅ | ❌ | ❌ |
 
 > ⏸ Suspender el negocio **no se expone por API**: un tenant suspendido corta
 > todas sus sesiones (regla ID-6), incluida la de quien lo desharía. Es una

@@ -25,6 +25,9 @@ import { StaffScheduleOrmEntity } from '../../modules/staff/infrastructure/persi
 import { ServiceStatus } from '../../modules/catalog/domain/service-status.js';
 import { ServiceOrmEntity } from '../../modules/catalog/infrastructure/persistence/typeorm/entities/service.orm-entity.js';
 import { ClientOrmEntity } from '../../modules/clients/infrastructure/persistence/typeorm/entities/client.orm-entity.js';
+import { PlanCode } from '../../modules/billing/domain/plan.js';
+import { TRIAL_DAYS } from '../../modules/billing/domain/subscription.entity.js';
+import { SubscriptionOrmEntity } from '../../modules/billing/infrastructure/persistence/typeorm/entities/subscription.orm-entity.js';
 import { MembershipStatus } from '../../modules/identity/domain/membership-status.js';
 import { UserRole } from '../../shared/domain/user-role.js';
 import { MembershipOrmEntity } from '../../modules/identity/infrastructure/persistence/typeorm/entities/membership.orm-entity.js';
@@ -36,6 +39,7 @@ import { BusinessHoursOrmEntity } from '../../modules/tenants/infrastructure/per
 import { TenantOrmEntity } from '../../modules/tenants/infrastructure/persistence/typeorm/entities/tenant.orm-entity.js';
 
 export const DEMO_TENANT_ID = '01999999-0000-7000-8000-000000000001';
+const DEMO_SUBSCRIPTION_ID = '01999999-0000-7000-8000-0000000000b1';
 
 const DEMO_PASSWORD = 'Demo1234!';
 
@@ -247,6 +251,19 @@ export async function runDevSeed(dataSource: DataSource): Promise<SeedSummary> {
         updatedAt: now,
       },
       ['id'],
+    );
+
+    await manager.getRepository(SubscriptionOrmEntity).upsert(
+      {
+        id: DEMO_SUBSCRIPTION_ID,
+        tenantId: DEMO_TENANT_ID,
+        planCode: PlanCode.Pro,
+        // A fresh trial on every seed, so the demo never ends up read-only.
+        trialEndsAt: new Date(now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000),
+        createdAt: now,
+        updatedAt: now,
+      },
+      ['tenantId'],
     );
 
     await manager

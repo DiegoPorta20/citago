@@ -104,6 +104,10 @@ const Map<String, String> _messagesByCode = {
   'WHATSAPP_UNAVAILABLE':
       'No pudimos contactar con WhatsApp. Inténtalo de nuevo.',
   'INVALID_WHATSAPP_CHANNEL_DATA': 'Revisa los datos del canal de WhatsApp.',
+  'SUBSCRIPTION_EXPIRED':
+      'Tu prueba gratis terminó. Elige un plan para volver a hacer cambios.',
+  'UNKNOWN_PLAN': 'Ese plan no existe.',
+  'SUBSCRIPTION_NOT_FOUND': 'Este negocio no tiene una suscripción.',
 };
 
 AppFailure failureFromApi({

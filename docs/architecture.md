@@ -44,6 +44,7 @@ token de inyección de NestJS.
 | `sales` | Ventas, líneas, métodos de pago, anulación ([ADR 0010](./adr/0010-sales-and-money.md)) | **implementado** |
 | `conversations` | Conversaciones y mensajes, independientes del canal | **implementado** |
 | `whatsapp` | Webhook, firma, conexión del número, envío por la Cloud API ([ADR 0009](./adr/0009-whatsapp-integration.md)) | **implementado** |
+| `billing` | Prueba gratuita de 7 días, 3 planes y bloqueo de escritura al vencer ([ADR 0014](./adr/0014-billing-and-free-trial.md)); sin pasarela todavía | **implementado** |
 | `dashboard` | Métricas por consulta, sin dominio ni tabla propia ([ADR 0011](./adr/0011-dashboard-by-query.md)) | **implementado** |
 
 ## Contrato de la API
@@ -114,10 +115,17 @@ token de inyección de NestJS.
 | GET · PUT · DELETE | `/api/v1/whatsapp/channel` (estado, conectar, desconectar) | OWNER, ADMIN |
 | GET | `/api/v1/dashboard/summary` (ingresos, agenda, clientes, top, por profesional) | OWNER, ADMIN |
 | GET | `/api/v1/dashboard/me` (mis atenciones del período) | Autenticado |
+| GET | `/api/v1/billing/plans` (los 3 planes) | Autenticado |
+| GET | `/api/v1/billing/subscription` (plan, estado, días restantes) | Autenticado |
+| PUT | `/api/v1/billing/subscription/plan` (elegir plan; funciona con la prueba vencida) | OWNER |
 | GET · POST | `/api/v1/webhooks/whatsapp` (verificación y entregas de Meta) | Público, con verify token / firma |
 
 La autenticación es **deny by default**: el guard es global y un endpoint solo
 queda abierto si lleva `@Public()`.
+
+Con la prueba gratuita vencida, un segundo guard global deja el negocio en solo
+lectura: toda petición que no sea `GET` responde `402 SUBSCRIPTION_EXPIRED`,
+salvo las marcadas con `@AllowWhenExpired()` ([ADR 0014](./adr/0014-billing-and-free-trial.md)).
 
 ## Seguridad transversal
 

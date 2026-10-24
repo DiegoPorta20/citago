@@ -30,6 +30,7 @@ import { RegisterBusinessUseCase } from '../application/register-business/regist
 import type { IssuedSession } from '../application/session-issuer.js';
 import { SwitchTenantUseCase } from '../application/switch-tenant/switch-tenant.use-case.js';
 import { CurrentAuth } from '../../../shared/presentation/decorators/current-auth.decorator.js';
+import { AllowWhenExpired } from '../../../shared/presentation/decorators/allow-when-expired.decorator.js';
 import { Public } from '../../../shared/presentation/decorators/public.decorator.js';
 import { CurrentSessionResponseDto } from './dto/current-session.response.dto.js';
 import { LoginRequestDto } from './dto/login.request.dto.js';
@@ -168,6 +169,7 @@ export class AuthController {
   }
 
   @Post('switch-tenant')
+  @AllowWhenExpired()
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOperation({

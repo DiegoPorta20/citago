@@ -5,6 +5,7 @@ import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { validateEnvironment } from './config/environment.js';
 import { DatabaseModule } from './database/database.module.js';
 import { AppointmentsModule } from './modules/appointments/appointments.module.js';
+import { BillingModule } from './modules/billing/billing.module.js';
 import { CatalogModule } from './modules/catalog/catalog.module.js';
 import { ClientsModule } from './modules/clients/clients.module.js';
 import { ConversationsModule } from './modules/conversations/conversations.module.js';
@@ -33,6 +34,7 @@ import { ResponseEnvelopeInterceptor } from './shared/presentation/interceptors/
     HealthModule,
     TenantsModule,
     IdentityModule,
+    BillingModule,
     CatalogModule,
     ClientsModule,
     StaffModule,

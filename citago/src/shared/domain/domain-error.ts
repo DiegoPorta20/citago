@@ -5,6 +5,7 @@ export enum DomainErrorCategory {
   BusinessRule = 'BUSINESS_RULE',
   Forbidden = 'FORBIDDEN',
   Unauthorized = 'UNAUTHORIZED',
+  PaymentRequired = 'PAYMENT_REQUIRED',
   ExternalService = 'EXTERNAL_SERVICE',
 }
 

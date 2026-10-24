@@ -5,6 +5,8 @@ import { IdGenerator } from '../../../../shared/application/ports/id-generator.p
 import { TransactionRunner } from '../../../../shared/application/ports/transaction-runner.port.js';
 import { Email } from '../../../../shared/domain/email.js';
 import { UserRole } from '../../../../shared/domain/user-role.js';
+import { Subscription } from '../../../billing/domain/subscription.entity.js';
+import { SubscriptionRepository } from '../../../billing/domain/subscription.repository.js';
 import { BusinessType } from '../../../tenants/domain/business-type.js';
 import { Tenant } from '../../../tenants/domain/tenant.entity.js';
 import { TenantRepository } from '../../../tenants/domain/tenant.repository.js';
@@ -42,6 +44,7 @@ export class RegisterBusinessUseCase {
     private readonly tenants: TenantRepository,
     private readonly users: UserRepository,
     private readonly memberships: MembershipRepository,
+    private readonly subscriptions: SubscriptionRepository,
     private readonly passwordHasher: PasswordHasher,
     private readonly sessionIssuer: SessionIssuer,
     private readonly ids: IdGenerator,
@@ -97,7 +100,12 @@ export class RegisterBusinessUseCase {
       await this.tenants.save(tenant);
       await this.users.save(user);
       await this.memberships.save(membership);
-
+      await this.subscriptions.save(
+        Subscription.startTrial(
+          { id: this.ids.generate(), tenantId: tenant.id },
+          now,
+        ),
+      );
       const session = await this.sessionIssuer.issue({
         userId: user.id,
         tenantId: tenant.id,

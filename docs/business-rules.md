@@ -117,6 +117,21 @@ Matriz de permisos por rol: [permissions.md](./permissions.md).
 | CO-12 | El token de WhatsApp se guarda cifrado y nunca se devuelve por la API | ✔ |
 | CO-6 | Un número desconocido crea conversación; vincularlo a un cliente es una acción explícita | ✔ |
 
+## Suscripción y planes
+
+Decisiones y alcance: [ADR 0014](./adr/0014-billing-and-free-trial.md). Todavía no hay pasarela de pago.
+
+| # | Regla | Estado |
+|---|---|---|
+| BI-1 | Todo negocio nuevo empieza con una prueba gratuita de 7 días, sin tarjeta, creada en la misma transacción del registro | ✔ |
+| BI-2 | Terminada la prueba, el negocio queda en solo lectura: toda escritura responde `402 SUBSCRIPTION_EXPIRED` y los datos siguen visibles | ✔ casos de uso y guard con tests unitarios; e2e escrito, pendiente de ejecutar |
+| BI-3 | Con la prueba vencida el usuario aún puede iniciar sesión, cambiar de negocio y elegir plan | ✔ igual que BI-2 |
+| BI-4 | Hay tres planes en soles (Inicial S/ 39, Profesional S/ 79, Negocio S/ 149); los precios viajan como string decimal | ✔ precios y topes son una propuesta inicial |
+| BI-5 | Solo el OWNER elige el plan; elegirlo registra la preferencia y no cobra | ✔ |
+| BI-6 | El estado de la prueba se calcula con la fecha de fin, no se almacena ni lo cambia un job | ✔ |
+| BI-7 | Cada plan limita los profesionales activos (2 / 5 / 15) | ◻ el tope se muestra pero no se aplica hasta que exista el cobro |
+| BI-8 | Un pago confirmado activa la suscripción por un periodo | ◻ requiere pasarela |
+
 ## Tiempo
 
 | # | Regla | Estado |
