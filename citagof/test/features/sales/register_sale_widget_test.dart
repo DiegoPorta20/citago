@@ -109,6 +109,9 @@ class _FakeSaleRepository implements SaleRepository {
   Future<Sale> get(String id) => throw UnimplementedError();
 
   @override
+  Future<Sale?> findByAppointment(String appointmentId) async => null;
+
+  @override
   Future<Sale> pay(String id, PaymentMethod method) =>
       throw UnimplementedError();
 

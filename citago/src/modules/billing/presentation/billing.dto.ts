@@ -50,14 +50,6 @@ export class CheckoutSessionResponseDto {
   expiresInSeconds: number;
 }
 
-export class CheckoutConfigResponseDto {
-  @ApiProperty({ example: 'pk_test_xxx' })
-  publicKey: string;
-
-  @ApiProperty({ type: () => PlanResponseDto })
-  plan: PlanResponseDto;
-}
-
 export class PlanResponseDto {
   @ApiProperty({ enum: PlanCode })
   code: PlanCode;
@@ -86,6 +78,15 @@ export class PlanResponseDto {
       maxStaff: plan.maxStaff,
     };
   }
+}
+
+// Must stay below PlanResponseDto: decorator metadata reads it at load time.
+export class CheckoutConfigResponseDto {
+  @ApiProperty({ example: 'pk_test_xxx' })
+  publicKey: string;
+
+  @ApiProperty({ type: () => PlanResponseDto })
+  plan: PlanResponseDto;
 }
 
 export class SubscriptionResponseDto {

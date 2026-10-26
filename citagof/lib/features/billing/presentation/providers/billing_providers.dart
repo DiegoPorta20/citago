@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/network/providers.dart';
 import '../../data/repositories/billing_repository_impl.dart';
@@ -18,6 +19,21 @@ final getSubscriptionUseCaseProvider = Provider(
 );
 final choosePlanUseCaseProvider = Provider(
   (ref) => ChoosePlanUseCase(ref.watch(billingRepositoryProvider)),
+);
+final startCheckoutUseCaseProvider = Provider(
+  (ref) => StartCheckoutUseCase(ref.watch(billingRepositoryProvider)),
+);
+final cancelSubscriptionUseCaseProvider = Provider(
+  (ref) => CancelSubscriptionUseCase(ref.watch(billingRepositoryProvider)),
+);
+
+/// Opens a page in the system browser. A provider so tests can swap it: the
+/// real one needs a platform.
+typedef UrlOpener = Future<bool> Function(Uri url);
+
+final urlOpenerProvider = Provider<UrlOpener>(
+  (ref) =>
+      (url) => launchUrl(url, mode: LaunchMode.externalApplication),
 );
 
 final plansProvider = FutureProvider.autoDispose<List<Plan>>(

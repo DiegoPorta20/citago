@@ -47,6 +47,19 @@ class SaleRepositoryImpl implements SaleRepository {
   });
 
   @override
+  Future<Sale?> findByAppointment(String appointmentId) => _guard(() async {
+    try {
+      final response = await _dio.get<dynamic>(
+        '/sales/by-appointment/$appointmentId',
+      );
+      return saleFromJson(unwrapData<Map<String, dynamic>>(response));
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 404) return null;
+      rethrow;
+    }
+  });
+
+  @override
   Future<Sale> pay(String id, PaymentMethod method) => _guard(() async {
     final response = await _dio.post<dynamic>(
       '/sales/$id/pay',

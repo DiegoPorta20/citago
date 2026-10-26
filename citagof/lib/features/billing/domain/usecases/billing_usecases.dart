@@ -24,3 +24,20 @@ class ChoosePlanUseCase {
 
   Future<Subscription> call(PlanCode code) => _repository.choosePlan(code);
 }
+
+class StartCheckoutUseCase {
+  const StartCheckoutUseCase(this._repository);
+
+  final BillingRepository _repository;
+
+  Future<CheckoutSession> call(PlanCode code) =>
+      _repository.startCheckout(code);
+}
+
+class CancelSubscriptionUseCase {
+  const CancelSubscriptionUseCase(this._repository);
+
+  final BillingRepository _repository;
+
+  Future<Subscription> call() => _repository.cancelSubscription();
+}

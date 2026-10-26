@@ -28,6 +28,7 @@ import { CurrentAuth } from '../../../shared/presentation/decorators/current-aut
 import { Roles } from '../../../shared/presentation/decorators/roles.decorator.js';
 import { ApiErrorDto } from '../../../shared/presentation/dto/api-error.dto.js';
 import {
+  GetSaleByAppointmentUseCase,
   GetSaleUseCase,
   ListSalesUseCase,
   SaleViewAssembler,
@@ -52,6 +53,7 @@ export class SalesController {
     private readonly registerSale: RegisterSaleUseCase,
     private readonly transitionSale: TransitionSaleUseCase,
     private readonly getSale: GetSaleUseCase,
+    private readonly getSaleByAppointment: GetSaleByAppointmentUseCase,
     private readonly listSales: ListSalesUseCase,
     private readonly assembler: SaleViewAssembler,
   ) {}
@@ -103,6 +105,23 @@ export class SalesController {
       items: page.items.map((view) => SaleResponseDto.fromView(view)),
       meta: page.meta,
     };
+  }
+
+  @Get('by-appointment/:appointmentId')
+  @ApiOperation({
+    summary: 'The sale that charged an appointment',
+    description:
+      '404 SALE_NOT_FOUND while the appointment has not been billed.',
+  })
+  @ApiOkResponse({ type: SaleResponseDto })
+  @ApiNotFoundResponse({ description: 'SALE_NOT_FOUND', type: ApiErrorDto })
+  async byAppointment(
+    @CurrentAuth() auth: AuthContext,
+    @Param('appointmentId', ParseUUIDPipe) appointmentId: string,
+  ): Promise<SaleResponseDto> {
+    return SaleResponseDto.fromView(
+      await this.getSaleByAppointment.execute(auth, appointmentId),
+    );
   }
 
   @Get(':id')

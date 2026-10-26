@@ -38,6 +38,15 @@ class GetSaleUseCase {
   Future<Sale> call(String id) => _repository.get(id);
 }
 
+class FindAppointmentSaleUseCase {
+  const FindAppointmentSaleUseCase(this._repository);
+
+  final SaleRepository _repository;
+
+  Future<Sale?> call(String appointmentId) =>
+      _repository.findByAppointment(appointmentId);
+}
+
 class PaySaleUseCase {
   const PaySaleUseCase(this._repository);
 

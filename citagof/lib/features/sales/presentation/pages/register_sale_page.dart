@@ -8,6 +8,7 @@ import '../../../../core/widgets/error_view.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
 import '../../../agenda/domain/entities/appointment.dart';
 import '../../../agenda/presentation/providers/agenda_providers.dart';
+import '../../../dashboard/presentation/providers/dashboard_refresh.dart';
 import '../../domain/entities/money.dart';
 import '../../domain/entities/sale.dart';
 import '../providers/sale_providers.dart';
@@ -94,7 +95,10 @@ class _FormState extends ConsumerState<_Form> {
         ),
       );
       ref.invalidate(appointmentDetailProvider(widget.appointment.id));
+      ref.invalidate(appointmentSaleProvider(widget.appointment.id));
       ref.invalidate(agendaDayProvider);
+      ref.invalidate(salesListProvider);
+      refreshHome(ref);
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Venta registrada.')));

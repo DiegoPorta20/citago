@@ -10,6 +10,7 @@ import '../../../catalog/domain/entities/service.dart';
 import '../../../catalog/presentation/providers/service_providers.dart';
 import '../../../clients/domain/entities/client.dart';
 import '../../../clients/presentation/pages/client_picker_page.dart';
+import '../../../dashboard/presentation/providers/dashboard_refresh.dart';
 import '../../../staff/domain/entities/staff_member.dart';
 import '../../../staff/presentation/providers/staff_providers.dart';
 import '../../domain/entities/availability.dart';
@@ -92,6 +93,7 @@ class _NewAppointmentPageState extends ConsumerState<NewAppointmentPage> {
         ),
       );
       ref.invalidate(agendaDayProvider);
+      refreshHome(ref);
       if (!mounted) return;
       context.pushReplacement(AgendaRoutes.detail(appointment.id));
     } on Object catch (error) {

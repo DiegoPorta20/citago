@@ -34,6 +34,21 @@ class BillingRepositoryImpl implements BillingRepository {
     return subscriptionFromJson(unwrapData<Map<String, dynamic>>(response));
   });
 
+  @override
+  Future<CheckoutSession> startCheckout(PlanCode code) => _guard(() async {
+    final response = await _dio.post<dynamic>(
+      '/billing/checkout/session',
+      data: checkoutBody(code),
+    );
+    return checkoutSessionFromJson(unwrapData<Map<String, dynamic>>(response));
+  });
+
+  @override
+  Future<Subscription> cancelSubscription() => _guard(() async {
+    final response = await _dio.delete<dynamic>('/billing/subscription');
+    return subscriptionFromJson(unwrapData<Map<String, dynamic>>(response));
+  });
+
   Future<T> _guard<T>(Future<T> Function() call) async {
     try {
       return await call();

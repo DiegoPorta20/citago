@@ -64,6 +64,31 @@ el resto de la API funciona igual y la bandeja se puede probar con el simulador
 
 Detalles en [ADR 0009](../docs/adr/0009-whatsapp-integration.md).
 
+### Pagos (Culqi)
+
+Sin llaves de Culqi la app muestra los planes pero no ofrece pagar. Para probar
+el cobro con tarjeta **en modo de pruebas** (no mueve dinero):
+
+1. En [CulqiPanel](https://integ-panel.culqi.com) (entorno de integración)
+   copiar las llaves de **pruebas** en `.env`: `CULQI_PUBLIC_KEY=pk_test_…` y
+   `CULQI_SECRET_KEY=sk_test_…`.
+2. Crear en el panel (Suscripciones › Planes) tres planes **mensuales en PEN** con
+   los precios de `billing/domain/plan.ts` (39, 79 y 149) y pegar sus ids en
+   `CULQI_PLAN_STARTER_ID`, `CULQI_PLAN_PRO_ID` y `CULQI_PLAN_BUSINESS_ID`.
+3. `PUBLIC_BASE_URL` debe ser una dirección que abra **el navegador del
+   dispositivo** donde corre la app: `http://localhost:3000` sirve para Chrome o
+   Windows; en el emulador de Android usa `http://10.0.2.2:3000`; en un teléfono
+   real, la IP de tu PC en la red (`http://192.168.x.x:3000`) o un túnel https.
+4. Reiniciar el backend. En la app: Más › Plan y suscripción › elegir plan ›
+   **Pagar**. Se abre el navegador con el formulario de Culqi; con la tarjeta de
+   prueba `4111 1111 1111 1111`, cualquier fecha futura y CVV `123`, el plan
+   queda activo y la app lo detecta al volver.
+
+El webhook (`CULQI_WEBHOOK_SECRET`) solo hace falta para que Culqi avise de las
+renovaciones mensuales; el primer pago se confirma sin él.
+
+Detalles en [ADR 0014](../docs/adr/0014-billing-and-free-trial.md).
+
 ## Base de datos
 
 - MySQL 8, InnoDB, `utf8mb4`, timestamps en **UTC** (`timezone: 'Z'`).

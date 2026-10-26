@@ -14,6 +14,9 @@ abstract class SaleRepository {
 
   Future<Sale> get(String id);
 
+  /// The sale that charged [appointmentId], or `null` while it is unbilled.
+  Future<Sale?> findByAppointment(String appointmentId);
+
   Future<Sale> pay(String id, PaymentMethod method);
 
   Future<Sale> cancel(String id, String reason);

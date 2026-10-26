@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_status_colors.dart';
 import '../../../../core/theme/app_tokens.dart';
+import '../../domain/entities/subscription.dart';
 import '../billing_routes.dart';
 import '../providers/billing_providers.dart';
 
@@ -18,16 +19,42 @@ class SubscriptionBanner extends ConsumerWidget {
     final subscription = ref.watch(subscriptionProvider).value;
     if (subscription == null) return const SizedBox.shrink();
 
+    final (StatusTone, IconData, String)? notice = switch (subscription.state) {
+      SubscriptionState.expired => (
+        StatusTone.danger,
+        Icons.lock_outline_rounded,
+        'Tu prueba gratis terminó: solo puedes ver tus datos',
+      ),
+      SubscriptionState.trialing => (
+        StatusTone.info,
+        Icons.timer_outlined,
+        subscription.daysLeft == 1
+            ? 'Prueba gratis: te queda 1 día'
+            : 'Prueba gratis: te quedan ${subscription.daysLeft} días',
+      ),
+      SubscriptionState.pastDue => (
+        StatusTone.warning,
+        Icons.credit_card_off_outlined,
+        'No pudimos cobrar tu renovación',
+      ),
+      // Paid and renewing: nothing to say. Cancelled: say when it ends.
+      SubscriptionState.active =>
+        subscription.renews
+            ? null
+            : (
+                StatusTone.info,
+                Icons.event_busy_outlined,
+                subscription.daysLeft == 1
+                    ? 'Tu plan termina mañana'
+                    : 'Tu plan termina en ${subscription.daysLeft} días',
+              ),
+    };
+    if (notice == null) return const SizedBox.shrink();
+
+    final (tone, icon, message) = notice;
     final colors = AppStatusColors.of(context);
-    final tone = subscription.isExpired ? StatusTone.danger : StatusTone.info;
     final foreground = colors.foreground(tone);
     final theme = Theme.of(context);
-
-    final message = subscription.isExpired
-        ? 'Tu prueba gratis terminó: solo puedes ver tus datos'
-        : subscription.daysLeft == 1
-        ? 'Prueba gratis: te queda 1 día'
-        : 'Prueba gratis: te quedan ${subscription.daysLeft} días';
 
     return Material(
       color: colors.background(tone),
@@ -40,13 +67,7 @@ class SubscriptionBanner extends ConsumerWidget {
           ),
           child: Row(
             children: [
-              Icon(
-                subscription.isExpired
-                    ? Icons.lock_outline_rounded
-                    : Icons.timer_outlined,
-                size: 18,
-                color: foreground,
-              ),
+              Icon(icon, size: 18, color: foreground),
               const SizedBox(width: AppSpacing.s),
               Expanded(
                 child: Text(

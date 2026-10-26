@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/errors/app_failure.dart';
-import '../../../dashboard/presentation/providers/dashboard_providers.dart';
+import '../../../dashboard/presentation/providers/dashboard_refresh.dart';
 import '../../domain/entities/sale.dart';
 import '../providers/sale_providers.dart';
 import '../widgets/payment_method_dialog.dart';
@@ -16,8 +16,8 @@ class SaleActions {
   void _invalidate(String saleId) {
     ref.invalidate(salesListProvider);
     ref.invalidate(saleDetailProvider(saleId));
-    ref.invalidate(businessDashboardProvider);
-    ref.invalidate(ownDashboardProvider);
+    ref.invalidate(appointmentSaleProvider);
+    refreshHome(ref);
   }
 
   Future<bool> pay(BuildContext context, Sale sale) async {

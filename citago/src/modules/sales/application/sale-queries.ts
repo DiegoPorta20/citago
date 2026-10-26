@@ -98,6 +98,36 @@ export class GetSaleUseCase {
   }
 }
 
+/**
+ * The sale that charged an appointment. An appointment is billed only once, so
+ * the app asks this to know whether to offer "Cobrar" or show the sale instead.
+ */
+@Injectable()
+export class GetSaleByAppointmentUseCase {
+  constructor(
+    private readonly sales: SaleRepository,
+    private readonly access: SalesAccess,
+    private readonly assembler: SaleViewAssembler,
+  ) {}
+
+  async execute(actor: AuthContext, appointmentId: string): Promise<SaleView> {
+    const sale = await this.sales.findByAppointmentId(
+      actor.tenantId,
+      appointmentId,
+    );
+
+    if (!sale) {
+      throw new SaleNotFoundError();
+    }
+
+    await this.access.assertCanSee(actor, sale);
+
+    const [view] = await this.assembler.assemble(actor.tenantId, [sale]);
+
+    return view;
+  }
+}
+
 export interface ListSalesInput extends PageRequest {
   readonly from: Date;
   readonly to: Date;

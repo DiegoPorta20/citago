@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/billing/presentation/widgets/subscription_banner.dart';
 import '../../features/conversations/presentation/providers/pending_conversations_provider.dart';
+import '../../features/dashboard/presentation/providers/dashboard_refresh.dart';
 
 class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.shell});
@@ -27,10 +28,15 @@ class AppShell extends ConsumerWidget {
             ),
             child: NavigationBar(
               selectedIndex: shell.currentIndex,
-              onDestinationSelected: (index) => shell.goBranch(
-                index,
-                initialLocation: index == shell.currentIndex,
-              ),
+              onDestinationSelected: (index) {
+                // Every tab stays alive in the background, so Inicio would
+                // keep showing what it loaded the first time.
+                if (index == 0 && shell.currentIndex != 0) refreshHome(ref);
+                shell.goBranch(
+                  index,
+                  initialLocation: index == shell.currentIndex,
+                );
+              },
               destinations: [
                 const NavigationDestination(
                   icon: Icon(Icons.space_dashboard_outlined),

@@ -6,6 +6,7 @@ import '../../../../core/errors/app_failure.dart';
 import '../../../../core/time/business_clock.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
+import '../../../dashboard/presentation/providers/dashboard_refresh.dart';
 import '../../../staff/domain/entities/staff_member.dart';
 import '../../../staff/presentation/providers/staff_providers.dart';
 import '../../domain/entities/appointment.dart';
@@ -99,6 +100,7 @@ class _FormState extends ConsumerState<_Form> {
       );
       ref.invalidate(appointmentDetailProvider(widget.appointment.id));
       ref.invalidate(agendaDayProvider);
+      refreshHome(ref);
       if (!mounted) return;
       context.pushReplacement(AgendaRoutes.detail(widget.appointment.id));
     } on Object catch (error) {

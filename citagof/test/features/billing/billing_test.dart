@@ -48,12 +48,60 @@ Subscription expired({Plan plan = _pro}) => Subscription(
   daysLeft: 0,
 );
 
+Subscription withPayments(Subscription s) => Subscription(
+  plan: s.plan,
+  state: s.state,
+  trialEndsAt: s.trialEndsAt,
+  daysLeft: s.daysLeft,
+  currentPeriodEnd: s.currentPeriodEnd,
+  renews: s.renews,
+  paymentsEnabled: true,
+);
+
+Subscription paying({
+  Plan plan = _pro,
+  SubscriptionState state = SubscriptionState.active,
+}) => Subscription(
+  plan: plan,
+  state: state,
+  trialEndsAt: DateTime.utc(2026, 10, 20, 17),
+  daysLeft: 20,
+  currentPeriodEnd: DateTime.utc(2026, 11, 24, 17),
+  renews: true,
+  paymentsEnabled: true,
+);
+
 class FakeBillingRepository implements BillingRepository {
   FakeBillingRepository(this.current);
 
   Subscription current;
   AppFailure? chooseFailure;
   final List<PlanCode> chosen = [];
+  final List<PlanCode> checkouts = [];
+  int cancels = 0;
+
+  @override
+  Future<CheckoutSession> startCheckout(PlanCode code) async {
+    checkouts.add(code);
+    return CheckoutSession(
+      url: Uri.parse('https://citago.test/api/v1/pages/checkout#t=abc'),
+      expiresInSeconds: 900,
+    );
+  }
+
+  @override
+  Future<Subscription> cancelSubscription() async {
+    cancels++;
+    return current = Subscription(
+      plan: current.plan,
+      state: current.state,
+      trialEndsAt: current.trialEndsAt,
+      daysLeft: current.daysLeft,
+      currentPeriodEnd: current.currentPeriodEnd,
+      renews: false,
+      paymentsEnabled: current.paymentsEnabled,
+    );
+  }
 
   @override
   Future<List<Plan>> plans() async => const [_starter, _pro, _business];
@@ -96,6 +144,8 @@ Future<void> _pump(
   WidgetTester tester,
   FakeBillingRepository repo, {
   UserRole role = UserRole.owner,
+  List<Uri>? opened,
+  bool browserWorks = true,
 }) async {
   // Tall enough to lay out the three plans and the footer without scrolling.
   tester.view.physicalSize = const Size(800, 2000);
@@ -110,6 +160,10 @@ Future<void> _pump(
     ProviderScope(
       overrides: [
         billingRepositoryProvider.overrideWithValue(repo),
+        urlOpenerProvider.overrideWithValue((url) async {
+          opened?.add(url);
+          return browserWorks;
+        }),
         businessClockProvider.overrideWithValue(BusinessClock('America/Lima')),
         sessionControllerProvider.overrideWith(
           () => FakeSessionController(role),
@@ -167,6 +221,59 @@ void main() {
     test('an unknown plan or state fails loudly instead of guessing', () {
       expect(() => PlanCode.parse('FREE'), throwsFormatException);
       expect(() => SubscriptionState.parse('PAUSED'), throwsFormatException);
+    });
+
+    test('an active, renewing subscription is parsed with its period', () {
+      final subscription = subscriptionFromJson({
+        'plan': {
+          'code': 'PRO',
+          'name': 'Profesional',
+          'monthlyPrice': '79.00',
+          'currency': 'PEN',
+          'maxStaff': 5,
+        },
+        'state': 'ACTIVE',
+        'trialEndsAt': '2026-10-20T17:00:00.000Z',
+        'currentPeriodEnd': '2026-11-24T17:00:00.000Z',
+        'renews': true,
+        'paymentsEnabled': true,
+        'daysLeft': 30,
+      });
+
+      expect(subscription.state, SubscriptionState.active);
+      expect(subscription.isPaid, isTrue);
+      expect(subscription.isExpired, isFalse);
+      expect(subscription.renews, isTrue);
+      expect(subscription.paymentsEnabled, isTrue);
+      expect(subscription.currentPeriodEnd, DateTime.utc(2026, 11, 24, 17));
+    });
+
+    test('PAST_DUE is a paid state that needs attention', () {
+      expect(SubscriptionState.parse('PAST_DUE'), SubscriptionState.pastDue);
+    });
+
+    test('checkoutSessionFromJson reads the link', () {
+      final session = checkoutSessionFromJson({
+        'url': 'https://citago.test/api/v1/pages/checkout#t=abc',
+        'expiresInSeconds': 900,
+      });
+
+      expect(session.url.fragment, 't=abc');
+      expect(session.expiresInSeconds, 900);
+    });
+
+    test('payment errors have friendly messages', () {
+      expect(
+        failureFromApi(
+          statusCode: 503,
+          code: 'PAYMENTS_NOT_CONFIGURED',
+        ).message,
+        contains('pagos en línea'),
+      );
+      expect(
+        failureFromApi(statusCode: 402, code: 'PAYMENT_DECLINED').message,
+        contains('no aceptó la tarjeta'),
+      );
     });
 
     test('choosePlanBody sends the API code', () {
@@ -305,6 +412,160 @@ void main() {
         await tester.pumpAndSettle();
         expect(repo.chosen, isEmpty);
       }
+    });
+  });
+
+  group('paying with Culqi', () {
+    testWidgets('the pay button opens the card page in the browser', (
+      tester,
+    ) async {
+      final repo = FakeBillingRepository(withPayments(trialing()));
+      final opened = <Uri>[];
+      await _pump(tester, repo, opened: opened);
+
+      await tester.tap(find.text('Negocio'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Pagar Negocio · S/ 149.00'));
+      await tester.pumpAndSettle();
+
+      expect(repo.checkouts, [PlanCode.business]);
+      expect(opened, hasLength(1));
+      expect(opened.single.path, '/api/v1/pages/checkout');
+      expect(opened.single.fragment, 't=abc');
+      expect(find.text('Completa el pago en el navegador'), findsOneWidget);
+    });
+
+    testWidgets('the owner can still just save the choice', (tester) async {
+      final repo = FakeBillingRepository(withPayments(trialing()));
+      await _pump(tester, repo);
+
+      await tester.tap(find.text('Inicial'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Solo guardar Inicial por ahora'));
+      await tester.pumpAndSettle();
+
+      expect(repo.chosen, [PlanCode.starter]);
+      expect(repo.checkouts, isEmpty);
+    });
+
+    testWidgets('a browser that will not open is reported', (tester) async {
+      final repo = FakeBillingRepository(withPayments(trialing()));
+      await _pump(tester, repo, browserWorks: false);
+
+      await tester.tap(find.text('Negocio'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Pagar Negocio · S/ 149.00'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('No pudimos abrir el navegador'),
+        findsWidgets,
+      );
+      expect(find.text('Completa el pago en el navegador'), findsNothing);
+    });
+
+    testWidgets('after paying, checking again shows the active plan', (
+      tester,
+    ) async {
+      final repo = FakeBillingRepository(withPayments(trialing()));
+      await _pump(tester, repo);
+
+      await tester.tap(find.text('Negocio'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Pagar Negocio · S/ 149.00'));
+      await tester.pumpAndSettle();
+
+      // The payment goes through in the browser.
+      repo.current = paying(plan: _business);
+      await tester.tap(find.text('Ya pagué, actualizar'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Plan Negocio activo'), findsOneWidget);
+      expect(find.textContaining('Se renueva el'), findsOneWidget);
+      expect(find.text('¡Listo! Tu plan Negocio está activo.'), findsOneWidget);
+      expect(find.text('Completa el pago en el navegador'), findsNothing);
+    });
+
+    testWidgets('a paying business cannot buy the plan it already has', (
+      tester,
+    ) async {
+      await _pump(tester, FakeBillingRepository(paying()));
+
+      expect(find.text('Plan Profesional activo'), findsOneWidget);
+      expect(
+        tester
+            .widget<FilledButton>(
+              find.widgetWithText(FilledButton, 'Elige otro plan para cambiar'),
+            )
+            .onPressed,
+        isNull,
+      );
+
+      await tester.tap(find.text('Profesional').first);
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<FilledButton>(
+              find.widgetWithText(FilledButton, 'Este es tu plan actual'),
+            )
+            .onPressed,
+        isNull,
+      );
+
+      await tester.tap(find.text('Inicial'));
+      await tester.pumpAndSettle();
+      expect(find.text('Cambiar a Inicial · S/ 39.00'), findsOneWidget);
+      expect(find.textContaining('Solo guardar'), findsNothing);
+    });
+
+    testWidgets('a failed renewal can be paid again on the same plan', (
+      tester,
+    ) async {
+      final repo = FakeBillingRepository(
+        paying(state: SubscriptionState.pastDue),
+      );
+      await _pump(tester, repo);
+
+      expect(find.text('No pudimos cobrar tu renovación'), findsOneWidget);
+
+      await tester.tap(find.text('Pagar la renovación'));
+      await tester.pumpAndSettle();
+
+      expect(repo.checkouts, [PlanCode.pro]);
+    });
+
+    testWidgets('cancelling asks first and then stops the renewal', (
+      tester,
+    ) async {
+      final repo = FakeBillingRepository(paying());
+      await _pump(tester, repo);
+
+      await tester.tap(find.text('Cancelar suscripción'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Volver'));
+      await tester.pumpAndSettle();
+      expect(repo.cancels, 0);
+
+      await tester.tap(find.text('Cancelar suscripción'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.widgetWithText(FilledButton, 'Cancelar suscripción'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(repo.cancels, 1);
+      expect(find.textContaining('No se renovará'), findsOneWidget);
+    });
+
+    testWidgets('only the owner sees the cancel button', (tester) async {
+      await _pump(
+        tester,
+        FakeBillingRepository(paying()),
+        role: UserRole.admin,
+      );
+
+      expect(find.text('Cancelar suscripción'), findsNothing);
+      expect(find.byType(FilledButton), findsNothing);
     });
   });
 }

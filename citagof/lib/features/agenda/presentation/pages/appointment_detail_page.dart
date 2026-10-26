@@ -12,6 +12,10 @@ import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/initials_avatar.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../authentication/presentation/providers/auth_providers.dart';
+import '../../../dashboard/presentation/providers/dashboard_refresh.dart';
+import '../../../sales/domain/entities/sale.dart';
+import '../../../sales/presentation/providers/sale_providers.dart';
+import '../../../sales/presentation/sales_routes.dart';
 import '../../domain/entities/appointment.dart';
 import '../../domain/entities/appointment_status.dart';
 import '../agenda_routes.dart';
@@ -40,6 +44,60 @@ class AppointmentDetailPage extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Offers "Cobrar" only while the appointment has no sale; afterwards it leads
+/// to that sale (to charge it if it was left pending, or just to see it).
+class _BillingAction extends ConsumerWidget {
+  const _BillingAction({required this.appointmentId});
+
+  final String appointmentId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sale = ref.watch(appointmentSaleProvider(appointmentId));
+
+    return sale.when(
+      // Not knowing yet is not "unbilled": showing "Cobrar" for a moment would
+      // invite a second charge.
+      loading: () => const SizedBox(
+        height: 48,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      // The server refuses a second sale anyway, so offering it is harmless.
+      error: (_, _) => _chargeButton(context),
+      data: (data) {
+        if (data == null) return _chargeButton(context);
+
+        final pending = data.status == SaleStatus.pending;
+        return FilledButton.icon(
+          style: pending
+              ? null
+              : FilledButton.styleFrom(
+                  backgroundColor: Theme.of(context)
+                      .colorScheme
+                      .surfaceContainerHigh,
+                  foregroundColor: Theme.of(context).colorScheme.onSurface,
+                ),
+          onPressed: () => context.push(SalesRoutes.detail(data.id)),
+          icon: Icon(
+            pending ? Icons.point_of_sale_rounded : Icons.receipt_long_rounded,
+          ),
+          label: Text(
+            pending
+                ? 'Cobrar venta pendiente'
+                : 'Ver venta (${data.status.label})',
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _chargeButton(BuildContext context) => FilledButton.icon(
+    onPressed: () => context.push(AgendaRoutes.registerSale(appointmentId)),
+    icon: const Icon(Icons.point_of_sale_rounded),
+    label: const Text('Cobrar'),
+  );
 }
 
 /// The next step of the normal flow, shown as the single prominent action.
@@ -103,13 +161,7 @@ class _Body extends ConsumerWidget {
           const SizedBox(height: AppSpacing.xl),
           const SectionHeader(title: 'Acciones'),
           const SizedBox(height: AppSpacing.m),
-          if (canBill)
-            FilledButton.icon(
-              onPressed: () =>
-                  context.push(AgendaRoutes.registerSale(appointment.id)),
-              icon: const Icon(Icons.point_of_sale_rounded),
-              label: const Text('Cobrar'),
-            ),
+          if (canBill) _BillingAction(appointmentId: appointment.id),
           if (primary != null)
             _ActionButton(
               appointment: appointment,
@@ -430,6 +482,10 @@ class _ActionButtonState extends ConsumerState<_ActionButton> {
       );
       ref.invalidate(appointmentDetailProvider(widget.appointment.id));
       ref.invalidate(agendaDayProvider);
+      refreshHome(ref);
+      // The refreshed appointment reuses this very button (same slot, same
+      // type), so without this the spinner would stay on forever.
+      if (mounted) setState(() => _running = false);
     } on Object catch (error) {
       if (!mounted) return;
       setState(() => _running = false);

@@ -104,6 +104,10 @@ class _FakeSales implements SaleRepository {
       detail ?? seed.firstWhere((s) => s.id == id);
 
   @override
+  Future<Sale?> findByAppointment(String appointmentId) async =>
+      seed.where((s) => s.appointmentId == appointmentId).firstOrNull;
+
+  @override
   Future<Sale> pay(String id, PaymentMethod method) async {
     paid.add((id, method));
     return _sale(id: id, status: SaleStatus.paid);

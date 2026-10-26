@@ -8,6 +8,7 @@ import { TenantsModule } from '../tenants/tenants.module.js';
 import { SalesReportQuery } from './application/ports/sales-report.query.js';
 import { RegisterSaleUseCase } from './application/register-sale.use-case.js';
 import {
+  GetSaleByAppointmentUseCase,
   GetSaleUseCase,
   ListSalesUseCase,
   SaleViewAssembler,
@@ -36,6 +37,7 @@ import { SalesController } from './presentation/sales.controller.js';
     RegisterSaleUseCase,
     TransitionSaleUseCase,
     GetSaleUseCase,
+    GetSaleByAppointmentUseCase,
     ListSalesUseCase,
   ],
   exports: [SaleRepository, SalesReportQuery],

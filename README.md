@@ -34,8 +34,9 @@ flutter run --dart-define=API_BASE_URL=http://localhost:3000/api/v1
 
 > Incluye inicio de sesión, registro, dashboard, agenda, cobro, conversaciones,
 > clientes y la administración de servicios, profesionales, equipo, negocio,
-> WhatsApp, ventas y el plan de suscripción (prueba gratis de 7 días y 3 planes;
-> todavía sin pasarela de pago, [ADR 0014](./docs/adr/0014-billing-and-free-trial.md)).
+> WhatsApp, ventas y el plan de suscripción (prueba gratis de 7 días, 3 planes y
+> pago con tarjeta por Culqi; ver [`citago/README.md`](./citago/README.md#pagos-culqi)
+> y [ADR 0014](./docs/adr/0014-billing-and-free-trial.md)).
 > Falta la recuperación de contraseña (necesita proveedor de correo).
 > Ver [`citagof/README.md`](./citagof/README.md).
 

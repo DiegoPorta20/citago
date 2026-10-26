@@ -109,6 +109,16 @@ const Map<String, String> _messagesByCode = {
   'UNKNOWN_PLAN': 'Ese plan no existe.',
   'STAFF_LIMIT_REACHED': 'Tu plan ya llegó al máximo de profesionales activos. Elige un plan más grande o desactiva a alguien.',
   'SUBSCRIPTION_NOT_FOUND': 'Este negocio no tiene una suscripción.',
+  'PAYMENTS_NOT_CONFIGURED':
+      'Los pagos en línea todavía no están activos en este servidor.',
+  'PAYMENT_DECLINED':
+      'El banco no aceptó la tarjeta. Prueba con otra o consulta con tu banco.',
+  'PAYMENT_UNAVAILABLE':
+      'No pudimos contactar con el servicio de pagos. Inténtalo en un momento.',
+  'ALREADY_SUBSCRIBED': 'Ese plan ya está activo. No se te cobró de nuevo.',
+  'PLAN_CHANGE_REQUIRES_PAYMENT':
+      'Con una suscripción activa, cambias de plan pagando el nuevo.',
+  'NOT_PAYING': 'No hay ningún cobro mensual que cancelar.',
 };
 
 AppFailure failureFromApi({

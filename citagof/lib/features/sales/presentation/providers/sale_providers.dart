@@ -22,6 +22,9 @@ final listSalesUseCaseProvider = Provider(
 final getSaleUseCaseProvider = Provider(
   (ref) => GetSaleUseCase(ref.watch(saleRepositoryProvider)),
 );
+final findAppointmentSaleUseCaseProvider = Provider(
+  (ref) => FindAppointmentSaleUseCase(ref.watch(saleRepositoryProvider)),
+);
 final paySaleUseCaseProvider = Provider(
   (ref) => PaySaleUseCase(ref.watch(saleRepositoryProvider)),
 );
@@ -242,3 +245,10 @@ final salesListProvider =
 final saleDetailProvider = FutureProvider.autoDispose.family<Sale, String>(
   (ref, id) => ref.watch(getSaleUseCaseProvider)(id),
 );
+
+/// The sale that charged an appointment; `null` while it has none.
+final appointmentSaleProvider = FutureProvider.autoDispose
+    .family<Sale?, String>(
+      (ref, appointmentId) =>
+          ref.watch(findAppointmentSaleUseCaseProvider)(appointmentId),
+    );
