@@ -187,6 +187,17 @@ void main() {
 
       expect(failure.message, contains('prueba gratis terminó'));
     });
+
+    test('hitting the professionals limit tells the owner what to do', () {
+      final failure = failureFromApi(
+        statusCode: 422,
+        code: 'STAFF_LIMIT_REACHED',
+        details: {'planCode': 'STARTER', 'limit': 2},
+      );
+
+      expect(failure.message, contains('máximo de profesionales'));
+      expect(failure.message, contains('plan más grande'));
+    });
   });
 
   group('plans page', () {

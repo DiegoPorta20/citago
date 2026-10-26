@@ -1,3 +1,5 @@
+import { createHmac } from 'node:crypto';
+
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -24,6 +26,9 @@ interface GraphErrorBody {
 @Injectable()
 export class GraphWhatsAppCloudApi extends WhatsAppCloudApi {
   private readonly baseUrl: string;
+  private readonly appId: string;
+  private readonly appSecret: string;
+  private readonly pinKey: string;
 
   constructor(config: ConfigService<EnvironmentVariables, true>) {
     super();
@@ -32,6 +37,9 @@ export class GraphWhatsAppCloudApi extends WhatsAppCloudApi {
       .replace(/\/+$/, '');
 
     this.baseUrl = `${root}/${config.get('WHATSAPP_GRAPH_API_VERSION', { infer: true })}`;
+    this.appId = config.get('WHATSAPP_APP_ID', { infer: true });
+    this.appSecret = config.get('WHATSAPP_APP_SECRET', { infer: true });
+    this.pinKey = config.get('ENCRYPTION_KEY', { infer: true });
   }
 
   async getPhoneNumber(
@@ -57,6 +65,45 @@ export class GraphWhatsAppCloudApi extends WhatsAppCloudApi {
       verifiedName:
         typeof info.verified_name === 'string' ? info.verified_name : null,
     };
+  }
+
+  async exchangeCode(code: string): Promise<string> {
+    const query = new URLSearchParams({
+      client_id: this.appId,
+      client_secret: this.appSecret,
+      code,
+    });
+    const body = await this.request(
+      `${this.baseUrl}/oauth/access_token?${query.toString()}`,
+      null,
+      { method: 'GET' },
+    );
+    const token = (body as { access_token?: unknown }).access_token;
+
+    if (typeof token !== 'string' || token.length === 0) {
+      throw new WhatsAppApiError('REJECTED');
+    }
+
+    return token;
+  }
+
+  async subscribeApp(wabaId: string, accessToken: string): Promise<void> {
+    await this.request(`${this.idPath(wabaId)}/subscribed_apps`, accessToken, {
+      method: 'POST',
+    });
+  }
+
+  async registerPhone(
+    phoneNumberId: string,
+    accessToken: string,
+  ): Promise<void> {
+    await this.request(`${this.idPath(phoneNumberId)}/register`, accessToken, {
+      method: 'POST',
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        pin: this.pinFor(phoneNumberId),
+      }),
+    });
   }
 
   async sendText(input: {
@@ -88,6 +135,19 @@ export class GraphWhatsAppCloudApi extends WhatsAppCloudApi {
     return id;
   }
 
+  /**
+   * Meta wants a 6-digit two-step PIN when a number is registered. It is
+   * derived from the number with a key only we hold, so registering again
+   * (reconnecting) always presents the same PIN and nothing has to be stored.
+   */
+  private pinFor(phoneNumberId: string): string {
+    const digest = createHmac('sha256', this.pinKey)
+      .update(`whatsapp-registration-pin:${phoneNumberId}`)
+      .digest();
+
+    return String(digest.readUInt32BE(0) % 1_000_000).padStart(6, '0');
+  }
+
   private idPath(id: string): string {
     if (!META_ID.test(id)) {
       throw new WhatsAppApiError('REJECTED');
@@ -98,7 +158,7 @@ export class GraphWhatsAppCloudApi extends WhatsAppCloudApi {
 
   private async request(
     url: string,
-    accessToken: string,
+    accessToken: string | null,
     init: { method: 'GET' | 'POST'; body?: string },
   ): Promise<unknown> {
     let response: Response;
@@ -107,7 +167,7 @@ export class GraphWhatsAppCloudApi extends WhatsAppCloudApi {
       response = await fetch(url, {
         ...init,
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
           ...(init.body ? { 'Content-Type': 'application/json' } : {}),
         },
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),

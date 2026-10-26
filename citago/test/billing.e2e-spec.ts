@@ -222,4 +222,44 @@ describe('Billing (e2e)', () => {
   it('does not block a business in its trial', async () => {
     await createService().expect(201);
   });
+
+  describe('professionals per plan (BI-7)', () => {
+    const hire = (name: string, token: RegisteredBusiness = owner) =>
+      request(server())
+        .post(`${API}/staff`)
+        .set(...authHeader(token))
+        .send({ displayName: name });
+
+    it('stops at the 5 of the default Pro plan with STAFF_LIMIT_REACHED', async () => {
+      for (let i = 1; i <= 5; i += 1) {
+        await hire(`Barbero ${i}`).expect(201);
+      }
+
+      const response = await hire('Sexto').expect(422);
+
+      expect(response.body.code).toBe('STAFF_LIMIT_REACHED');
+      expect(response.body.details).toEqual({ planCode: 'PRO', limit: 5 });
+    });
+
+    it('lets the owner make room by choosing a bigger plan', async () => {
+      await choosePlan('STARTER').expect(200);
+      await hire('Uno').expect(201);
+      await hire('Dos').expect(201);
+      await hire('Tres').expect(422);
+
+      await choosePlan('BUSINESS').expect(200);
+      await hire('Tres').expect(201);
+    });
+
+    it('counts each business on its own', async () => {
+      const { tenantA, tenantB } = await createTwoTenants(app);
+
+      await choosePlan('STARTER', tenantA).expect(200);
+      await hire('Uno', tenantA).expect(201);
+      await hire('Dos', tenantA).expect(201);
+      await hire('Tres', tenantA).expect(422);
+
+      await hire('Uno', tenantB).expect(201);
+    });
+  });
 });

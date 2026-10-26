@@ -12,6 +12,7 @@ import { PlanCode } from '../../../../domain/plan.js';
 
 @Entity('subscriptions')
 @Unique('uq_subscriptions_tenant', ['tenantId'])
+@Unique('uq_subscriptions_gateway_subscription', ['gatewaySubscriptionId'])
 export class SubscriptionOrmEntity {
   @PrimaryColumn({ name: 'id', type: 'char', length: 36 })
   id: string;
@@ -24,6 +25,46 @@ export class SubscriptionOrmEntity {
 
   @Column({ name: 'trial_ends_at', type: 'datetime', precision: 3 })
   trialEndsAt: Date;
+
+  @Column({
+    name: 'gateway_subscription_id',
+    type: 'varchar',
+    length: 64,
+    nullable: true,
+  })
+  gatewaySubscriptionId: string | null;
+
+  @Column({
+    name: 'gateway_customer_id',
+    type: 'varchar',
+    length: 64,
+    nullable: true,
+  })
+  gatewayCustomerId: string | null;
+
+  @Column({
+    name: 'current_period_end',
+    type: 'datetime',
+    precision: 3,
+    nullable: true,
+  })
+  currentPeriodEnd: Date | null;
+
+  @Column({
+    name: 'canceled_at',
+    type: 'datetime',
+    precision: 3,
+    nullable: true,
+  })
+  canceledAt: Date | null;
+
+  @Column({
+    name: 'last_synced_at',
+    type: 'datetime',
+    precision: 3,
+    nullable: true,
+  })
+  lastSyncedAt: Date | null;
 
   @Column({ name: 'created_at', type: 'datetime', precision: 3 })
   createdAt: Date;

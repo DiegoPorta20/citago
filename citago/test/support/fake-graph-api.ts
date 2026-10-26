@@ -7,10 +7,14 @@ import {
 import type { AddressInfo } from 'node:net';
 
 export const VALID_TOKEN = 'EAAG-valid-test-token-0123456789';
+export const VALID_SIGNUP_CODE = 'valid-signup-code';
+export const FAKE_APP_ID = 'test-app-id';
+export const FAKE_APP_SECRET = 'test-app-secret';
 
 export interface RecordedRequest {
   readonly method: string;
   readonly path: string;
+  readonly query: Record<string, string>;
   readonly authorization: string | undefined;
   readonly body: unknown;
 }
@@ -84,6 +88,7 @@ export class FakeGraphApi {
     this.requests.push({
       method: request.method ?? 'GET',
       path: url.pathname,
+      query: Object.fromEntries(url.searchParams),
       authorization,
       body: raw ? (JSON.parse(raw) as unknown) : null,
     });
@@ -95,6 +100,30 @@ export class FakeGraphApi {
       reply(response, status, {
         error: { message: 'Forced failure', code: code ?? 1 },
       });
+      return;
+    }
+
+    if (url.pathname.endsWith('/oauth/access_token')) {
+      const {
+        client_id: id,
+        client_secret: secret,
+        code,
+      } = Object.fromEntries(url.searchParams);
+
+      if (
+        id === FAKE_APP_ID &&
+        secret === FAKE_APP_SECRET &&
+        code === VALID_SIGNUP_CODE
+      ) {
+        reply(response, 200, {
+          access_token: VALID_TOKEN,
+          token_type: 'bearer',
+        });
+      } else {
+        reply(response, 400, {
+          error: { message: 'This authorization code has expired.', code: 100 },
+        });
+      }
       return;
     }
 
@@ -122,6 +151,14 @@ export class FakeGraphApi {
         messaging_product: 'whatsapp',
         messages: [{ id: `wamid.fake-${Date.now()}-${this.sent}` }],
       });
+      return;
+    }
+
+    if (
+      request.method === 'POST' &&
+      (action === 'subscribed_apps' || action === 'register')
+    ) {
+      reply(response, 200, { success: true });
       return;
     }
 

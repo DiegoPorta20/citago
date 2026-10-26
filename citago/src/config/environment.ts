@@ -22,6 +22,12 @@ export enum NodeEnvironment {
   Production = 'production',
 }
 
+export enum EmailProvider {
+  /** Writes the message to the log. Development and tests. */
+  Log = 'log',
+  Ses = 'ses',
+}
+
 const asBoolean = () =>
   Transform(({ value }) => value === true || value === 'true' || value === '1');
 
@@ -122,6 +128,64 @@ export class EnvironmentVariables {
 
   @Matches(/^v\d+\.\d+$/)
   WHATSAPP_GRAPH_API_VERSION: string = 'v23.0';
+
+  /** Public https origin of this API: the pages Meta and Culqi open are served from it. */
+  @IsUrl({ require_tld: false, protocols: ['http', 'https'] })
+  PUBLIC_BASE_URL: string = 'http://localhost:3000';
+
+  /** Meta app id and Embedded Signup configuration id (Facebook Login for Business). */
+  @IsOptional()
+  @IsString()
+  WHATSAPP_APP_ID: string = '';
+
+  @IsOptional()
+  @IsString()
+  WHATSAPP_EMBEDDED_SIGNUP_CONFIG_ID: string = '';
+
+  @IsEnum(EmailProvider)
+  EMAIL_PROVIDER: EmailProvider = EmailProvider.Log;
+
+  /** Sender, e.g. `CitaGo <avisos@citago.pe>`. Must be a verified SES identity. */
+  @IsOptional()
+  @IsString()
+  EMAIL_FROM: string = '';
+
+  @IsString()
+  SES_REGION: string = 'us-east-1';
+
+  @IsOptional()
+  @IsString()
+  CULQI_PUBLIC_KEY: string = '';
+
+  @IsOptional()
+  @IsString()
+  CULQI_SECRET_KEY: string = '';
+
+  @IsUrl({ require_tld: false, protocols: ['http', 'https'] })
+  CULQI_API_URL: string = 'https://api.culqi.com/v2';
+
+  /** Secret path segment of the webhook URL configured in CulqiPanel. */
+  @IsOptional()
+  @IsString()
+  CULQI_WEBHOOK_SECRET: string = '';
+
+  /** Plans are created once in CulqiPanel; these map ours to theirs. */
+  @IsOptional()
+  @IsString()
+  CULQI_PLAN_STARTER_ID: string = '';
+
+  @IsOptional()
+  @IsString()
+  CULQI_PLAN_PRO_ID: string = '';
+
+  @IsOptional()
+  @IsString()
+  CULQI_PLAN_BUSINESS_ID: string = '';
+
+  /** Runs the trial/payment reminder job inside this process. */
+  @asBoolean()
+  @IsBoolean()
+  REMINDERS_ENABLED: boolean = false;
 }
 
 export function validateEnvironment(

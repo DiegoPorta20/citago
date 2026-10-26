@@ -1,16 +1,13 @@
 import { Injectable } from '@nestjs/common';
 
 import type { AuthContext } from '../../../shared/application/auth-context.js';
-import { Clock } from '../../../shared/application/ports/clock.port.js';
-import { IdGenerator } from '../../../shared/application/ports/id-generator.port.js';
-import { SecretCipher } from '../../../shared/application/ports/secret-cipher.port.js';
-import { TransactionRunner } from '../../../shared/application/ports/transaction-runner.port.js';
 import { WhatsAppChannel } from '../domain/whatsapp-channel.entity.js';
 import { WhatsAppChannelRepository } from '../domain/whatsapp-channel.repository.js';
 import {
   WhatsAppCredentialsRejectedError,
   WhatsAppUnavailableError,
 } from '../domain/whatsapp.errors.js';
+import { WhatsAppChannelConnector } from './embedded-signup.use-cases.js';
 import {
   WhatsAppApiError,
   WhatsAppCloudApi,
@@ -26,12 +23,8 @@ export interface ConnectWhatsAppInput {
 @Injectable()
 export class ConnectWhatsAppChannelUseCase {
   constructor(
-    private readonly channels: WhatsAppChannelRepository,
     private readonly cloudApi: WhatsAppCloudApi,
-    private readonly cipher: SecretCipher,
-    private readonly transaction: TransactionRunner,
-    private readonly ids: IdGenerator,
-    private readonly clock: Clock,
+    private readonly connector: WhatsAppChannelConnector,
   ) {}
 
   async execute(
@@ -40,34 +33,11 @@ export class ConnectWhatsAppChannelUseCase {
   ): Promise<WhatsAppChannel> {
     const info = await this.verify(input);
 
-    return this.transaction.run(async () => {
-      const now = this.clock.now();
-      const connection = {
-        phoneNumberId: input.phoneNumberId,
-        wabaId: input.wabaId ?? null,
-        displayPhoneNumber: info.displayPhoneNumber,
-        verifiedName: info.verifiedName,
-        encryptedAccessToken: this.cipher.encrypt(
-          input.accessToken,
-          WhatsAppChannel.tokenContext(actor.tenantId, input.phoneNumberId),
-        ),
-      };
-
-      const existing = await this.channels.findByTenant(actor.tenantId);
-      const channel =
-        existing ??
-        WhatsAppChannel.connect(
-          { id: this.ids.generate(), tenantId: actor.tenantId, ...connection },
-          now,
-        );
-
-      if (existing) {
-        existing.reconnect(connection, now);
-      }
-
-      await this.channels.save(channel);
-
-      return channel;
+    return this.connector.connect(actor.tenantId, {
+      phoneNumberId: input.phoneNumberId,
+      wabaId: input.wabaId ?? null,
+      accessToken: input.accessToken,
+      info,
     });
   }
 

@@ -22,6 +22,7 @@ const CATEGORY_STATUS: Record<DomainErrorCategory, HttpStatus> = {
   [DomainErrorCategory.Unauthorized]: HttpStatus.UNAUTHORIZED,
   [DomainErrorCategory.PaymentRequired]: HttpStatus.PAYMENT_REQUIRED,
   [DomainErrorCategory.ExternalService]: HttpStatus.BAD_GATEWAY,
+  [DomainErrorCategory.Unavailable]: HttpStatus.SERVICE_UNAVAILABLE,
 };
 
 const STATUS_CODE_NAMES: Record<number, string> = {

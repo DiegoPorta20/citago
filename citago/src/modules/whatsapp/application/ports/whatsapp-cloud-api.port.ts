@@ -26,6 +26,21 @@ export abstract class WhatsAppCloudApi {
     accessToken: string,
   ): Promise<WhatsAppPhoneNumberInfo>;
 
+  /**
+   * Embedded Signup hands the browser a one-time code; this trades it for
+   * the business customer's access token. The app id and secret are ours.
+   */
+  abstract exchangeCode(code: string): Promise<string>;
+
+  /** Makes Meta deliver the number's webhooks (messages) to this app. */
+  abstract subscribeApp(wabaId: string, accessToken: string): Promise<void>;
+
+  /** Registers the number on the Cloud API so it can send and receive. */
+  abstract registerPhone(
+    phoneNumberId: string,
+    accessToken: string,
+  ): Promise<void>;
+
   abstract sendText(input: {
     readonly phoneNumberId: string;
     readonly accessToken: string;

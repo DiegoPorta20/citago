@@ -107,6 +107,7 @@ const Map<String, String> _messagesByCode = {
   'SUBSCRIPTION_EXPIRED':
       'Tu prueba gratis terminó. Elige un plan para volver a hacer cambios.',
   'UNKNOWN_PLAN': 'Ese plan no existe.',
+  'STAFF_LIMIT_REACHED': 'Tu plan ya llegó al máximo de profesionales activos. Elige un plan más grande o desactiva a alguien.',
   'SUBSCRIPTION_NOT_FOUND': 'Este negocio no tiene una suscripción.',
 };
 

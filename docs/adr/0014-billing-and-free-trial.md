@@ -25,9 +25,9 @@ Restricciones que pesan:
 negocio, el usuario y la membresía (BI-1): no existe un negocio nuevo sin
 prueba. Dura `TRIAL_DAYS = 7` y arranca en el plan Pro, el que la app destaca.
 
-Durante la prueba **todo funciona igual en los tres planes**: todavía no hay
-diferencias de funciones que justifiquen limitar nada, y limitar durante la
-prueba reduce la conversión sin ahorrar nada.
+Durante la prueba **las funciones son las mismas en los tres planes**: todavía no
+hay diferencias de funciones que justifiquen limitar nada. Lo único que distingue
+a un plan es el número de profesionales activos (ver abajo).
 
 ### Tres planes, definidos en código
 
@@ -46,9 +46,21 @@ cambiarlos es editar ese archivo.
 El eje del precio es el número de profesionales porque es lo que crece junto con
 el negocio y lo que el dueño entiende sin explicación.
 
-> **Límite todavía no aplicado:** `maxStaff` se muestra pero nada lo exige aún.
-> Aplicarlo toca el alta de profesionales (otro módulo) y tiene sentido hacerlo
-> cuando exista el cobro, no antes.
+> **Tope de profesionales (BI-7):** el plan elegido limita los profesionales
+> **activos**, también durante la prueba. Elegir plan no cuesta nada todavía, así
+> que un negocio que no cabe en el plan por defecto (Pro, 5) recibe
+> `422 STAFF_LIMIT_REACHED` con `{ planCode, limit }` y resuelve eligiendo uno
+> mayor, sin pagar. Detalles:
+>
+> - Cuenta como "agregar uno" crear un profesional y **reactivar** a uno
+>   desactivado; "activar" a quien ya está activo no cambia nada y no se rechaza.
+> - Pasar a un plan menor **no desactiva** a nadie: el tope solo impide sumar más.
+> - Staff define el puerto `StaffCapacity` y billing lo implementa
+>   (`PlanStaffCapacity`), igual que `ChannelMessenger` entre conversaciones y
+>   WhatsApp: staff nunca sabe qué es un plan.
+> - La comprobación no es atómica: dos altas simultáneas al límite podrían dejar
+>   un profesional de más. Es un tope comercial, no una regla de integridad, y
+>   el efecto es inofensivo; no justifica bloquear la fila del negocio.
 
 ### El estado se deriva, no se almacena
 
@@ -103,7 +115,6 @@ billing no debe dejar a nadie bloqueado el día del despliegue.
   firmado e idempotente que activa la suscripción, y una migración que añade
   `status` y `current_period_end`. Entonces aparecen `ACTIVE`, `PAST_DUE` y un
   periodo de gracia; hoy no tendría quién los produzca.
-- **Aplicar `maxStaff`** (ver arriba).
 - **Aviso por correo** antes de que venza la prueba: necesita proveedor de correo,
   que el proyecto aún no tiene. Por ahora la app muestra los días restantes.
 - **Cobro de WhatsApp.** Meta factura los mensajes a la cuenta de WhatsApp

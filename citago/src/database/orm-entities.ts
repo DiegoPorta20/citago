@@ -1,3 +1,4 @@
+import { SubscriptionNoticeOrmEntity } from '../modules/billing/infrastructure/persistence/typeorm/entities/subscription-notice.orm-entity.js';
 import { SubscriptionOrmEntity } from '../modules/billing/infrastructure/persistence/typeorm/entities/subscription.orm-entity.js';
 import { ClientOrmEntity } from '../modules/clients/infrastructure/persistence/typeorm/entities/client.orm-entity.js';
 import { AppointmentOrmEntity } from '../modules/appointments/infrastructure/persistence/typeorm/entities/appointment.orm-entity.js';
@@ -36,4 +37,5 @@ export const ORM_ENTITIES = [
   SaleLineOrmEntity,
   WhatsAppChannelOrmEntity,
   SubscriptionOrmEntity,
+  SubscriptionNoticeOrmEntity,
 ];

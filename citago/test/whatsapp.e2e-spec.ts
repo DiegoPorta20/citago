@@ -14,7 +14,11 @@ import {
   type RegisteredBusiness,
 } from './support/auth-flows.js';
 import { createTestApp } from './support/create-test-app.js';
-import { FakeGraphApi, VALID_TOKEN } from './support/fake-graph-api.js';
+import {
+  FakeGraphApi,
+  VALID_SIGNUP_CODE,
+  VALID_TOKEN,
+} from './support/fake-graph-api.js';
 import { queryRows, truncateAll } from './support/test-data-source.js';
 
 const GRAPH_PORT = 3399;
@@ -514,6 +518,185 @@ describe('WhatsApp (e2e)', () => {
 
       await reply(tenantB, conversationId).expect(404);
       expect(graph.sentMessages).toHaveLength(0);
+    });
+  });
+
+  describe('Embedded Signup (automatic connection)', () => {
+    const session = (business: RegisteredBusiness) =>
+      request(server())
+        .post(`${API}/whatsapp/embedded-signup/session`)
+        .set(...authHeader(business));
+
+    const tokenFrom = (url: string) =>
+      new URLSearchParams(url.split('#')[1]).get('t') ?? '';
+
+    const handoff = (token: string) =>
+      ['Authorization', `Handoff ${token}`] as const;
+
+    const complete = (token: string, body: Record<string, unknown> = {}) =>
+      request(server())
+        .post(`${API}/whatsapp/embedded-signup/complete`)
+        .set(...handoff(token))
+        .send({
+          code: VALID_SIGNUP_CODE,
+          phoneNumberId: NUMBER_A,
+          wabaId: '102290129340398',
+          ...body,
+        });
+
+    const startFlow = async (business: RegisteredBusiness = owner) => {
+      const response = await session(business).expect(200);
+
+      return tokenFrom(response.body.data.url as string);
+    };
+
+    it('hands the app a link whose token is in the fragment', async () => {
+      const response = await session(owner).expect(200);
+      const url = response.body.data.url as string;
+
+      expect(url).toMatch(
+        /^http:\/\/localhost:3000\/api\/v1\/pages\/whatsapp-signup#t=v1\./,
+      );
+      expect(response.body.data.expiresInSeconds).toBe(900);
+    });
+
+    it('is for OWNER and ADMIN only', async () => {
+      const { staffUser } = await addStaffUser(app, owner);
+
+      await session(staffUser).expect(403);
+    });
+
+    it('serves the page with the headers Meta’s popup needs, and no inline script', async () => {
+      const response = await request(server())
+        .get(`${API}/pages/whatsapp-signup`)
+        .expect(200);
+
+      expect(response.headers['content-type']).toContain('text/html');
+      expect(response.headers['content-security-policy']).toContain(
+        "script-src 'self' https://connect.facebook.net",
+      );
+      expect(response.headers['content-security-policy']).toContain(
+        "frame-ancestors 'none'",
+      );
+      expect(response.headers['cross-origin-opener-policy']).toBe(
+        'same-origin-allow-popups',
+      );
+      expect(response.headers['referrer-policy']).toBe('no-referrer');
+      expect(response.text).not.toMatch(/<script(?![^>]*\bsrc=)/);
+      await request(server())
+        .get(`${API}/pages/whatsapp-signup.js`)
+        .expect(200);
+      await request(server()).get(`${API}/pages/pages.css`).expect(200);
+    });
+
+    it('gives the page the Meta app settings, but only to a valid token', async () => {
+      const token = await startFlow();
+
+      const response = await request(server())
+        .get(`${API}/whatsapp/embedded-signup/config`)
+        .set(...handoff(token))
+        .expect(200);
+
+      expect(response.body.data).toEqual({
+        appId: 'test-app-id',
+        configId: 'test-config-id',
+        graphVersion: 'v23.0',
+      });
+      await request(server())
+        .get(`${API}/whatsapp/embedded-signup/config`)
+        .expect(401);
+      await request(server())
+        .get(`${API}/whatsapp/embedded-signup/config`)
+        .set(...handoff('v1.forged.token'))
+        .expect(401);
+    });
+
+    it('does not accept a session access token in place of the handoff token', async () => {
+      await request(server())
+        .get(`${API}/whatsapp/embedded-signup/config`)
+        .set('Authorization', `Handoff ${owner.accessToken}`)
+        .expect(401);
+    });
+
+    it('completes the sign-up: connects the number and stores the token encrypted', async () => {
+      const token = await startFlow();
+
+      const response = await complete(token).expect(200);
+
+      expect(response.body.data).toMatchObject({
+        connected: true,
+        phoneNumberId: NUMBER_A,
+        wabaId: '102290129340398',
+        displayPhoneNumber: '+51 1 555 0000',
+      });
+      expect(JSON.stringify(response.body)).not.toContain(VALID_TOKEN);
+
+      const paths = graph.requests.map((r) => `${r.method} ${r.path}`);
+
+      expect(paths).toEqual([
+        'GET /v23.0/oauth/access_token',
+        `GET /v23.0/${NUMBER_A}`,
+        'POST /v23.0/102290129340398/subscribed_apps',
+        `POST /v23.0/${NUMBER_A}/register`,
+      ]);
+
+      const rows = await queryRows<{ token: Buffer }>(
+        dataSource,
+        'SELECT encrypted_access_token AS token FROM whatsapp_channels',
+      );
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0].token.toString('utf8')).not.toContain(VALID_TOKEN);
+    });
+
+    it('then receives that number’s messages like a manually connected one', async () => {
+      await complete(await startFlow()).expect(200);
+
+      await deliver(metaWebhook(NUMBER_A, [{ body: 'Hola' }])).expect(200);
+
+      const list = await inbox(owner).expect(200);
+
+      expect(list.body.data).toHaveLength(1);
+    });
+
+    it('rejects a code Meta refuses, saving nothing', async () => {
+      const response = await complete(await startFlow(), {
+        code: 'already-used-code',
+      }).expect(422);
+
+      expect(response.body.code).toBe('WHATSAPP_SIGNUP_REJECTED');
+      expect(
+        await queryRows(dataSource, 'SELECT id FROM whatsapp_channels'),
+      ).toHaveLength(0);
+    });
+
+    it('rejects an expired or forged token', async () => {
+      await complete('v1.forged.token').expect(401);
+    });
+
+    it('connects the business named in the token, never one sent in the body', async () => {
+      const { tenantA, tenantB } = await createTwoTenants(app);
+      const token = await startFlow(tenantA);
+
+      await complete(token, { tenantId: tenantB.tenantId }).expect(400);
+      await complete(token).expect(200);
+
+      const rows = await queryRows<{ tenant_id: string }>(
+        dataSource,
+        'SELECT tenant_id FROM whatsapp_channels',
+      );
+
+      expect(rows).toEqual([{ tenant_id: tenantA.tenantId }]);
+    });
+
+    it('does not take a number another business connected', async () => {
+      const { tenantA, tenantB } = await createTwoTenants(app);
+
+      await complete(await startFlow(tenantA)).expect(200);
+
+      const response = await complete(await startFlow(tenantB)).expect(409);
+
+      expect(response.body.code).toBe('WHATSAPP_NUMBER_IN_USE');
     });
   });
 });

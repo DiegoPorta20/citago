@@ -6,6 +6,7 @@ import { TimeOfDay } from '../../../../../shared/domain/time-of-day.js';
 import type { TimeRange } from '../../../../../shared/domain/time-range.js';
 import { TransactionalEntityManager } from '../../../../../shared/infrastructure/persistence/transactional-entity-manager.js';
 import { StaffMember } from '../../../domain/staff-member.entity.js';
+import { StaffMemberStatus } from '../../../domain/staff-member-status.js';
 import { StaffTimeOff } from '../../../domain/staff-time-off.entity.js';
 import { StaffRepository } from '../../../domain/staff.repository.js';
 import {
@@ -63,6 +64,13 @@ export class TypeOrmStaffRepository extends StaffRepository {
     });
 
     return this.hydrate(rows);
+  }
+
+  async countActive(tenantId: string): Promise<number> {
+    return this.members().countBy({
+      tenantId,
+      status: StaffMemberStatus.Active,
+    });
   }
 
   async save(member: StaffMember): Promise<void> {

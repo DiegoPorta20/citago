@@ -9,6 +9,7 @@ import { AddWhatsAppChannels1789734112708 } from './1789734112708-AddWhatsAppCha
 import { AddSales1790041223146 } from './1790041223146-AddSales.js';
 import { AddBusinessHours1790050069324 } from './1790050069324-AddBusinessHours.js';
 import { AddSubscriptions1790136000000 } from './1790136000000-AddSubscriptions.js';
+import { AddSubscriptionPayments1790222400000 } from './1790222400000-AddSubscriptionPayments.js';
 
 export const MIGRATIONS = [
   InitTenancyAndIdentity1789674597432,
@@ -22,4 +23,5 @@ export const MIGRATIONS = [
   AddSales1790041223146,
   AddBusinessHours1790050069324,
   AddSubscriptions1790136000000,
+  AddSubscriptionPayments1790222400000,
 ];

@@ -20,6 +20,8 @@ export abstract class StaffRepository {
 
   abstract list(tenantId: string): Promise<StaffMember[]>;
 
+  abstract countActive(tenantId: string): Promise<number>;
+
   abstract save(staffMember: StaffMember): Promise<void>;
 
   abstract findTimeOffForTenant(

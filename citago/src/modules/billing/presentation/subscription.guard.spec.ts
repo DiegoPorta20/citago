@@ -2,12 +2,18 @@ import { jest } from '@jest/globals';
 import type { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
-import { InMemorySubscriptionRepository } from '../../../../test/support/fakes/billing.fakes.js';
+import {
+  FakePaymentProvider,
+  InMemorySubscriptionRepository,
+} from '../../../../test/support/fakes/billing.fakes.js';
 import { FixedClock } from '../../../../test/support/fakes/identity.fakes.js';
 import type { AuthContext } from '../../../shared/application/auth-context.js';
 import { UserRole } from '../../../shared/domain/user-role.js';
 import { AUTH_CONTEXT_PROPERTY } from '../../../shared/presentation/decorators/current-auth.decorator.js';
-import { AssertSubscriptionAccessUseCase } from '../application/billing.use-cases.js';
+import {
+  AssertSubscriptionAccessUseCase,
+  SubscriptionSync,
+} from '../application/billing.use-cases.js';
 import { SubscriptionExpiredError } from '../domain/billing.errors.js';
 import { Subscription } from '../domain/subscription.entity.js';
 import { SubscriptionGuard } from './subscription.guard.js';
@@ -44,7 +50,11 @@ async function setup(options: {
 
   const guard = new SubscriptionGuard(
     reflector,
-    new AssertSubscriptionAccessUseCase(subscriptions, clock),
+    new AssertSubscriptionAccessUseCase(
+      subscriptions,
+      new SubscriptionSync(subscriptions, new FakePaymentProvider(), clock),
+      clock,
+    ),
   );
 
   const contextFor = (method: string, auth: AuthContext | null = owner) =>

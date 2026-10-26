@@ -7,6 +7,8 @@ export enum DomainErrorCategory {
   Unauthorized = 'UNAUTHORIZED',
   PaymentRequired = 'PAYMENT_REQUIRED',
   ExternalService = 'EXTERNAL_SERVICE',
+  /** We are not configured (or able) to do this right now: a 503. */
+  Unavailable = 'UNAVAILABLE',
 }
 
 export abstract class DomainError extends Error {

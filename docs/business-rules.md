@@ -129,7 +129,7 @@ Decisiones y alcance: [ADR 0014](./adr/0014-billing-and-free-trial.md). Todavía
 | BI-4 | Hay tres planes en soles (Inicial S/ 39, Profesional S/ 79, Negocio S/ 149); los precios viajan como string decimal | ✔ precios y topes son una propuesta inicial |
 | BI-5 | Solo el OWNER elige el plan; elegirlo registra la preferencia y no cobra | ✔ |
 | BI-6 | El estado de la prueba se calcula con la fecha de fin, no se almacena ni lo cambia un job | ✔ |
-| BI-7 | Cada plan limita los profesionales activos (2 / 5 / 15) | ◻ el tope se muestra pero no se aplica hasta que exista el cobro |
+| BI-7 | Cada plan limita los profesionales activos (2 / 5 / 15), también durante la prueba; pasar a un plan menor no desactiva a nadie, solo impide sumar más | ✔ casos de uso con tests unitarios; e2e escrito, pendiente de ejecutar |
 | BI-8 | Un pago confirmado activa la suscripción por un periodo | ◻ requiere pasarela |
 
 ## Tiempo

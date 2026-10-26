@@ -12,6 +12,7 @@ import {
   type ScheduleRangeInput,
 } from '../../../shared/domain/weekly-schedule.js';
 import { StaffUserLinkValidator } from './staff-user-link.validator.js';
+import { StaffCapacity } from './ports/staff-capacity.port.js';
 
 async function loadStaffMember(
   staff: StaffRepository,
@@ -32,6 +33,7 @@ export class CreateStaffMemberUseCase {
   constructor(
     private readonly staff: StaffRepository,
     private readonly linkValidator: StaffUserLinkValidator,
+    private readonly capacity: StaffCapacity,
     private readonly ids: IdGenerator,
     private readonly clock: Clock,
   ) {}
@@ -43,6 +45,11 @@ export class CreateStaffMemberUseCase {
     if (input.userId) {
       await this.linkValidator.assertLinkable(actor.tenantId, input.userId);
     }
+
+    await this.capacity.assertCanAddOne(
+      actor.tenantId,
+      await this.staff.countActive(actor.tenantId),
+    );
 
     const member = StaffMember.create(
       {
@@ -108,6 +115,7 @@ export class UpdateStaffMemberUseCase {
 export class SetStaffMemberStatusUseCase {
   constructor(
     private readonly staff: StaffRepository,
+    private readonly capacity: StaffCapacity,
     private readonly clock: Clock,
   ) {}
 
@@ -126,6 +134,14 @@ export class SetStaffMemberStatusUseCase {
     const now = this.clock.now();
 
     if (input.status === StaffMemberStatus.Active) {
+      // Re-activating counts as adding one; "activating" an active member
+      // changes nothing, so it must not be refused at the limit.
+      if (!member.isActive) {
+        await this.capacity.assertCanAddOne(
+          actor.tenantId,
+          await this.staff.countActive(actor.tenantId),
+        );
+      }
       member.activate(now);
     } else {
       member.deactivate(now);

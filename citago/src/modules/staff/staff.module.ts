@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { BillingModule } from '../billing/billing.module.js';
 import { IdentityModule } from '../identity/identity.module.js';
 import {
   CreateStaffMemberUseCase,
@@ -23,7 +24,7 @@ import { TypeOrmStaffRepository } from './infrastructure/persistence/typeorm/typ
 import { StaffController } from './presentation/staff.controller.js';
 
 @Module({
-  imports: [IdentityModule],
+  imports: [IdentityModule, BillingModule],
   controllers: [StaffController],
   providers: [
     { provide: StaffRepository, useClass: TypeOrmStaffRepository },

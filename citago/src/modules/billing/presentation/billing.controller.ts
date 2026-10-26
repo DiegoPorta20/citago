@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Put,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -12,13 +21,17 @@ import { AllowWhenExpired } from '../../../shared/presentation/decorators/allow-
 import { CurrentAuth } from '../../../shared/presentation/decorators/current-auth.decorator.js';
 import { Roles } from '../../../shared/presentation/decorators/roles.decorator.js';
 import {
+  CancelSubscriptionUseCase,
   ChoosePlanUseCase,
   GetSubscriptionUseCase,
   ListPlansUseCase,
+  StartCheckoutUseCase,
 } from '../application/billing.use-cases.js';
 import {
+  CheckoutSessionResponseDto,
   ChoosePlanRequestDto,
   PlanResponseDto,
+  StartCheckoutRequestDto,
   SubscriptionResponseDto,
 } from './billing.dto.js';
 
@@ -30,6 +43,8 @@ export class BillingController {
     private readonly listPlans: ListPlansUseCase,
     private readonly getSubscription: GetSubscriptionUseCase,
     private readonly choosePlan: ChoosePlanUseCase,
+    private readonly startCheckout: StartCheckoutUseCase,
+    private readonly cancelSubscription: CancelSubscriptionUseCase,
   ) {}
 
   @Get('plans')
@@ -43,9 +58,9 @@ export class BillingController {
 
   @Get('subscription')
   @ApiOperation({
-    summary: 'Trial and plan of the current business',
+    summary: 'Trial, plan and payment state of the current business',
     description:
-      'Every role can read it: an expired trial affects all of them.',
+      'Every role can read it: an expired subscription affects all of them. Asks the payment gateway when a paid period has just run out.',
   })
   @ApiOkResponse({ type: SubscriptionResponseDto })
   async subscription(
@@ -60,9 +75,9 @@ export class BillingController {
   @Roles(UserRole.Owner)
   @AllowWhenExpired()
   @ApiOperation({
-    summary: 'Choose the plan the business wants',
+    summary: 'Choose the plan the business wants, without paying yet',
     description:
-      'Records the choice; nothing is charged yet. Works after the trial ends, so an expired business can still pick a plan.',
+      'Only while not paying: a paying business changes plan by paying for the new one (422 PLAN_CHANGE_REQUIRES_PAYMENT). Works after the trial ends.',
   })
   @ApiOkResponse({ type: SubscriptionResponseDto })
   async chooseSubscriptionPlan(
@@ -71,6 +86,40 @@ export class BillingController {
   ): Promise<SubscriptionResponseDto> {
     return SubscriptionResponseDto.fromView(
       await this.choosePlan.execute(auth, body.planCode),
+    );
+  }
+
+  @Post('checkout/session')
+  @HttpCode(HttpStatus.OK)
+  @Roles(UserRole.Owner)
+  @AllowWhenExpired()
+  @ApiOperation({
+    summary: 'Link to pay for a plan (Culqi card form)',
+    description:
+      'Returns a URL for the browser. 503 PAYMENTS_NOT_CONFIGURED until Culqi is set up; 409 ALREADY_SUBSCRIBED when that plan is already paid and active.',
+  })
+  @ApiOkResponse({ type: CheckoutSessionResponseDto })
+  checkoutSession(
+    @CurrentAuth() auth: AuthContext,
+    @Body() body: StartCheckoutRequestDto,
+  ): Promise<CheckoutSessionResponseDto> {
+    return this.startCheckout.execute(auth, body.planCode);
+  }
+
+  @Delete('subscription')
+  @Roles(UserRole.Owner)
+  @AllowWhenExpired()
+  @ApiOperation({
+    summary: 'Stop the monthly charge',
+    description:
+      'The paid period stays usable until it ends. 422 NOT_PAYING if there is nothing to cancel.',
+  })
+  @ApiOkResponse({ type: SubscriptionResponseDto })
+  async cancel(
+    @CurrentAuth() auth: AuthContext,
+  ): Promise<SubscriptionResponseDto> {
+    return SubscriptionResponseDto.fromView(
+      await this.cancelSubscription.execute(auth),
     );
   }
 }
