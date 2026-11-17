@@ -155,6 +155,8 @@ class _BodyState extends ConsumerState<_Body> {
           ),
         ),
         const SizedBox(height: AppSpacing.l),
+        _AccountRow(hasAccount: member.userId != null),
+        const SizedBox(height: AppSpacing.l),
         ListCard(
           leading: const IconBadge(icon: Icons.schedule_rounded),
           title: 'Horario semanal',
@@ -202,6 +204,52 @@ class _BodyState extends ConsumerState<_Body> {
           label: Text(member.active ? 'Desactivar' : 'Reactivar'),
         ),
       ],
+    );
+  }
+}
+
+class _AccountRow extends StatelessWidget {
+  const _AccountRow({required this.hasAccount});
+
+  final bool hasAccount;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
+    return AppCard(
+      child: Row(
+        children: [
+          IconBadge(
+            icon: hasAccount
+                ? Icons.verified_user_outlined
+                : Icons.person_off_outlined,
+          ),
+          const SizedBox(width: AppSpacing.m),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  hasAccount ? 'Cuenta vinculada' : 'Sin cuenta',
+                  style: theme.textTheme.titleSmall,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  hasAccount
+                      ? 'Entra a la app y ve su propia agenda y ventas.'
+                      : 'Solo aparece en la agenda. Edita para vincular una '
+                            'cuenta del equipo.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -12,6 +12,8 @@ import 'package:citagof/features/dashboard/presentation/providers/dashboard_prov
 import 'package:citagof/features/staff/domain/entities/staff_member.dart';
 import 'package:citagof/features/staff/domain/repositories/staff_repository.dart';
 import 'package:citagof/features/staff/presentation/providers/staff_providers.dart';
+import 'package:citagof/features/team/domain/entities/team_member.dart';
+import 'package:citagof/features/team/presentation/providers/team_providers.dart';
 import 'package:citagof/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -188,6 +190,7 @@ Future<void> _openStaff(
   WidgetTester tester,
   _FakeStaff repo, {
   UserRole role = UserRole.owner,
+  List<TeamMember> team = const [],
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -196,6 +199,7 @@ Future<void> _openStaff(
         authRepositoryProvider.overrideWithValue(_SignedIn(role)),
         dashboardRepositoryProvider.overrideWithValue(_Dashboard()),
         staffRepositoryProvider.overrideWithValue(repo),
+        teamMembersProvider.overrideWith((ref) async => team),
         pendingConversationsCountProvider.overrideWith((ref) async => 0),
         upcomingAppointmentsProvider.overrideWith((ref) async => []),
       ],
@@ -259,6 +263,119 @@ void main() {
 
     expect(find.text('Escribe el nombre'), findsOneWidget);
     expect(repo.created, isNull);
+  });
+
+  group('linking an account', () {
+    TeamMember member(String id, String name, String email) => TeamMember(
+      id: 'mem-$id',
+      userId: id,
+      name: name,
+      email: email,
+      role: UserRole.staff,
+      status: MembershipStatus.active,
+    );
+
+    testWidgets('a new professional can be linked to a team account', (
+      tester,
+    ) async {
+      final repo = _FakeStaff(const []);
+      await _openStaff(
+        tester,
+        repo,
+        team: [member('u-ana', 'Ana', 'ana@demo.local')],
+      );
+
+      await tester.tap(find.text('Nuevo'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextFormField).first, 'Carlos');
+
+      await tester.tap(find.byType(DropdownButtonFormField<String?>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('ana@demo.local').last);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Guardar'));
+      await tester.pumpAndSettle();
+
+      expect(repo.created?.displayName, 'Carlos');
+      expect(repo.created?.userId, 'u-ana');
+    });
+
+    testWidgets('an account already linked elsewhere is not offered', (
+      tester,
+    ) async {
+      final repo = _FakeStaff(const [
+        StaffMember(
+          id: 'a',
+          displayName: 'Carlos',
+          active: true,
+          userId: 'u-ana',
+        ),
+      ]);
+      await _openStaff(
+        tester,
+        repo,
+        team: [
+          member('u-ana', 'Ana', 'ana@demo.local'),
+          member('u-leo', 'Leo', 'leo@demo.local'),
+        ],
+      );
+
+      await tester.tap(find.text('Nuevo'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(DropdownButtonFormField<String?>));
+      await tester.pumpAndSettle();
+
+      // Ana is taken by Carlos; only Leo (and "Sin cuenta") remain.
+      expect(find.text('leo@demo.local'), findsWidgets);
+      expect(find.text('ana@demo.local'), findsNothing);
+    });
+
+    testWidgets('editing can unlink the account', (tester) async {
+      final repo = _FakeStaff(const [
+        StaffMember(
+          id: 'a',
+          displayName: 'Carlos',
+          active: true,
+          userId: 'u-ana',
+        ),
+      ]);
+      await _openStaff(
+        tester,
+        repo,
+        team: [member('u-ana', 'Ana', 'ana@demo.local')],
+      );
+
+      await tester.tap(find.text('Carlos'));
+      await tester.pumpAndSettle();
+      expect(find.text('Cuenta vinculada'), findsOneWidget);
+
+      await tester.tap(find.byTooltip('Editar'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(DropdownButtonFormField<String?>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Sin cuenta').last);
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Guardar'));
+      await tester.tap(find.text('Guardar'));
+      await tester.pumpAndSettle();
+
+      expect(repo.members.single.userId, isNull);
+    });
+
+    testWidgets('with no team accounts it guides to Equipo', (tester) async {
+      final repo = _FakeStaff(const []);
+      await _openStaff(tester, repo);
+
+      await tester.tap(find.text('Nuevo'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('No hay cuentas disponibles'), findsOneWidget);
+      expect(
+        find.textContaining('da acceso a la persona en Equipo'),
+        findsOneWidget,
+      );
+    });
   });
 
   testWidgets('the schedule editor rejects overlapping ranges', (tester) async {
@@ -383,6 +500,12 @@ void main() {
     await _openStaff(tester, repo);
 
     await tester.tap(find.text('Carlos'));
+    await tester.pumpAndSettle();
+    await tester.dragUntilVisible(
+      find.widgetWithText(OutlinedButton, 'Desactivar'),
+      find.byType(Scrollable).first,
+      const Offset(0, -200),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(OutlinedButton, 'Desactivar'));
     await tester.pumpAndSettle();
